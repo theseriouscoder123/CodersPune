@@ -1,0 +1,1037 @@
+[
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "repo is up: campus-events-app. next.js + tailwind soon",
+    "ts": "1768228800.000000"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "nice",
+    "ts": "1768228920.000001"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0SANA",
+    "user_profile": {
+      "name": "sana",
+      "real_name": "Sana Shaikh"
+    },
+    "text": "first poster card mockups are in figma",
+    "ts": "1768397400.000002"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "do we want login for RSVPs or just a name field?",
+    "ts": "1768492800.000003"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "login, otherwise people will RSVP as 'batman'",
+    "ts": "1768493040.000004"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "auth options: firebase auth, supabase auth, clerk. clerk free tier is small",
+    "ts": "1768746600.000005",
+    "thread_ts": "1768746600.000005"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "supabase has nice docs",
+    "ts": "1768746900.000006",
+    "thread_ts": "1768746600.000005"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "ok let's just go with Supabase auth for now, fastest to set up",
+    "ts": "1768747080.000007",
+    "thread_ts": "1768746600.000005"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "👍",
+    "ts": "1768747140.000008",
+    "thread_ts": "1768746600.000005"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "reminder: club meeting saturday 5pm",
+    "ts": "1769085000.000009"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0SANA",
+    "user_profile": {
+      "name": "sana",
+      "real_name": "Sana Shaikh"
+    },
+    "text": "we're moving to tailwind, PR coming",
+    "ts": "1769436000.000010"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "deploy workflow is live, merging to main ships to vercel",
+    "ts": "1769790600.000011"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "call me on +91 90000 00000 if deploy breaks while I'm travelling",
+    "ts": "1769790900.000012"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "anyone know why the build is slow",
+    "ts": "1770129000.000013"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "next build without cache, will fix in the workflow",
+    "ts": "1770129600.000014"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "thinking of dropping supabase for firebase auth since we use firestore anyway",
+    "ts": "1770479100.000015",
+    "thread_ts": "1770479100.000015"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "one console instead of two sounds good",
+    "ts": "1770479400.000016",
+    "thread_ts": "1770479100.000015"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "PR #41 tomorrow",
+    "ts": "1770479520.000017",
+    "thread_ts": "1770479100.000015"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "is the app going to cost us anything?",
+    "ts": "1770895800.000018"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "everything's on free plans right now",
+    "ts": "1770897600.000019"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0SANA",
+    "user_profile": {
+      "name": "sana",
+      "real_name": "Sana Shaikh"
+    },
+    "text": "poster aspect ratio 4:5 ok?",
+    "ts": "1771427400.000020"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "yes",
+    "ts": "1771427520.000021"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "poster uploads merged, they go to cloudinary on the club account",
+    "ts": "1771680600.000022"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "setup guide is in docs/setup.md",
+    "ts": "1772022600.000023"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "onesignal reminders work on my phone",
+    "ts": "1772638200.000024"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "bad news: onesignal free plan has a device cap and we'll hit it before fest",
+    "ts": "1773327600.000025",
+    "thread_ts": "1773327600.000025"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "how many devices?",
+    "ts": "1773327780.000026",
+    "thread_ts": "1773327600.000025"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "we had 900 subscribers in a week, cap is way under what fest will bring",
+    "ts": "1773327900.000027",
+    "thread_ts": "1773327600.000025"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "moving push to Firebase Cloud Messaging instead, it's free and we're already on firebase",
+    "ts": "1773328200.000028",
+    "thread_ts": "1773327600.000025"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "ok go ahead",
+    "ts": "1773328260.000029",
+    "thread_ts": "1773327600.000025"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "FCM reminders are live 🎉",
+    "ts": "1773549000.000030"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "fixed the double RSVP click",
+    "ts": "1774013400.000031"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "organisers can't upload posters on campus wifi, see issue #97",
+    "ts": "1774597200.000032"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "probably the upload size + slow wifi. will compress client side",
+    "ts": "1774598400.000033"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "fest budget meeting thursday",
+    "ts": "1774873800.000034"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "notes from today's fest prep are in the drive",
+    "ts": "1775143800.000035"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0SANA",
+    "user_profile": {
+      "name": "sana",
+      "real_name": "Sana Shaikh"
+    },
+    "text": "fest theme colours pushed",
+    "ts": "1775665800.000036"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "uploads failing again at the registration desk",
+    "ts": "1775880600.000037"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "use the compressed upload button, same as last year",
+    "ts": "1775880900.000038"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "great fest everyone, app had 2.1k users",
+    "ts": "1776004200.000039"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "taking a break for exams",
+    "ts": "1776691800.000040"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "working on category filters",
+    "ts": "1778416200.000041"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "summer plans? anyone around in june",
+    "ts": "1779719400.000042"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "fixed a typo in the deploy workflow",
+    "ts": "1781537400.000043"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "bumped next, all good locally",
+    "ts": "1782912600.000044"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "pasting the server key here so I can grab it from my laptop later:",
+    "ts": "1784735400.000045",
+    "thread_ts": "1784735400.000045"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "FIREBASE_SERVER_KEY=AI\u007aaSyD3m0-FAKE-KEY-n0t-real-0000000000",
+    "ts": "1784735460.000046",
+    "thread_ts": "1784735400.000045"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "rohan please don't paste keys in chat, rotate it",
+    "ts": "1784736000.000047",
+    "thread_ts": "1784735400.000045"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "rotated, sorry",
+    "ts": "1784736660.000048",
+    "thread_ts": "1784735400.000045"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "opened #120 for a leaderboard, thoughts?",
+    "ts": "1785418800.000049"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0SANA",
+    "user_profile": {
+      "name": "sana",
+      "real_name": "Sana Shaikh"
+    },
+    "text": "fun for fest",
+    "ts": "1785419400.000050"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "leaderboard skeleton is in, behind a flag",
+    "ts": "1786543200.000051"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "first load is slow, looking into it",
+    "ts": "1787240400.000052"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "new semester, new members joining the club",
+    "ts": "1788265800.000053"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "timezone fix is merged",
+    "ts": "1788880200.000054"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "rsvp csv export PR is up (#142), needs faculty sign-off",
+    "ts": "1789824600.000055"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "android users getting duplicate reminders, issue #131",
+    "ts": "1790613300.000056",
+    "thread_ts": "1790613300.000056"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "I'll look at the duplicate notifs later",
+    "ts": "1790614200.000057",
+    "thread_ts": "1790613300.000056"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "fixed the reminder sound on android, not the duplicates",
+    "ts": "1791043200.000058"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "reopened #97 just to document it, it's a yearly thing",
+    "ts": "1791552900.000059"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "readme still says onesignal",
+    "ts": "1792075200.000060"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "readme updated",
+    "ts": "1792592400.000061"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "winter fest planning starts next week",
+    "ts": "1793017800.000062"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "handover sync done, notes in drive. neha is taking over the app from rohan",
+    "ts": "1793201400.000063"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "congrats on the internship rohan!",
+    "ts": "1793201700.000064"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ARJUN",
+    "user_profile": {
+      "name": "arjun",
+      "real_name": "Arjun Patil"
+    },
+    "text": "🎉",
+    "ts": "1793201760.000065"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0NEHA",
+    "user_profile": {
+      "name": "neha",
+      "real_name": "Neha Joshi"
+    },
+    "text": "lint fixes merged",
+    "ts": "1793379900.000066"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0SANA",
+    "user_profile": {
+      "name": "sana",
+      "real_name": "Sana Shaikh"
+    },
+    "text": "winter fest poster drafts next week",
+    "ts": "1793712600.000067"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "club account balance is ₹12,400 after the workshop",
+    "ts": "1788352200.000068"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "thanks kabir",
+    "ts": "1788352800.000069"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "two companies interested in sponsoring winter fest",
+    "ts": "1789482600.000070"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "nice, which ones?",
+    "ts": "1789482900.000071"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "will share once it's firm",
+    "ts": "1789482960.000072"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "sponsor update: TechNova is confirmed",
+    "ts": "1791207000.000073",
+    "thread_ts": "1791207000.000073"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "TechNova pays ₹40,000 only if the events app is live for the fest by 20 Dec. contract is with me",
+    "ts": "1791207120.000074",
+    "thread_ts": "1791207000.000073"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "₹40k covers the stage and food",
+    "ts": "1791207300.000075",
+    "thread_ts": "1791207000.000073"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "app will be live, it already is. just need to keep it up",
+    "ts": "1791207360.000076",
+    "thread_ts": "1791207000.000073"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "please keep this in core team until it's announced",
+    "ts": "1791207600.000077",
+    "thread_ts": "1791207000.000073"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "invoice template ready for TechNova",
+    "ts": "1791354600.000078"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "second sponsor fell through",
+    "ts": "1791808200.000079"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "ok, we budget with TechNova only",
+    "ts": "1791808500.000080"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "faculty approval for winter fest dates: 19-21 Dec",
+    "ts": "1792333800.000081"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "noted",
+    "ts": "1792333920.000082"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "need receipts for september workshop by friday",
+    "ts": "1792668600.000083"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "rohan leaves 15 nov, neha takes over app. not in core team yet",
+    "ts": "1792935000.000084"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "should we add neha to core team?",
+    "ts": "1792935180.000085"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "after winter fest maybe",
+    "ts": "1792935300.000086"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "handover notes started",
+    "ts": "1793287800.000087"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0KABIR",
+    "user_profile": {
+      "name": "kabir",
+      "real_name": "Kabir Shah"
+    },
+    "text": "stage vendor quote is ₹28k",
+    "ts": "1793536200.000088"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "ok within the sponsor money",
+    "ts": "1793536500.000089"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0MEERA",
+    "user_profile": {
+      "name": "meera",
+      "real_name": "Meera Kulkarni"
+    },
+    "text": "TechNova wants a logo on the app's fest page",
+    "ts": "1793716200.000090"
+  },
+  {
+    "type": "message",
+    "channel": "core-team",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "easy, neha can add it",
+    "ts": "1793716500.000091"
+  }
+]

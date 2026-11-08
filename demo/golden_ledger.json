@@ -1,0 +1,292 @@
+{
+  "version": 1,
+  "export_date": "2026-11-05T12:00:00Z",
+  "claims": [
+    {
+      "id": "G1",
+      "type": "decision",
+      "subject_key": "notifications.provider",
+      "gist": "Push notifications moved from OneSignal to FCM in March because OneSignal's free plan caps devices",
+      "expected_status": [
+        "supported",
+        "verified"
+      ],
+      "evidence": [
+        {
+          "source": "repo:pull/88",
+          "contains": "OneSignal free plan caps us at the device limit before fest"
+        },
+        {
+          "source": "chat:#dev",
+          "contains": "moving push to Firebase Cloud Messaging instead"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G2",
+      "type": "ownership",
+      "subject_key": "deploy.owner",
+      "gist": "Rohan is effectively the only maintainer of the deploy workflow (31 of 33 commits)",
+      "expected_status": [
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "repo:commit_stats",
+          "contains": "deploy.yml: 33 commits; rohan 31, neha 2"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G3",
+      "type": "risk",
+      "subject_key": "upload.max_size",
+      "gist": "Upload limit conflict: notes say 5 MB, code enforces 2 MB",
+      "expected_status": [
+        "conflicting"
+      ],
+      "evidence": [
+        {
+          "source": "notes/2026-04-02-fest-prep.md",
+          "contains": "raise the poster upload limit to 5 MB"
+        },
+        {
+          "source": "repo:src/lib/upload.ts",
+          "contains": "2 * 1024 * 1024"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G4",
+      "type": "open_work",
+      "subject_key": "pr.142.status",
+      "gist": "PR #142 (RSVP CSV export) is unfinished and blocked on Dr. Rao's review",
+      "expected_status": [
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "repo:pull/142",
+          "contains": "waiting on Dr. Rao's review before merge"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G5",
+      "type": "contact",
+      "subject_key": "firebase.owner",
+      "gist": "Owner of the Firebase project and billing account is unknown",
+      "expected_status": [
+        "missing"
+      ],
+      "evidence": [],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G6",
+      "type": "open_question",
+      "subject_key": "leaderboard.status",
+      "gist": "The leaderboard feature (issue #120) is parked / may be abandoned",
+      "expected_status": [
+        "inferred",
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "repo:issues/120",
+          "contains": "parking this for now, maybe after fest"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G7",
+      "type": "decision",
+      "subject_key": "auth.provider",
+      "gist": "Auth moved from Supabase Auth to Firebase Auth in Feb, superseding January's choice",
+      "expected_status": [
+        "supported",
+        "verified"
+      ],
+      "superseded": "January Supabase claim superseded, not a conflict",
+      "evidence": [
+        {
+          "source": "repo:pull/41",
+          "contains": "Replace Supabase Auth with Firebase Auth"
+        },
+        {
+          "source": "chat:#dev",
+          "contains": "let's just go with Supabase auth"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G8",
+      "type": "dependency",
+      "subject_key": "sponsor.technova",
+      "gist": "Sponsor TechNova pays ₹40,000 only if the app is live for the fest by 20 Dec; contract is with Meera",
+      "expected_status": [
+        "supported"
+      ],
+      "restricted": true,
+      "evidence": [
+        {
+          "source": "chat:#core-team",
+          "contains": "TechNova pays ₹40,000 only if the events app is live"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G10",
+      "type": "recurring_issue",
+      "subject_key": "upload.timeouts",
+      "gist": "Every fest image uploads time out on campus Wi-Fi; workaround is client-side compression",
+      "expected_status": [
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "repo:issues/97",
+          "contains": "compress before upload"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G11",
+      "type": "dependency",
+      "subject_key": "images.provider",
+      "gist": "Images are hosted on Cloudinary's free plan under the club account",
+      "expected_status": [
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "repo:README.md",
+          "contains": "Cloudinary (free plan, club account)"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G12",
+      "type": "next_action",
+      "subject_key": "vercel.transfer",
+      "gist": "Rohan must transfer the Vercel project to Neha before 15 Nov",
+      "expected_status": [
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "notes/2026-10-28-handover-sync.md",
+          "contains": "transfer Vercel project ownership to Neha"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G13",
+      "type": "risk",
+      "subject_key": "rsvp.tests",
+      "gist": "The RSVP flow has no automated tests",
+      "expected_status": [
+        "supported"
+      ],
+      "evidence": [
+        {
+          "source": "repo:pull/142",
+          "contains": "there are no tests for the RSVP flow at all"
+        }
+      ],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    },
+    {
+      "id": "G14",
+      "type": "open_work",
+      "subject_key": "issue.131.status",
+      "gist": "Issue #131 (duplicate Android reminders), assigned to Rohan: status unknown",
+      "expected_status": [
+        "missing"
+      ],
+      "evidence": [],
+      "visible_to": [
+        "meera",
+        "rohan",
+        "neha",
+        "kabir"
+      ]
+    }
+  ],
+  "secrets": [
+    "AI\u007aaSyD3m0-FAKE-KEY-n0t-real-0000000000",
+    "sk\u005ftest_FAKEFAKEFAKEFAKE1234"
+  ],
+  "pii": [
+    "+91 90000 00000"
+  ]
+}

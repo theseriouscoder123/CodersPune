@@ -1,0 +1,72 @@
+[
+  {
+    "type": "file",
+    "path": "README.md",
+    "name": "README.md",
+    "size": 704,
+    "sha": "ddd738030a9c3e5f8dd68557e64ffa091403431a",
+    "encoding": "base64",
+    "content": "IyBDYW1wdXMgRXZlbnRzIEFwcAoKRGV2Q2x1YidzIHdlYiBhcHAgZm9yIGV2ZW50IGxpc3RpbmdzLCBSU1ZQcyBhbmQgcHVzaCByZW1pbmRlcnMgZHVyaW5nIHRoZSBmZXN0LgoKIyMgU3RhY2sKCi0gTmV4dC5qcyAoQXBwIFJvdXRlcikgKyBUYWlsd2luZAotIEZpcmViYXNlOiBGaXJlc3RvcmUgKGRhdGEpLCBGaXJlYmFzZSBBdXRoIChzaWduLWluKSwgRmlyZWJhc2UgQ2xvdWQgTWVzc2FnaW5nIChwdXNoIHJlbWluZGVycykKLSBJbWFnZXM6IENsb3VkaW5hcnkgKGZyZWUgcGxhbiwgY2x1YiBhY2NvdW50KQotIEhvc3Rpbmc6IFZlcmNlbCAoYXV0by1kZXBsb3lzIGBtYWluYCB0aHJvdWdoIHRoZSBHaXRIdWIgQWN0aW9ucyBkZXBsb3kgd29ya2Zsb3cpCgojIyBHZXR0aW5nIHN0YXJ0ZWQKClNlZSBgZG9jcy9zZXR1cC5tZGAuIEFzayBpbiAjZGV2IGlmIHNvbWV0aGluZyBpcyB1bmNsZWFyLgoKIyMgQ29udHJpYnV0aW5nCgotIEJyYW5jaCBmcm9tIGBtYWluYCwgb3BlbiBhIFBSLCBnZXQgb25lIHJldmlldy4KLSBEb24ndCBwdXNoIGRpcmVjdGx5IHRvIGBtYWluYCBkdXJpbmcgZmVzdCB3ZWVrLgotIEtlZXAgUFJzIHNtYWxsOyBzY3JlZW5zaG90cyBmb3IgVUkgY2hhbmdlcyBwbGVhc2UuCgojIyBUZWFtCgpNYWludGFpbmVkIGJ5IERldkNsdWIncyBhcHAgdGVhbS4gQ3VycmVudCBsZWFkOiBSb2hhbiAodW50aWwgTm92IDIwMjYpLgo=",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/README.md"
+  },
+  {
+    "type": "file",
+    "path": "docs/setup.md",
+    "name": "setup.md",
+    "size": 620,
+    "sha": "3f48873e3e9d5677d1c7a08b18a8c6cded12b6a2",
+    "encoding": "base64",
+    "content": "IyBMb2NhbCBzZXR1cAoKMS4gYG5wbSBpbnN0YWxsYAoyLiBDb3B5IGAuZW52LmV4YW1wbGVgIHRvIGAuZW52LmxvY2FsYCBhbmQgZmlsbCBpbiB0aGUgRmlyZWJhc2UgYW5kIENsb3VkaW5hcnkgdmFsdWVzIChhc2sgaW4gI2RldikuCjMuIGBucG0gcnVuIGRldmAgYW5kIG9wZW4gaHR0cDovL2xvY2FsaG9zdDozMDAwCgojIyBQYXltZW50cyBzYW5kYm94IChvbGQsIHVudXNlZCkKCldlIHRyaWVkIFN0cmlwZSBmb3IgcGFpZCB3b3Jrc2hvcCB0aWNrZXRzIGluIEphbnVhcnkgYW5kIGRyb3BwZWQgaXQuIE9sZCB0ZXN0IGNvbmZpZywga2VwdCBmb3IgcmVmZXJlbmNlOgoKYGBgClNUUklQRV9LRVk9c2tfdGVzdF9GQUtFRkFLRUZBS0VGQUtFMTIzNApgYGAKCiMjIFNlZWRpbmcgZXZlbnRzCgpgbnBtIHJ1biBzZWVkYCBsb2FkcyB0aHJlZSBzYW1wbGUgZXZlbnRzIGludG8gdGhlIEZpcmVzdG9yZSBlbXVsYXRvci4KCiMjIERlcGxveXMKCk1lcmdpbmcgdG8gYG1haW5gIHRyaWdnZXJzIGAuZ2l0aHViL3dvcmtmbG93cy9kZXBsb3kueW1sYCwgd2hpY2ggYnVpbGRzIGFuZCBkZXBsb3lzIHRvIFZlcmNlbC4KSWYgdGhlIGRlcGxveSBmYWlscywgY2hlY2sgdGhlIEFjdGlvbnMgdGFiIGZpcnN0Lgo=",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/docs/setup.md"
+  },
+  {
+    "type": "file",
+    "path": ".env.example",
+    "name": ".env.example",
+    "size": 261,
+    "sha": "2c4c11b5b9078c2613f35a1841439d072db36f98",
+    "encoding": "base64",
+    "content": "IyBGaXJlYmFzZSAocHJvamVjdCArIHB1c2gpCkZJUkVCQVNFX1BST0pFQ1RfSUQ9CkZJUkVCQVNFX1NFUlZFUl9LRVk9CkZJUkVCQVNFX0JJTExJTkdfQUxFUlRfRU1BSUw9Ck5FWFRfUFVCTElDX0ZJUkVCQVNFX0FQSV9LRVk9Ck5FWFRfUFVCTElDX0ZJUkVCQVNFX0FVVEhfRE9NQUlOPQoKIyBDbG91ZGluYXJ5IChwb3N0ZXIgdXBsb2FkcykKQ0xPVURJTkFSWV9DTE9VRF9OQU1FPQpDTE9VRElOQVJZX0FQSV9LRVk9CkNMT1VESU5BUllfQVBJX1NFQ1JFVD0K",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/.env.example"
+  },
+  {
+    "type": "file",
+    "path": ".github/workflows/deploy.yml",
+    "name": "deploy.yml",
+    "size": 775,
+    "sha": "c11a9b55236c7d2dd93adc297f51feb154d8f8bd",
+    "encoding": "base64",
+    "content": "bmFtZTogZGVwbG95CgpvbjoKICBwdXNoOgogICAgYnJhbmNoZXM6IFttYWluXQogIHdvcmtmbG93X2Rpc3BhdGNoOgoKam9iczoKICBkZXBsb3k6CiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICB0aW1lb3V0LW1pbnV0ZXM6IDE1CiAgICBzdGVwczoKICAgICAgLSB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QHY0CiAgICAgIC0gdXNlczogYWN0aW9ucy9zZXR1cC1ub2RlQHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIG5vZGUtdmVyc2lvbjogMjAKICAgICAgICAgIGNhY2hlOiBucG0KICAgICAgLSBydW46IG5wbSBjaQogICAgICAtIHJ1bjogbnBtIHJ1biBsaW50CiAgICAgIC0gcnVuOiBucG0gcnVuIGJ1aWxkCiAgICAgICAgZW52OgogICAgICAgICAgTkVYVF9QVUJMSUNfRklSRUJBU0VfQVBJX0tFWTogJHt7IHNlY3JldHMuTkVYVF9QVUJMSUNfRklSRUJBU0VfQVBJX0tFWSB9fQogICAgICAgICAgTkVYVF9QVUJMSUNfRklSRUJBU0VfQVVUSF9ET01BSU46ICR7eyBzZWNyZXRzLk5FWFRfUFVCTElDX0ZJUkVCQVNFX0FVVEhfRE9NQUlOIH19CiAgICAgIC0gbmFtZTogRGVwbG95IHRvIFZlcmNlbAogICAgICAgIHJ1bjogbnB4IHZlcmNlbCBkZXBsb3kgLS1wcm9kIC0tdG9rZW4gJHt7IHNlY3JldHMuVkVSQ0VMX1RPS0VOIH19CiAgICAgICAgZW52OgogICAgICAgICAgVkVSQ0VMX09SR19JRDogJHt7IHNlY3JldHMuVkVSQ0VMX09SR19JRCB9fQogICAgICAgICAgVkVSQ0VMX1BST0pFQ1RfSUQ6ICR7eyBzZWNyZXRzLlZFUkNFTF9QUk9KRUNUX0lEIH19Cg==",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/.github/workflows/deploy.yml"
+  },
+  {
+    "type": "file",
+    "path": "src/lib/upload.ts",
+    "name": "upload.ts",
+    "size": 1914,
+    "sha": "c922ae73f9b990ceaf4e816d15fc08d5f1b74c53",
+    "encoding": "base64",
+    "content": "Ly8gUG9zdGVyIGFuZCBiYW5uZXIgdXBsb2FkcyBmb3IgZXZlbnQgcGFnZXMuCi8vIEltYWdlcyBnbyB0byBDbG91ZGluYXJ5IChzZWUgUkVBRE1FKS4gS2VlcCB0aGlzIGZpbGUgc21hbGw7IFVJIGxpdmVzIGluIGNvbXBvbmVudHMvdXBsb2FkLy4KCmltcG9ydCB7IHYyIGFzIGNsb3VkaW5hcnkgfSBmcm9tICJjbG91ZGluYXJ5IjsKCmNsb3VkaW5hcnkuY29uZmlnKHsKICBjbG91ZF9uYW1lOiBwcm9jZXNzLmVudi5DTE9VRElOQVJZX0NMT1VEX05BTUUsCiAgYXBpX2tleTogcHJvY2Vzcy5lbnYuQ0xPVURJTkFSWV9BUElfS0VZLAogIGFwaV9zZWNyZXQ6IHByb2Nlc3MuZW52LkNMT1VESU5BUllfQVBJX1NFQ1JFVCwKfSk7CgpleHBvcnQgdHlwZSBVcGxvYWRSZXN1bHQgPSB7IHVybDogc3RyaW5nOyB3aWR0aDogbnVtYmVyOyBoZWlnaHQ6IG51bWJlcjsgYnl0ZXM6IG51bWJlciB9OwoKZXhwb3J0IGNvbnN0IEFMTE9XRURfVFlQRVMgPSBbImltYWdlL2pwZWciLCAiaW1hZ2UvcG5nIiwgImltYWdlL3dlYnAiXTsKCmV4cG9ydCBjbGFzcyBVcGxvYWRFcnJvciBleHRlbmRzIEVycm9yIHsKICBjb25zdHJ1Y3RvcihtZXNzYWdlOiBzdHJpbmcsIHB1YmxpYyByZWFkb25seSBjb2RlOiAidG9vX2xhcmdlIiB8ICJiYWRfdHlwZSIgfCAiZmFpbGVkIikgewogICAgc3VwZXIobWVzc2FnZSk7CiAgfQp9CgpmdW5jdGlvbiBhc3NlcnRUeXBlKG1pbWU6IHN0cmluZykgewogIGlmICghQUxMT1dFRF9UWVBFUy5pbmNsdWRlcyhtaW1lKSkgewogICAgdGhyb3cgbmV3IFVwbG9hZEVycm9yKGBVbnN1cHBvcnRlZCBmaWxlIHR5cGU6ICR7bWltZX1gLCAiYmFkX3R5cGUiKTsKICB9Cn0KCmZ1bmN0aW9uIGh1bWFuU2l6ZShieXRlczogbnVtYmVyKSB7CiAgcmV0dXJuIGAkeyhieXRlcyAvICgxMDI0ICogMTAyNCkpLnRvRml4ZWQoMSl9IE1CYDsKfQoKLy8gRm9sZGVyIHBlciBldmVudCBzbyB0aGUgY2x1YiBhY2NvdW50IHN0YXlzIHRpZHkuCmZ1bmN0aW9uIGZvbGRlckZvcihldmVudElkOiBzdHJpbmcpIHsKICByZXR1cm4gYGNhbXB1cy1ldmVudHMvJHtldmVudElkfWA7Cn0KCi8vIE5PVEU6IGNhbXB1cyBXaS1GaSBpcyBzbG93IGR1cmluZyBmZXN0OyB0aGUgY2xpZW50IGNvbXByZXNzZXMgYmVmb3JlIGNhbGxpbmcgdGhpcy4KLy8gU2VlIGlzc3VlICM5Ny4KCi8vIE1heCBwb3N0ZXIgc2l6ZSBhY2NlcHRlZCBieSB0aGUgQVBJIHJvdXRlLgpleHBvcnQgY29uc3QgTUFYX0JZVEVTID0gMiAqIDEwMjQgKiAxMDI0OwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHVwbG9hZFBvc3RlcihldmVudElkOiBzdHJpbmcsIGZpbGU6IEZpbGUpOiBQcm9taXNlPFVwbG9hZFJlc3VsdD4gewogIGFzc2VydFR5cGUoZmlsZS50eXBlKTsKICBpZiAoZmlsZS5zaXplID4gTUFYX0JZVEVTKSB7CiAgICB0aHJvdyBuZXcgVXBsb2FkRXJyb3IoYFBvc3RlciBpcyAke2h1bWFuU2l6ZShmaWxlLnNpemUpfTsgdGhlIGxpbWl0IGlzICR7aHVtYW5TaXplKE1BWF9CWVRFUyl9YCwgInRvb19sYXJnZSIpOwogIH0KICBjb25zdCBidWZmZXIgPSBCdWZmZXIuZnJvbShhd2FpdCBmaWxlLmFycmF5QnVmZmVyKCkpOwogIGNvbnN0IHJlcyA9IGF3YWl0IG5ldyBQcm9taXNlPGFueT4oKHJlc29sdmUsIHJlamVjdCkgPT4gewogICAgY2xvdWRpbmFyeS51cGxvYWRlcgogICAgICAudXBsb2FkX3N0cmVhbSh7IGZvbGRlcjogZm9sZGVyRm9yKGV2ZW50SWQpLCByZXNvdXJjZV90eXBlOiAiaW1hZ2UiIH0sIChlcnIsIG91dCkgPT4KICAgICAgICBlcnIgPyByZWplY3QoZXJyKSA6IHJlc29sdmUob3V0KSwKICAgICAgKQogICAgICAuZW5kKGJ1ZmZlcik7CiAgfSk7CiAgcmV0dXJuIHsgdXJsOiByZXMuc2VjdXJlX3VybCwgd2lkdGg6IHJlcy53aWR0aCwgaGVpZ2h0OiByZXMuaGVpZ2h0LCBieXRlczogcmVzLmJ5dGVzIH07Cn0K",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/src/lib/upload.ts"
+  },
+  {
+    "type": "file",
+    "path": "src/lib/notifications.ts",
+    "name": "notifications.ts",
+    "size": 442,
+    "sha": "18f830db454ceb659bdc0dd6fa075a56044c5a51",
+    "encoding": "base64",
+    "content": "Ly8gUHVzaCByZW1pbmRlcnMgdmlhIEZpcmViYXNlIENsb3VkIE1lc3NhZ2luZyAobW92ZWQgZnJvbSBPbmVTaWduYWwgaW4gTWFyY2gsIFBSICM4OCkuCmltcG9ydCB7IGdldE1lc3NhZ2luZyB9IGZyb20gImZpcmViYXNlLWFkbWluL21lc3NhZ2luZyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gc2VuZFJlbWluZGVyKHRva2Vuczogc3RyaW5nW10sIHRpdGxlOiBzdHJpbmcsIGJvZHk6IHN0cmluZykgewogIGlmICh0b2tlbnMubGVuZ3RoID09PSAwKSByZXR1cm4geyBzZW50OiAwIH07CiAgY29uc3QgcmVzID0gYXdhaXQgZ2V0TWVzc2FnaW5nKCkuc2VuZEVhY2hGb3JNdWx0aWNhc3QoeyB0b2tlbnMsIG5vdGlmaWNhdGlvbjogeyB0aXRsZSwgYm9keSB9IH0pOwogIHJldHVybiB7IHNlbnQ6IHJlcy5zdWNjZXNzQ291bnQsIGZhaWxlZDogcmVzLmZhaWx1cmVDb3VudCB9Owp9Cg==",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/src/lib/notifications.ts"
+  },
+  {
+    "type": "file",
+    "path": "package.json",
+    "name": "package.json",
+    "size": 540,
+    "sha": "0a634827cd6cbf06e12e367fa7044ad67f982e4d",
+    "encoding": "base64",
+    "content": "ewogICJuYW1lIjogImNhbXB1cy1ldmVudHMtYXBwIiwKICAicHJpdmF0ZSI6IHRydWUsCiAgInNjcmlwdHMiOiB7CiAgICAiZGV2IjogIm5leHQgZGV2IiwKICAgICJidWlsZCI6ICJuZXh0IGJ1aWxkIiwKICAgICJsaW50IjogIm5leHQgbGludCIsCiAgICAic2VlZCI6ICJub2RlIHNjcmlwdHMvc2VlZC5tanMiCiAgfSwKICAiZGVwZW5kZW5jaWVzIjogewogICAgIm5leHQiOiAiMTUuMS4wIiwKICAgICJyZWFjdCI6ICIxOS4wLjAiLAogICAgInJlYWN0LWRvbSI6ICIxOS4wLjAiLAogICAgImZpcmViYXNlIjogIjExLjEuMCIsCiAgICAiZmlyZWJhc2UtYWRtaW4iOiAiMTMuMC4yIiwKICAgICJjbG91ZGluYXJ5IjogIjIuNS4xIiwKICAgICJicm93c2VyLWltYWdlLWNvbXByZXNzaW9uIjogIjIuMC4yIiwKICAgICJwYXBhcGFyc2UiOiAiNS40LjEiCiAgfSwKICAiZGV2RGVwZW5kZW5jaWVzIjogewogICAgInRhaWx3aW5kY3NzIjogIjMuNC4xNyIsCiAgICAiZXNsaW50IjogIjkuMTcuMCIsCiAgICAidHlwZXNjcmlwdCI6ICI1LjcuMiIKICB9Cn0K",
+    "html_url": "https://github.com/devclub/campus-events-app/blob/main/package.json"
+  }
+]

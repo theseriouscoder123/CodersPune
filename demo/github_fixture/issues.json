@@ -1,0 +1,395 @@
+[
+  {
+    "number": 19,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/19",
+    "title": "Event cards cut off on small phones",
+    "user": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "state": "closed",
+    "body": "Text overflows on 360px screens.",
+    "assignee": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "assignees": [
+      {
+        "login": "sana",
+        "id": 9006,
+        "type": "User",
+        "html_url": "https://github.com/sana"
+      }
+    ],
+    "created_at": "2026-01-25T10:30:00Z",
+    "updated_at": "2026-01-28T13:10:00Z",
+    "closed_at": "2026-01-28T13:10:00Z",
+    "labels": []
+  },
+  {
+    "number": 47,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/47",
+    "title": "Sign-up confirmation email lands in spam",
+    "user": {
+      "login": "kabir",
+      "id": 9004,
+      "type": "User",
+      "html_url": "https://github.com/kabir"
+    },
+    "state": "closed",
+    "body": "Several people said they never got it.",
+    "assignee": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "assignees": [
+      {
+        "login": "rohan",
+        "id": 9002,
+        "type": "User",
+        "html_url": "https://github.com/rohan"
+      }
+    ],
+    "created_at": "2026-02-15T06:30:00Z",
+    "updated_at": "2026-02-27T14:30:00Z",
+    "closed_at": "2026-02-27T14:30:00Z",
+    "labels": []
+  },
+  {
+    "number": 61,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/61",
+    "title": "Add dark mode",
+    "user": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "state": "closed",
+    "body": "Nice to have.",
+    "assignee": null,
+    "assignees": [],
+    "created_at": "2026-02-19T03:30:00Z",
+    "updated_at": "2026-05-01T04:30:00Z",
+    "closed_at": "2026-05-01T04:30:00Z",
+    "labels": []
+  },
+  {
+    "number": 72,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/72",
+    "title": "RSVP count not updating live",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "closed",
+    "body": "Need a refresh to see new RSVPs.",
+    "assignee": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "assignees": [
+      {
+        "login": "arjun",
+        "id": 9005,
+        "type": "User",
+        "html_url": "https://github.com/arjun"
+      }
+    ],
+    "created_at": "2026-03-05T14:30:00Z",
+    "updated_at": "2026-03-21T12:30:00Z",
+    "closed_at": "2026-03-21T12:30:00Z",
+    "labels": []
+  },
+  {
+    "number": 97,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/97",
+    "title": "Poster uploads time out on campus Wi-Fi",
+    "user": {
+      "login": "meera",
+      "id": 9001,
+      "type": "User",
+      "html_url": "https://github.com/meera"
+    },
+    "state": "closed",
+    "body": "During fest prep half the organisers couldn't upload posters from the campus network. Uploads hang then fail.",
+    "assignee": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "assignees": [
+      {
+        "login": "rohan",
+        "id": 9002,
+        "type": "User",
+        "html_url": "https://github.com/rohan"
+      }
+    ],
+    "created_at": "2026-03-27T07:30:00Z",
+    "updated_at": "2026-10-10T12:30:00Z",
+    "closed_at": "2026-10-10T12:30:00Z",
+    "labels": []
+  },
+  {
+    "number": 104,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/104",
+    "title": "Events from last year still listed",
+    "user": {
+      "login": "kabir",
+      "id": 9004,
+      "type": "User",
+      "html_url": "https://github.com/kabir"
+    },
+    "state": "closed",
+    "body": "Archive old events?",
+    "assignee": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "assignees": [
+      {
+        "login": "neha",
+        "id": 9003,
+        "type": "User",
+        "html_url": "https://github.com/neha"
+      }
+    ],
+    "created_at": "2026-04-15T05:30:00Z",
+    "updated_at": "2026-05-18T12:50:00Z",
+    "closed_at": "2026-05-18T12:50:00Z",
+    "labels": []
+  },
+  {
+    "number": 113,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/113",
+    "title": "Typo on About page",
+    "user": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "state": "closed",
+    "body": "'Comittee'.",
+    "assignee": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "assignees": [
+      {
+        "login": "sana",
+        "id": 9006,
+        "type": "User",
+        "html_url": "https://github.com/sana"
+      }
+    ],
+    "created_at": "2026-06-02T04:30:00Z",
+    "updated_at": "2026-06-02T06:30:00Z",
+    "closed_at": "2026-06-02T06:30:00Z",
+    "labels": []
+  },
+  {
+    "number": 120,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/120",
+    "title": "Leaderboard",
+    "user": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "state": "open",
+    "body": "Points for attending events, top 10 on a leaderboard page during fest.",
+    "assignee": null,
+    "assignees": [],
+    "created_at": "2026-07-30T13:30:00Z",
+    "updated_at": "2026-07-30T13:30:00Z",
+    "closed_at": null,
+    "labels": []
+  },
+  {
+    "number": 124,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/124",
+    "title": "Map of venues",
+    "user": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "state": "open",
+    "body": "Embed campus map with venue pins.",
+    "assignee": null,
+    "assignees": [],
+    "created_at": "2026-08-05T11:30:00Z",
+    "updated_at": "2026-08-05T11:30:00Z",
+    "closed_at": null,
+    "labels": []
+  },
+  {
+    "number": 129,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/129",
+    "title": "Slow first load on event page",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "open",
+    "body": "LCP is ~4s on 4G.",
+    "assignee": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "assignees": [
+      {
+        "login": "neha",
+        "id": 9003,
+        "type": "User",
+        "html_url": "https://github.com/neha"
+      }
+    ],
+    "created_at": "2026-08-20T15:30:00Z",
+    "updated_at": "2026-08-20T15:30:00Z",
+    "closed_at": null,
+    "labels": []
+  },
+  {
+    "number": 131,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/131",
+    "title": "Duplicate reminder notifications on Android",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "open",
+    "body": "Some Android phones get the same reminder two or three times.",
+    "assignee": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "assignees": [
+      {
+        "login": "rohan",
+        "id": 9002,
+        "type": "User",
+        "html_url": "https://github.com/rohan"
+      }
+    ],
+    "created_at": "2026-09-28T16:30:00Z",
+    "updated_at": "2026-09-28T16:30:00Z",
+    "closed_at": null,
+    "labels": []
+  },
+  {
+    "number": 133,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/133",
+    "title": "Add Marathi translations",
+    "user": {
+      "login": "kabir",
+      "id": 9004,
+      "type": "User",
+      "html_url": "https://github.com/kabir"
+    },
+    "state": "open",
+    "body": "For the cultural events at least.",
+    "assignee": null,
+    "assignees": [],
+    "created_at": "2026-10-01T06:30:00Z",
+    "updated_at": "2026-10-01T06:30:00Z",
+    "closed_at": null,
+    "labels": []
+  },
+  {
+    "number": 136,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/136",
+    "title": "Organiser role management",
+    "user": {
+      "login": "meera",
+      "id": 9001,
+      "type": "User",
+      "html_url": "https://github.com/meera"
+    },
+    "state": "open",
+    "body": "Right now any signed-in user can create events.",
+    "assignee": null,
+    "assignees": [],
+    "created_at": "2026-10-05T12:30:00Z",
+    "updated_at": "2026-10-05T12:30:00Z",
+    "closed_at": null,
+    "labels": []
+  },
+  {
+    "number": 140,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/140",
+    "title": "Update README stack section",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "closed",
+    "body": "Still mentions OneSignal.",
+    "assignee": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "assignees": [
+      {
+        "login": "rohan",
+        "id": 9002,
+        "type": "User",
+        "html_url": "https://github.com/rohan"
+      }
+    ],
+    "created_at": "2026-10-15T14:30:00Z",
+    "updated_at": "2026-10-21T14:15:00Z",
+    "closed_at": "2026-10-21T14:15:00Z",
+    "labels": []
+  },
+  {
+    "number": 144,
+    "html_url": "https://github.com/devclub/campus-events-app/issues/144",
+    "title": "Fest schedule PDF download",
+    "user": {
+      "login": "kabir",
+      "id": 9004,
+      "type": "User",
+      "html_url": "https://github.com/kabir"
+    },
+    "state": "open",
+    "body": "People keep asking for a printable schedule.",
+    "assignee": null,
+    "assignees": [],
+    "created_at": "2026-10-25T05:30:00Z",
+    "updated_at": "2026-10-25T05:30:00Z",
+    "closed_at": null,
+    "labels": []
+  }
+]

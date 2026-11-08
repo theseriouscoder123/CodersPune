@@ -1,0 +1,1532 @@
+[
+  {
+    "sha": "84654aee0aa5f1e6eb89559e50e47cc9114f4068",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/84654aee0aa5f1e6eb89559e50e47cc9114f4068",
+    "author": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "commit": {
+      "message": "chore: lint fixes",
+      "author": {
+        "name": "Neha Joshi",
+        "email": "neha@users.noreply.example",
+        "date": "2026-10-30T17:00:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/page.tsx",
+        "status": "modified",
+        "additions": 29,
+        "deletions": 14
+      },
+      {
+        "filename": "src/components/RsvpButton.tsx",
+        "status": "modified",
+        "additions": 30,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "f198b08c692a7eb07c74df93e0d5a050b5005b3a",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/f198b08c692a7eb07c74df93e0d5a050b5005b3a",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "docs: readme stack section",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-10-21T14:15:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "README.md",
+        "status": "modified",
+        "additions": 40,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "ed5b3b4e1ddc20d0def97ea935f3d94b6311558e",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/ed5b3b4e1ddc20d0def97ea935f3d94b6311558e",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: tidy workflow",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-10-19T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 24,
+        "deletions": 4
+      }
+    ]
+  },
+  {
+    "sha": "36854ffc5b2d4aea8ae1593088a7507fdafdc475",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/36854ffc5b2d4aea8ae1593088a7507fdafdc475",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: revert .next cache, stale builds",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-10-11T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 33,
+        "deletions": 5
+      }
+    ]
+  },
+  {
+    "sha": "8968de56ad60fb0eb2d5f059f2b9359ce4d65502",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/8968de56ad60fb0eb2d5f059f2b9359ce4d65502",
+    "author": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "commit": {
+      "message": "fix: android reminder sound",
+      "author": {
+        "name": "Arjun Patil",
+        "email": "arjun@users.noreply.example",
+        "date": "2026-10-03T15:55:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/notifications.ts",
+        "status": "modified",
+        "additions": 40,
+        "deletions": 13
+      }
+    ]
+  },
+  {
+    "sha": "9c6a366d76b27ab5959150f967268c35ddbc7231",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/9c6a366d76b27ab5959150f967268c35ddbc7231",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: cache .next/cache",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-09-29T13:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 39,
+        "deletions": 2
+      }
+    ]
+  },
+  {
+    "sha": "cd00209b75186d91fc710f4d231c1150d5bacf47",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/cd00209b75186d91fc710f4d231c1150d5bacf47",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: remove debug echo",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-09-22T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 9,
+        "deletions": 12
+      }
+    ]
+  },
+  {
+    "sha": "922fd1d027ce5cd76ce02f6c9bd9feb053058503",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/922fd1d027ce5cd76ce02f6c9bd9feb053058503",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: rsvp csv export wip (#142)",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-09-19T13:25:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/api/rsvps/export/route.ts",
+        "status": "modified",
+        "additions": 38,
+        "deletions": 9
+      },
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 36,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "sha": "d44677bbb1bd8dc4cf3228e32ebc5f4e6d4a535b",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/d44677bbb1bd8dc4cf3228e32ebc5f4e6d4a535b",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: make deploy job required",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-09-11T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 9,
+        "deletions": 9
+      }
+    ]
+  },
+  {
+    "sha": "92858152d31d31fe34b8ebe9045105a9e3867065",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/92858152d31d31fe34b8ebe9045105a9e3867065",
+    "author": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "commit": {
+      "message": "fix: timezone on event cards",
+      "author": {
+        "name": "Neha Joshi",
+        "email": "neha@users.noreply.example",
+        "date": "2026-09-08T15:05:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/components/PosterCard.tsx",
+        "status": "modified",
+        "additions": 6,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "3be4a60c31316ab99a640144def3577d0cc3f219",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/3be4a60c31316ab99a640144def3577d0cc3f219",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: fix deploy after vercel token rotation",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-09-03T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 28,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "sha": "00fb0e387b104e325dda8296fdc424cda1321120",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/00fb0e387b104e325dda8296fdc424cda1321120",
+    "author": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "commit": {
+      "message": "ci: add lint to deploy workflow comment",
+      "author": {
+        "name": "Neha Joshi",
+        "email": "neha@users.noreply.example",
+        "date": "2026-09-02T14:10:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 17,
+        "deletions": 9
+      }
+    ]
+  },
+  {
+    "sha": "1ad29612f6d174a21a1fc605cbcf455b26f5cfb7",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/1ad29612f6d174a21a1fc605cbcf455b26f5cfb7",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: clean up job names",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-08-24T17:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 22,
+        "deletions": 15
+      }
+    ]
+  },
+  {
+    "sha": "3ea46b2054260071c97db6a7d3281bd6ab477098",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/3ea46b2054260071c97db6a7d3281bd6ab477098",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: add fcm env",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-08-15T17:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 24,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "2931ce07166c1b2d520fa504f3eff800aa10c1ee",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/2931ce07166c1b2d520fa504f3eff800aa10c1ee",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: leaderboard skeleton (#120)",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-08-12T13:40:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/leaderboard/page.tsx",
+        "status": "modified",
+        "additions": 21,
+        "deletions": 10
+      }
+    ]
+  },
+  {
+    "sha": "e1056051df383eebb37d21e02e50b28ef498f7e8",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/e1056051df383eebb37d21e02e50b28ef498f7e8",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: drop old onesignal env",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-08-06T13:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 16,
+        "deletions": 5
+      }
+    ]
+  },
+  {
+    "sha": "810460498eaa098b6fd81377f5029b989e3e1c41",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/810460498eaa098b6fd81377f5029b989e3e1c41",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: move to node 20",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-07-29T13:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 33,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "sha": "40ed7f06e3902d575436bcc2f4b5cb4693876e2b",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/40ed7f06e3902d575436bcc2f4b5cb4693876e2b",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "chore: rotate firebase server key",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-07-22T16:10:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".env.example",
+        "status": "modified",
+        "additions": 25,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "sha": "ec2be8162a2ed205190c852a90156a80fb4bd090",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/ec2be8162a2ed205190c852a90156a80fb4bd090",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: add build env for auth domain",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-07-21T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 22,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "sha": "6c9c788d29f8cd4cc51a4df17ba0322d08f4a383",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/6c9c788d29f8cd4cc51a4df17ba0322d08f4a383",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: fix lint step exit code",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-07-13T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 13,
+        "deletions": 5
+      }
+    ]
+  },
+  {
+    "sha": "4815dbeb00f85dadffa0e8299641106688a1ffed",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/4815dbeb00f85dadffa0e8299641106688a1ffed",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: fest week freeze note",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-07-01T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 39,
+        "deletions": 13
+      }
+    ]
+  },
+  {
+    "sha": "220253d1633e53e8bd7f40462373c0e13142d0a3",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/220253d1633e53e8bd7f40462373c0e13142d0a3",
+    "author": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "commit": {
+      "message": "chore: bump next",
+      "author": {
+        "name": "Arjun Patil",
+        "email": "arjun@users.noreply.example",
+        "date": "2026-06-30T14:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 3
+      }
+    ]
+  },
+  {
+    "sha": "bd3a98518503bc572f5823400880805bc4803763",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/bd3a98518503bc572f5823400880805bc4803763",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: use npm ci",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-06-25T17:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 22,
+        "deletions": 6
+      }
+    ]
+  },
+  {
+    "sha": "030b5c2c43b58a302e5836a13b034f791dde57f8",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/030b5c2c43b58a302e5836a13b034f791dde57f8",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: unpin vercel cli again",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-06-16T12:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 40,
+        "deletions": 7
+      }
+    ]
+  },
+  {
+    "sha": "b39d784fcdfd31778f0b24f9a4f9a861f63c7aa6",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/b39d784fcdfd31778f0b24f9a4f9a861f63c7aa6",
+    "author": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "commit": {
+      "message": "ci: fix typo in deploy step name",
+      "author": {
+        "name": "Neha Joshi",
+        "email": "neha@users.noreply.example",
+        "date": "2026-06-14T15:40:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "4f3b991276786d904fd753eb3ced176463feca0b",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/4f3b991276786d904fd753eb3ced176463feca0b",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: pin vercel cli",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-06-07T14:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 20,
+        "deletions": 4
+      }
+    ]
+  },
+  {
+    "sha": "70ca2bbe72ea8ee44e8425cb15114001ded76f79",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/70ca2bbe72ea8ee44e8425cb15114001ded76f79",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: revert docs-only skip, it broke tags",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-05-29T12:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 34,
+        "deletions": 9
+      }
+    ]
+  },
+  {
+    "sha": "81c57965adf1cf2fa935cfe36201bca8e0ca105e",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/81c57965adf1cf2fa935cfe36201bca8e0ca105e",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: skip deploy on docs-only changes",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-05-18T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 11
+      }
+    ]
+  },
+  {
+    "sha": "5629bcba07cd3f756fbe0c74d8a23ddc71a3e4da",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/5629bcba07cd3f756fbe0c74d8a23ddc71a3e4da",
+    "author": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "commit": {
+      "message": "feat: event categories filter",
+      "author": {
+        "name": "Neha Joshi",
+        "email": "neha@users.noreply.example",
+        "date": "2026-05-18T12:50:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/page.tsx",
+        "status": "modified",
+        "additions": 22,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "sha": "edfc56d1362f9a691ca9a2cc8f8183d3ea229d63",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/edfc56d1362f9a691ca9a2cc8f8183d3ea229d63",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: fix secrets name typo",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-05-09T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 34,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "sha": "ca92cc3e38a35e70b1db24b731c798e112defa41",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/ca92cc3e38a35e70b1db24b731c798e112defa41",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: print build size",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-05-02T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 40,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "sha": "a6d5ed033ae00882cb824f82eca186a73450a56d",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/a6d5ed033ae00882cb824f82eca186a73450a56d",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: timeout after 15 min",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-04-23T12:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 28,
+        "deletions": 9
+      }
+    ]
+  },
+  {
+    "sha": "43d3b33f7df892ec2cede0cbeeb8c23e68102055",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/43d3b33f7df892ec2cede0cbeeb8c23e68102055",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: fix missing VERCEL_ORG_ID",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-04-13T12:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 33,
+        "deletions": 4
+      }
+    ]
+  },
+  {
+    "sha": "0253352b215dc6469c5ad700af52dae8799e0822",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/0253352b215dc6469c5ad700af52dae8799e0822",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "fix: upload timeout message",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-04-10T18:20:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/upload.ts",
+        "status": "modified",
+        "additions": 4,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "sha": "879a022e8ad59e17f2a05131ff45ede987af9727",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/879a022e8ad59e17f2a05131ff45ede987af9727",
+    "author": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "commit": {
+      "message": "style: fest theme colours",
+      "author": {
+        "name": "Sana Shaikh",
+        "email": "sana@users.noreply.example",
+        "date": "2026-04-06T13:45:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/globals.css",
+        "status": "modified",
+        "additions": 24,
+        "deletions": 2
+      }
+    ]
+  },
+  {
+    "sha": "4e93aa95be81775401a9d728026948b1a7430924",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/4e93aa95be81775401a9d728026948b1a7430924",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: add workflow_dispatch",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-04-04T14:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 14,
+        "deletions": 10
+      }
+    ]
+  },
+  {
+    "sha": "10e65bff0223d4a3d54ccfbb3f5050f3cdb08492",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/10e65bff0223d4a3d54ccfbb3f5050f3cdb08492",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: compress posters client-side before upload (#97)",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-03-29T15:00:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/components/upload/PosterInput.tsx",
+        "status": "modified",
+        "additions": 23,
+        "deletions": 14
+      },
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 27,
+        "deletions": 12
+      }
+    ]
+  },
+  {
+    "sha": "6434f4f7965c8b6dfa72268aae0d4378c52046eb",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/6434f4f7965c8b6dfa72268aae0d4378c52046eb",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: deploy only from main",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-03-25T12:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 27,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "732cd81587e61f1243201b3399693130f0a3601c",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/732cd81587e61f1243201b3399693130f0a3601c",
+    "author": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "commit": {
+      "message": "fix: RSVP double click",
+      "author": {
+        "name": "Arjun Patil",
+        "email": "arjun@users.noreply.example",
+        "date": "2026-03-21T12:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/components/RsvpButton.tsx",
+        "status": "modified",
+        "additions": 20,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "bdc37323e8a1a2d2a0df513fc62ead341f06bf87",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/bdc37323e8a1a2d2a0df513fc62ead341f06bf87",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: bump checkout action",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-03-17T13:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 11,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "sha": "59fbe25a09b91025a0bf509d5db70a34ece268d1",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/59fbe25a09b91025a0bf509d5db70a34ece268d1",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: move push reminders to FCM (#88)",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-03-14T16:40:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/notifications.ts",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 4
+      },
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 37,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "e818c14a0ecdf5f526b740da8b7fedf2c6e4ff10",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/e818c14a0ecdf5f526b740da8b7fedf2c6e4ff10",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: retry vercel deploy once",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-03-09T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 39,
+        "deletions": 2
+      }
+    ]
+  },
+  {
+    "sha": "addea76049c1fa951e48fd9c98747e76b38057c8",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/addea76049c1fa951e48fd9c98747e76b38057c8",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: onesignal push reminders",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-03-03T15:15:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/notifications.ts",
+        "status": "modified",
+        "additions": 32,
+        "deletions": 12
+      }
+    ]
+  },
+  {
+    "sha": "fa46ba470941576ce34eb1625d640538fcaef895",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/fa46ba470941576ce34eb1625d640538fcaef895",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: pass firebase env to build",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-02-27T13:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 8,
+        "deletions": 7
+      }
+    ]
+  },
+  {
+    "sha": "94e78a6bb0b6741bb7668b8397b54055e196c750",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/94e78a6bb0b6741bb7668b8397b54055e196c750",
+    "author": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "commit": {
+      "message": "docs: setup guide",
+      "author": {
+        "name": "Neha Joshi",
+        "email": "neha@users.noreply.example",
+        "date": "2026-02-24T14:00:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "docs/setup.md",
+        "status": "modified",
+        "additions": 39,
+        "deletions": 11
+      }
+    ]
+  },
+  {
+    "sha": "e070a579dcf7fb2036f3c8e4aa3797f1f51c83a1",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/e070a579dcf7fb2036f3c8e4aa3797f1f51c83a1",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: poster uploads to cloudinary",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-02-20T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/upload.ts",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 11
+      },
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 32,
+        "deletions": 13
+      }
+    ]
+  },
+  {
+    "sha": "ea868b548f899434d4eaa4ba5ca4fab61f80291a",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/ea868b548f899434d4eaa4ba5ca4fab61f80291a",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: run lint before build",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-02-17T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 12
+      }
+    ]
+  },
+  {
+    "sha": "c3929ae7ca8de18128bb122ec844fb1ea6909d9a",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/c3929ae7ca8de18128bb122ec844fb1ea6909d9a",
+    "author": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "commit": {
+      "message": "feat: RSVP button",
+      "author": {
+        "name": "Arjun Patil",
+        "email": "arjun@users.noreply.example",
+        "date": "2026-02-11T11:35:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/components/RsvpButton.tsx",
+        "status": "modified",
+        "additions": 22,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "sha": "09238fb8797f74ff38bc029ff8dffa170b886762",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/09238fb8797f74ff38bc029ff8dffa170b886762",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "refactor: replace supabase auth with firebase auth (#41)",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-02-09T14:50:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/auth.ts",
+        "status": "modified",
+        "additions": 19,
+        "deletions": 1
+      },
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 5,
+        "deletions": 4
+      }
+    ]
+  },
+  {
+    "sha": "f3ddb4fd69f95ab61559d3d127c6ada062115e9a",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/f3ddb4fd69f95ab61559d3d127c6ada062115e9a",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: fix node version",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-02-07T15:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 9,
+        "deletions": 13
+      }
+    ]
+  },
+  {
+    "sha": "3005dc4d627ebb0c54ab032e03b018cb5cb30960",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/3005dc4d627ebb0c54ab032e03b018cb5cb30960",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: cache npm in deploy",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-01-30T16:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 30,
+        "deletions": 10
+      }
+    ]
+  },
+  {
+    "sha": "d296c52ced9031d608d26d1733ec411f617ca291",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/d296c52ced9031d608d26d1733ec411f617ca291",
+    "author": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "commit": {
+      "message": "style: poster card layout",
+      "author": {
+        "name": "Sana Shaikh",
+        "email": "sana@users.noreply.example",
+        "date": "2026-01-28T13:10:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/components/PosterCard.tsx",
+        "status": "modified",
+        "additions": 5,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "e31663634097c48bc139135b20b07e687c0b3356",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/e31663634097c48bc139135b20b07e687c0b3356",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "ci: add deploy workflow for Vercel",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-01-21T17:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/deploy.yml",
+        "status": "modified",
+        "additions": 16,
+        "deletions": 4
+      }
+    ]
+  },
+  {
+    "sha": "3330dc1f718f354b966676876961393e377bbd4e",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/3330dc1f718f354b966676876961393e377bbd4e",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: supabase auth sign-in",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-01-19T16:45:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/lib/auth.ts",
+        "status": "modified",
+        "additions": 5,
+        "deletions": 2
+      },
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 28,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "sha": "5b29be06f81031d14716820c299efd0e406cc449",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/5b29be06f81031d14716820c299efd0e406cc449",
+    "author": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "commit": {
+      "message": "feat: event detail page",
+      "author": {
+        "name": "Arjun Patil",
+        "email": "arjun@users.noreply.example",
+        "date": "2026-01-16T13:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/events/[id]/page.tsx",
+        "status": "modified",
+        "additions": 6,
+        "deletions": 6
+      }
+    ]
+  },
+  {
+    "sha": "79b2ac1566dd485485df11bd344579a71b2376f8",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/79b2ac1566dd485485df11bd344579a71b2376f8",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "feat: event list page",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-01-13T16:00:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "src/app/page.tsx",
+        "status": "modified",
+        "additions": 26,
+        "deletions": 8
+      }
+    ]
+  },
+  {
+    "sha": "6a5f5862cf02382ac44d10177a193a69fb0cbdca",
+    "html_url": "https://github.com/devclub/campus-events-app/commit/6a5f5862cf02382ac44d10177a193a69fb0cbdca",
+    "author": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "commit": {
+      "message": "init: next.js app with tailwind",
+      "author": {
+        "name": "Rohan Deshpande",
+        "email": "rohan@users.noreply.example",
+        "date": "2026-01-12T14:30:00Z"
+      }
+    },
+    "files": [
+      {
+        "filename": "package.json",
+        "status": "modified",
+        "additions": 18,
+        "deletions": 10
+      },
+      {
+        "filename": "README.md",
+        "status": "modified",
+        "additions": 40,
+        "deletions": 8
+      }
+    ]
+  }
+]

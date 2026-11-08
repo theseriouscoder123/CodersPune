@@ -1,0 +1,303 @@
+[
+  {
+    "number": 12,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/12",
+    "title": "Event list page",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "First version of the event list. Static data for now.",
+    "created_at": "2026-01-13T15:30:00Z",
+    "updated_at": "2026-01-14T04:30:00Z",
+    "closed_at": "2026-01-14T04:30:00Z",
+    "merged_at": "2026-01-14T04:30:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 23,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/23",
+    "title": "Supabase auth sign-in",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "Adds email sign-in with Supabase auth, as discussed in #dev. Keeps things simple for the first release.",
+    "created_at": "2026-01-19T16:30:00Z",
+    "updated_at": "2026-01-20T04:00:00Z",
+    "closed_at": "2026-01-20T04:00:00Z",
+    "merged_at": "2026-01-20T04:00:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 34,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/34",
+    "title": "Switch styling to Tailwind",
+    "user": {
+      "login": "sana",
+      "id": 9006,
+      "type": "User",
+      "html_url": "https://github.com/sana"
+    },
+    "state": "closed",
+    "body": "Moving from CSS modules to Tailwind so poster cards and the fest theme are quicker to iterate on. Agreed in Saturday's call.",
+    "created_at": "2026-01-27T12:30:00Z",
+    "updated_at": "2026-01-29T05:30:00Z",
+    "closed_at": "2026-01-29T05:30:00Z",
+    "merged_at": "2026-01-29T05:30:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 41,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/41",
+    "title": "Replace Supabase Auth with Firebase Auth",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "Replace Supabase Auth with Firebase Auth — we're already using Firebase for Firestore, one console instead of two. This reverses the January choice to use Supabase auth. Existing test accounts need to sign up again.",
+    "created_at": "2026-02-08T13:30:00Z",
+    "updated_at": "2026-02-09T14:50:00Z",
+    "closed_at": "2026-02-09T14:50:00Z",
+    "merged_at": "2026-02-09T14:50:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 55,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/55",
+    "title": "RSVP button",
+    "user": {
+      "login": "arjun",
+      "id": 9005,
+      "type": "User",
+      "html_url": "https://github.com/arjun"
+    },
+    "state": "closed",
+    "body": "RSVP toggle on the event page. Stores attendees in Firestore.",
+    "created_at": "2026-02-10T11:30:00Z",
+    "updated_at": "2026-02-11T11:35:00Z",
+    "closed_at": "2026-02-11T11:35:00Z",
+    "merged_at": "2026-02-11T11:35:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 63,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/63",
+    "title": "Poster uploads",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "Organisers can upload a poster per event. Files go to Cloudinary under the club account (free plan).",
+    "created_at": "2026-02-19T14:30:00Z",
+    "updated_at": "2026-02-20T15:30:00Z",
+    "closed_at": "2026-02-20T15:30:00Z",
+    "merged_at": "2026-02-20T15:30:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 88,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/88",
+    "title": "Move push reminders from OneSignal to FCM",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "Switching push reminders to Firebase Cloud Messaging. The OneSignal free plan caps us at the device limit before fest, and we'd blow past it on day one. FCM is free and we already have Firebase. Removes the OneSignal SDK.",
+    "created_at": "2026-03-12T15:30:00Z",
+    "updated_at": "2026-03-14T16:40:00Z",
+    "closed_at": "2026-03-14T16:40:00Z",
+    "merged_at": "2026-03-14T16:40:00Z",
+    "labels": [
+      {
+        "name": "notifications"
+      }
+    ],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 95,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/95",
+    "title": "Compress posters client-side",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "Workaround for #97: compress images in the browser (browser-image-compression) before upload, because uploads time out on campus Wi-Fi during fest.",
+    "created_at": "2026-03-28T13:30:00Z",
+    "updated_at": "2026-03-29T15:00:00Z",
+    "closed_at": "2026-03-29T15:00:00Z",
+    "merged_at": "2026-03-29T15:00:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 110,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/110",
+    "title": "Event categories filter",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "closed",
+    "body": "Filter chips for tech / cultural / sports.",
+    "created_at": "2026-05-17T12:30:00Z",
+    "updated_at": "2026-05-18T12:50:00Z",
+    "closed_at": "2026-05-18T12:50:00Z",
+    "merged_at": "2026-05-18T12:50:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 126,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/126",
+    "title": "Leaderboard skeleton",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "closed",
+    "body": "Empty leaderboard page behind a flag. See #120.",
+    "created_at": "2026-08-11T13:30:00Z",
+    "updated_at": "2026-08-12T13:40:00Z",
+    "closed_at": "2026-08-12T13:40:00Z",
+    "merged_at": "2026-08-12T13:40:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 138,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/138",
+    "title": "Fix timezone on event cards",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "closed",
+    "body": "Cards showed UTC times. Now uses Asia/Kolkata.",
+    "created_at": "2026-09-07T14:30:00Z",
+    "updated_at": "2026-09-08T15:05:00Z",
+    "closed_at": "2026-09-08T15:05:00Z",
+    "merged_at": "2026-09-08T15:05:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 142,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/142",
+    "title": "RSVP CSV export for organisers",
+    "user": {
+      "login": "rohan",
+      "id": 9002,
+      "type": "User",
+      "html_url": "https://github.com/rohan"
+    },
+    "state": "open",
+    "body": "Adds an organiser-only CSV export of RSVPs (name, roll number, timestamp) using papaparse. Still WIP: needs the faculty coordinator's sign-off because it exports student data. Requested review from Dr. Rao via Meera.",
+    "created_at": "2026-09-19T13:00:00Z",
+    "updated_at": "2026-09-19T13:00:00Z",
+    "closed_at": null,
+    "merged_at": null,
+    "labels": [
+      {
+        "name": "wip"
+      },
+      {
+        "name": "needs-review"
+      }
+    ],
+    "requested_reviewers": [
+      {
+        "login": "meera"
+      }
+    ],
+    "base": {
+      "ref": "main"
+    }
+  },
+  {
+    "number": 147,
+    "html_url": "https://github.com/devclub/campus-events-app/pull/147",
+    "title": "Lint fixes",
+    "user": {
+      "login": "neha",
+      "id": 9003,
+      "type": "User",
+      "html_url": "https://github.com/neha"
+    },
+    "state": "closed",
+    "body": "No functional changes.",
+    "created_at": "2026-10-30T16:30:00Z",
+    "updated_at": "2026-10-30T17:00:00Z",
+    "closed_at": "2026-10-30T17:00:00Z",
+    "merged_at": "2026-10-30T17:00:00Z",
+    "labels": [],
+    "requested_reviewers": [],
+    "base": {
+      "ref": "main"
+    }
+  }
+]
