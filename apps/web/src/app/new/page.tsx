@@ -174,7 +174,7 @@ export default function NewWorkspacePage() {
             <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => setPeople((ps) => [...ps, { name: "", handle: "", role: "member" }])} disabled={people.length >= 12}>
               <Plus className="h-4 w-4" /> Add member
             </Button>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(Object.keys(ROLE_HELP) as Role[]).map((r) => (
                 <div key={r} className={`rounded-xl px-3 py-2 text-xs ring-1 ring-line ${roleCount(r) === 1 || r === "member" ? "bg-card" : "bg-amber-soft/70"}`}>
                   <b className="capitalize text-ink">{r}</b> <span className="text-muted">· {ROLE_HELP[r]}</span>

@@ -205,7 +205,7 @@ function Review() {
       )}
       {tab === "missing" && isReviewer && <QuestionsBar workspaceId={ws.id} />}
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <ul className="stagger scroll-quiet space-y-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-auto lg:pr-1" data-testid="claim-list">
           {ledger.loading && <SkeletonList rows={6} />}
           {ledger.error && <Alert tone="error">{ledger.error}</Alert>}
@@ -378,7 +378,7 @@ function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
         {c.conflict && !c.conflict.resolved && (
           <div className="mt-4 rounded-xl border border-conflicting/25 bg-conflicting-soft/60 p-4">
             <p className="text-sm font-semibold text-conflicting">Sources disagree. Which is current?</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[c, ...c.conflict.others].map((o) => (
                 <div key={o.id} className="flex flex-col justify-between gap-3 rounded-xl border border-line bg-card p-3">
                   <p className="text-sm text-ink">{o.text}</p>

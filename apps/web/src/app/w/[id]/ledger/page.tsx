@@ -61,7 +61,7 @@ export default function LedgerPage() {
       <Modal open={runOpen} onClose={() => setRunOpen(false)} label="Re-run the pipeline">
         <h2 className="font-display text-xl font-semibold text-ink">Run the pipeline again</h2>
         <p className="mt-1 text-sm text-muted">Both options keep every claim you&apos;ve reviewed. Takes a few minutes and uses the AI quota.</p>
-        <div className="mt-4 grid gap-2">
+        <div className="mt-4 grid grid-cols-1 gap-2">
           <button onClick={() => rerun("refresh")} className="lift rounded-xl border border-line bg-card p-4 text-left" data-testid="run-refresh">
             <p className="font-semibold text-ink">Refresh from sources <span className="ml-1 rounded-full bg-verified-soft px-2 py-0.5 text-[11px] text-verified">recommended</span></p>
             <p className="mt-1 text-sm text-muted">Re-fetches the repository, reads only new activity since the last run, and adds to the ledger. Existing claims stay.</p>
@@ -103,7 +103,7 @@ export default function LedgerPage() {
         </div>
       )}
 
-      <div className="mt-9 grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="mt-9 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
         <section>
           <h2 className="font-display text-xl font-semibold text-ink">Decision timeline</h2>
           <p className="text-sm text-muted">In date order. A reversed decision stays visible and is marked superseded, not treated as a contradiction.</p>

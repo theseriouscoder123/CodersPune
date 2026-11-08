@@ -85,12 +85,12 @@ export default function SourcesPage() {
 
       <div className="mt-7">
         {error && <Alert tone="error">Couldn&apos;t load sources: {error}</Alert>}
-        {loading && <div className="grid gap-4 sm:grid-cols-2"><SkeletonList rows={2} /><SkeletonList rows={2} /></div>}
+        {loading && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><SkeletonList rows={2} /><SkeletonList rows={2} /></div>}
         {sources && sources.length === 0 && (
           <EmptyState icon={<GitBranch className="h-5 w-5" />} title="No sources yet">Connect a GitHub repository, upload notes or import a chat export to begin.</EmptyState>
         )}
         {sources && sources.length > 0 && (
-          <div className="stagger grid gap-4 md:grid-cols-2">{sources.map((s) => <SourceCard key={s.id} s={s} />)}</div>
+          <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-2">{sources.map((s) => <SourceCard key={s.id} s={s} />)}</div>
         )}
       </div>
 

@@ -8,6 +8,7 @@ Trust properties:
 
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -38,6 +39,24 @@ Rules:
 - If the items answer only part of the question, give that part (with citations), say what is not covered, and set
   answered=false. If they don't help at all, set answered=false with no citations.
 - Keep the answer short (at most 4 sentences or 5 bullet points), plain English. No personal contact details."""
+
+
+_INLINE_REF = re.compile(r"[\[(]?\b(I\d{1,2})\b(?:\s*[,;]\s*\b(I\d{1,2})\b)*[\])]?")
+_REF_ID = re.compile(r"\bI\d{1,2}\b")
+
+
+def _renumber(answer: str, local_ids: list[str]) -> str:
+    """Replace the model's internal item ids (I7, [I1, I3]) with [1], [2] matching the order of the citation list.
+    Ids that aren't valid citations are dropped so no meaningless marker reaches the user."""
+    order = {lid: n for n, lid in enumerate(local_ids, start=1)}
+
+    def sub(m: re.Match[str]) -> str:
+        nums = sorted({order[i] for i in _REF_ID.findall(m.group(0)) if i in order})
+        return "".join(f"[{n}]" for n in nums)
+
+    out = _INLINE_REF.sub(sub, answer)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    return re.sub(r"[ \t]+([.,;:])", r"\1", out).strip()
 
 
 class AskIn(BaseModel):
@@ -101,11 +120,14 @@ def ask(handover_id: uuid.UUID, body: AskIn, request: Request, db: Session = Dep
         raise HTTPException(503, exc.user_message) from exc
 
     norm = {c.strip().strip("[]").upper() for c in res.cited}
-    cited = [it for lid, it in local.items() if lid in norm]
+    # Keep citations in the order the answer mentions them, then any cited-but-unmentioned ones.
+    mentioned = [i for i in dict.fromkeys(_REF_ID.findall(res.answer or "")) if i in norm and i in local]
+    cited_ids = mentioned + [lid for lid in local if lid in norm and lid not in mentioned]
+    cited = [local[lid] for lid in cited_ids]
     fallback = f"The approved handover doesn't cover this. Ask {reviewer} (reviewer) or the leaver."
     if not res.answer or not cited:  # uncited answers are never shown as fact
         return {"answered": False, "partial": False, "answer": None, "citations": [], "fallback": fallback}
-    answer = res.answer.strip()
+    answer = _renumber(res.answer.strip(), cited_ids)
     if not ctx.is_reviewer:
         answer = mask_pii(answer)
     partial = not res.answered  # cited, but the handover only covers part of the question

@@ -98,7 +98,7 @@ export default function HealthPage() {
                   <span className="text-muted">{r.started_at?.slice(0, 16).replace("T", " ")} · {fmtDur(r.duration_s)}</span>
                 </div>
                 {r.error && <p className="mt-2 text-sm text-missing">{r.error}</p>}
-                <ol className="mt-3 grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
+                <ol className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
                   {r.steps.map((s) => (
                     <li key={s.step} className="flex gap-2">
                       <span className={s.status === "done" ? "text-verified" : s.status === "failed" ? "text-missing" : "text-muted"}>{s.status === "done" ? "✓" : s.status === "failed" ? "✕" : "○"}</span>

@@ -130,9 +130,9 @@ function PreviewInner() {
         </div>
       </Modal>
 
-      {pv.loading && <div className="mt-7 grid gap-6 lg:grid-cols-2"><SkeletonList rows={4} /><SkeletonList rows={2} /></div>}
+      {pv.loading && <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-2"><SkeletonList rows={4} /><SkeletonList rows={2} /></div>}
       {pv.data && (
-        <div className="mt-7 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
           <section>
             <h2 className="flex items-center gap-2 font-semibold text-ink"><Eye className="h-4 w-4 text-verified" /> {name} will see <span className="text-muted">({pv.data.visible.length})</span></h2>
             <div className="stagger mt-3 space-y-5">

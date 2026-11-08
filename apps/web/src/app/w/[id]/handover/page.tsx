@@ -124,7 +124,7 @@ function HandoverInner() {
 
           {hid && <AskHandover handoverId={hid} workspaceId={ws.id} onOpenEvidence={openEvidence} />}
 
-          <div className="stagger mt-6 grid gap-5 lg:grid-cols-2 print:block print:space-y-4" data-testid="handover-sections">
+          <div className="stagger mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2 print:block print:space-y-4" data-testid="handover-sections">
             {v.sections.map((s) => {
               const meta = SECTION_META[s.key];
               return (
@@ -137,7 +137,7 @@ function HandoverInner() {
                       <p className="text-xs text-muted">{s.help}</p>
                     </div>
                   </div>
-                  <ul className={`mt-4 grid gap-2 ${s.key === "start_here" ? "md:grid-cols-2" : ""}`}>
+                  <ul className={`mt-4 grid grid-cols-1 gap-2 ${s.key === "start_here" ? "md:grid-cols-2" : ""}`}>
                     {s.items.length === 0 && <li className="text-sm text-muted">Nothing here.</li>}
                     {s.items.map((it, i) => it.restricted ? (
                       <li key={`r${i}`} className="flex items-center gap-2 rounded-xl border border-dashed border-line-2 bg-paper/60 px-3 py-2.5 text-sm italic text-muted"><Lock className="h-3.5 w-3.5" /> {it.text}</li>

@@ -98,7 +98,7 @@ export default function Home() {
           <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">How it works</p>
             <h2 className="font-display mt-2 text-3xl font-semibold text-ink">Five steps, each with a clear owner</h2>
-            <ol className="relative mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            <ol className="relative mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
               <span className="animate-draw absolute left-6 right-6 top-6 hidden h-px bg-line-2 lg:block" aria-hidden />
               {STEPS.map((s, i) => (
                 <li key={s.name} className="relative">
@@ -115,7 +115,7 @@ export default function Home() {
         </section>
 
         <section id="trust" className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.4fr]">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Evidence, not guesswork</p>
               <h2 className="font-display mt-2 text-3xl font-semibold text-ink">Five statuses, set by rules</h2>
@@ -127,7 +127,7 @@ export default function Home() {
                 {(["verified", "supported", "inferred", "conflicting", "missing"] as Status[]).map((s) => <StatusChip key={s} status={s} size="md" />)}
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {PRINCIPLES.map((p) => (
                 <div key={p.title} className="lift rounded-2xl border border-line bg-card p-5">
                   <p.Icon className="h-5 w-5 text-amber-ink" strokeWidth={1.8} />
