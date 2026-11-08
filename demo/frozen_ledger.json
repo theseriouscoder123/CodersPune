@@ -1,0 +1,2144 @@
+{
+ "note": "Real output of a Baton pipeline run on the SYNTHETIC demo dataset, frozen so judges never wait on an LLM.",
+ "frozen_at": "2026-11-08T13:07:27.476166+00:00",
+ "run": {
+  "started_at": "2026-11-08T12:57:45.415315+00:00",
+  "finished_at": "2026-11-08T13:04:03.136824+00:00",
+  "steps": [
+   {
+    "step": "conflicts",
+    "message": "1 conflicts, 1 reversed decisions",
+    "progress": 1,
+    "total": 1
+   },
+   {
+    "step": "extract",
+    "message": "60 claims from 7 batches (9 duplicates merged)",
+    "progress": 7,
+    "total": 7
+   },
+   {
+    "step": "cover",
+    "message": "3 of 7 items found in sources",
+    "progress": 7,
+    "total": 7
+   },
+   {
+    "step": "match",
+    "message": "76 of 76 quotes found in their cited source",
+    "progress": 76,
+    "total": 76
+   },
+   {
+    "step": "verify",
+    "message": "76/76 evidence items checked",
+    "progress": 76,
+    "total": 76
+   },
+   {
+    "step": "ingest",
+    "message": "4 sources ready",
+    "progress": 4,
+    "total": 4
+   },
+   {
+    "step": "checklist",
+    "message": "9 expected items from the repository",
+    "progress": 9,
+    "total": 9
+   },
+   {
+    "step": "status",
+    "message": "69 claims graded by deterministic rules",
+    "progress": 69,
+    "total": 69
+   },
+   {
+    "step": "handover",
+    "message": "Handover ready for review",
+    "progress": 1,
+    "total": 1
+   }
+  ]
+ },
+ "claims": [
+  {
+   "key": "c0",
+   "type": "decision",
+   "text": "The library browser-image-compression was chosen as a workaround to compress images before upload because uploads time out on campus Wi-Fi during the fest.",
+   "subject_key": "dependency.browser_image_compression",
+   "value": null,
+   "occurred_at": "2026-03-29T15:00:00+00:00",
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "browser-image-compression",
+     "chose",
+     "switch",
+     "because"
+    ],
+    "signal": "browser-image-compression is a runtime dependency",
+    "question": "Why browser-image-compression was chosen"
+   },
+   "evidence": [
+    {
+     "chunk": "9cc27fb63ea72d52a181",
+     "quote": "Workaround for #97: compress images in the browser (browser-image-compression) before upload, because uploads time out on campus Wi-Fi during fest.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 95,
+     "match_end": 242,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states browser-image-compression was used as a workaround to prevent upload timeouts on campus Wi-Fi.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c1",
+   "type": "ownership",
+   "text": "Rohan is effectively the only maintainer of .github/workflows/deploy.yml (31 of 33 commits)",
+   "subject_key": "deploy.owner",
+   "value": null,
+   "occurred_at": "2026-10-30T17:00:00+00:00",
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [],
+    "signal": "Rohan authored at least 80% of commits to .github/workflows/deploy.yml",
+    "question": "Rohan is effectively the only maintainer of .github/workflows/deploy.yml (31 of 33 commits)"
+   },
+   "evidence": [
+    {
+     "chunk": "a1635d0d407732b1e658",
+     "quote": ".github/workflows/deploy.yml: 33 commits; rohan 31, neha 2",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 53,
+     "match_end": 111,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt shows rohan made 31 out of 33 commits to .github/workflows/deploy.yml, confirming the claim.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c2",
+   "type": "decision",
+   "text": "Firebase Auth was chosen because the team was already using Firebase for Firestore and wanted to manage only one console instead of two.",
+   "subject_key": "dependency.firebase",
+   "value": null,
+   "occurred_at": "2026-02-09T14:50:00+00:00",
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "firebase",
+     "chose",
+     "switch",
+     "because"
+    ],
+    "signal": "firebase is a runtime dependency",
+    "question": "Why firebase was chosen"
+   },
+   "evidence": [
+    {
+     "chunk": "3790744568ca2f7bf816",
+     "quote": "Replace Supabase Auth with Firebase Auth — we're already using Firebase for Firestore, one console instead of two.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 107,
+     "match_end": 221,
+     "verdict": "supports",
+     "verdict_reason": "The excerpt explicitly states Firebase Auth was chosen because they already use Firebase for Firestore and want one console instead of two.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c3",
+   "type": "contact",
+   "text": "Who owns the Firebase account/project and its billing",
+   "subject_key": "firebase.owner",
+   "value": null,
+   "occurred_at": null,
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "Firebase",
+     "owner",
+     "account",
+     "billing"
+    ],
+    "signal": "FIREBASE_PROJECT_ID, FIREBASE_SERVER_KEY, FIREBASE_BILLING_ALERT_EMAIL in .env.example",
+    "question": "Who owns the Firebase account/project and its billing"
+   },
+   "evidence": []
+  },
+  {
+   "key": "c4",
+   "type": "contact",
+   "text": "Who owns the Cloudinary account/project and its billing",
+   "subject_key": "cloudinary.owner",
+   "value": null,
+   "occurred_at": null,
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "Cloudinary",
+     "owner",
+     "account",
+     "billing"
+    ],
+    "signal": "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in .env.example",
+    "question": "Who owns the Cloudinary account/project and its billing"
+   },
+   "evidence": []
+  },
+  {
+   "key": "c5",
+   "type": "open_work",
+   "text": "Status and next step for issue #131 'Duplicate reminder notifications on Android'",
+   "subject_key": "issue.131.status",
+   "value": null,
+   "occurred_at": null,
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "#131",
+     "Duplicate",
+     "reminder",
+     "notifications",
+     "Android"
+    ],
+    "signal": "open issue #131 is assigned to Rohan",
+    "question": "Status and next step for issue #131 'Duplicate reminder notifications on Android'"
+   },
+   "evidence": []
+  },
+  {
+   "key": "c6",
+   "type": "ownership",
+   "text": "Rohan is effectively the only maintainer of package.json (7 of 8 commits)",
+   "subject_key": "owner.package_json",
+   "value": null,
+   "occurred_at": "2026-10-30T17:00:00+00:00",
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [],
+    "signal": "Rohan authored at least 80% of commits to package.json",
+    "question": "Rohan is effectively the only maintainer of package.json (7 of 8 commits)"
+   },
+   "evidence": [
+    {
+     "chunk": "51a7cc971f698257741a",
+     "quote": "package.json: 8 commits; rohan 7, arjun 1",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 53,
+     "match_end": 94,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt shows rohan has 7 out of 8 commits for package.json, making him effectively the only maintainer.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c7",
+   "type": "open_work",
+   "text": "The PR is still a work in progress and is waiting for the faculty coordinator's sign-off before it can be merged.",
+   "subject_key": "pr.142.status",
+   "value": null,
+   "occurred_at": "2026-09-19T13:00:00+00:00",
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "#142",
+     "RSVP",
+     "CSV",
+     "export",
+     "organisers"
+    ],
+    "signal": "open PR #142 is authored by Rohan",
+    "question": "Status and next step for PR #142 'RSVP CSV export for organisers'"
+   },
+   "evidence": [
+    {
+     "chunk": "8e5dc1fe47309daf95d1",
+     "quote": "Adds an organiser-only CSV export of RSVPs (name, roll number, timestamp) using papaparse. Still WIP: needs the faculty coordinator's sign-off because it exports student data. Requested review from Dr. Rao via Meera.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 106,
+     "match_end": 322,
+     "verdict": "supports",
+     "verdict_reason": "The excerpt explicitly states the PR is still WIP and needs the faculty coordinator's sign-off for exporting student data.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c8",
+   "type": "decision",
+   "text": "Why cloudinary was chosen",
+   "subject_key": "dependency.cloudinary",
+   "value": null,
+   "occurred_at": null,
+   "origin": "checklist",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": true,
+   "meta": {
+    "terms": [
+     "cloudinary",
+     "chose",
+     "switch",
+     "because"
+    ],
+    "signal": "cloudinary is a runtime dependency",
+    "question": "Why cloudinary was chosen"
+   },
+   "evidence": []
+  },
+  {
+   "key": "c9",
+   "type": "decision",
+   "text": "The required aspect ratio for event posters is 4:5.",
+   "subject_key": "images.aspect_ratio",
+   "value": "4:5",
+   "occurred_at": "2026-02-18T15:12:00.000021+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "652edaf994e671646366",
+     "quote": "poster aspect ratio 4:5 ok?",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 53,
+     "match_end": 80,
+     "verdict": "supports",
+     "verdict_reason": "The developer messages explicitly confirm that a 4:5 aspect ratio for event posters is accepted.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c10",
+   "type": "recurring_issue",
+   "text": "Sign-up confirmation emails have been reported as landing in spam folders.",
+   "subject_key": "auth.email",
+   "value": null,
+   "occurred_at": "2026-02-15T06:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "94f1952ea56b07a4eff5",
+     "quote": "Sign-up confirmation email lands in spam",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 11,
+     "match_end": 51,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly mentions an issue titled 'Sign-up confirmation email lands in spam'.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c11",
+   "type": "next_action",
+   "text": "Neha is responsible for writing the setup guide.",
+   "subject_key": "docs.setup",
+   "value": null,
+   "occurred_at": "2026-02-10T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "bef6d12ee34389a0cc3b",
+     "quote": "Neha to write the setup guide.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 47,
+     "match_end": 77,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that Neha is responsible for writing the setup guide.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c12",
+   "type": "dependency",
+   "text": "The project uses Firestore for storing attendee data.",
+   "subject_key": "database.provider",
+   "value": "Firestore",
+   "occurred_at": "2026-02-11T11:35:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "2c48d310ed9341552c94",
+     "quote": "Stores attendees in Firestore.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 109,
+     "match_end": 139,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly states that the RSVP toggle stores attendees in Firestore.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c13",
+   "type": "ownership",
+   "text": "Rohan is the app lead and responsible for deploys and push notifications.",
+   "subject_key": "service.owner",
+   "value": "Rohan",
+   "occurred_at": "2026-02-10T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "c2dd92fcbb8524456a03",
+     "quote": "Rohan: app lead, deploys, push notifications.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 11,
+     "match_end": 56,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly lists Rohan as the app lead responsible for deploys and push notifications.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c14",
+   "type": "open_work",
+   "text": "Rohan is tasked with setting up push reminders for events.",
+   "subject_key": "feature.push_notifications",
+   "value": null,
+   "occurred_at": "2026-02-10T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "bef6d12ee34389a0cc3b",
+     "quote": "Rohan to set up push reminders.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 13,
+     "match_end": 44,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly states that Rohan is assigned to set up push reminders.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c15",
+   "type": "decision",
+   "text": "The project uses Next.js and Tailwind CSS.",
+   "subject_key": "tech.stack",
+   "value": "Next.js, Tailwind",
+   "occurred_at": "2026-01-12T14:42:00.000001+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "6e79bcaab07678dd83aa",
+     "quote": "repo is up: campus-events-app. next.js + tailwind soon",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 54,
+     "match_end": 108,
+     "verdict": "contradicts",
+     "verdict_reason": "The excerpt states that Next.js and Tailwind will be added soon, not that the project currently uses them.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c16",
+   "type": "ownership",
+   "text": "Neha is responsible for frontend and documentation.",
+   "subject_key": "service.owner",
+   "value": "Neha",
+   "occurred_at": "2026-02-10T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "c2dd92fcbb8524456a03",
+     "quote": "Neha: frontend, docs.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 59,
+     "match_end": 80,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly lists Neha's roles as frontend and docs, which directly matches the claim.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c17",
+   "type": "decision",
+   "text": "The project uses Firebase Auth for user authentication.",
+   "subject_key": "auth.provider",
+   "value": "Firebase Auth",
+   "occurred_at": "2026-02-09T14:50:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": true,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "3790744568ca2f7bf816",
+     "quote": "Replace Supabase Auth with Firebase Auth — we're already using Firebase for Firestore, one console instead of two. This reverses the January choice to use Supabase auth.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 107,
+     "match_end": 276,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly mentions replacing Supabase Auth with Firebase Auth because they are already using Firebase for Firestore.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "2989896a8c6c89772cac",
+     "quote": "ok let's just go with Supabase auth for now, fastest to set up",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 203,
+     "match_end": 265,
+     "verdict": "contradicts",
+     "verdict_reason": "The excerpt explicitly states they decided to use Supabase auth instead of Firebase auth.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "e3692125d02f42a313ca",
+     "quote": "2026-02-09 rohan: refactor: replace supabase auth with firebase auth (#41) (09238fb)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 487,
+     "match_end": 571,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly states a refactor to replace supabase auth with firebase auth.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c18",
+   "type": "open_work",
+   "text": "Kabir needs to check Cloudinary usage after the fest.",
+   "subject_key": "budget.cloudinary",
+   "value": null,
+   "occurred_at": "2026-04-02T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "9817634e93d73e8bbe50",
+     "quote": "Kabir: check Cloudinary usage after fest.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 42,
+     "match_end": 83,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states under actions that Kabir must check Cloudinary usage after the fest.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c19",
+   "type": "decision",
+   "text": "The poster upload size limit is set to 5 MB.",
+   "subject_key": "upload.max_size",
+   "value": "5 MB",
+   "occurred_at": "2026-04-02T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": "upload.max_size",
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "9abdc77e58e4e321296e",
+     "quote": "We agreed to raise the poster upload limit to 5 MB before the fest.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 66,
+     "match_end": 133,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states they agreed to raise the poster upload limit to 5 MB.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c20",
+   "type": "risk",
+   "text": "Poster uploads continue to time out on campus Wi-Fi despite client-side compression and quality adjustments.",
+   "subject_key": "images.upload.reliability",
+   "value": null,
+   "occurred_at": "2026-04-11T04:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "7feb79aaf02fc1243f70",
+     "quote": "Reopening, happened again on fest day 1.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 86,
+     "match_end": 126,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt confirms that poster uploads continue to time out on campus Wi-Fi.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c21",
+   "type": "ownership",
+   "text": "Neha is the designated on-call person for the app on day 1 of the fest.",
+   "subject_key": "service.owner",
+   "value": "Neha",
+   "occurred_at": "2026-04-02T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "2229c4f4f5d4410b7b33",
+     "quote": "Neha will be on call for the app on day 1.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 45,
+     "match_end": 87,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that Neha will be on call for the app on day 1.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c22",
+   "type": "decision",
+   "text": "The project uses client-side compression for poster uploads to mitigate timeout issues on slow networks.",
+   "subject_key": "images.upload.compression",
+   "value": "browser-image-compression",
+   "occurred_at": "2026-03-29T15:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "9cc27fb63ea72d52a181",
+     "quote": "Workaround for #97: compress images in the browser (browser-image-compression) before upload, because uploads time out on campus Wi-Fi during fest.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 95,
+     "match_end": 242,
+     "verdict": "supports",
+     "verdict_reason": "The source states that client-side image compression was added as a workaround for uploads timing out on campus Wi-Fi.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c23",
+   "type": "decision",
+   "text": "The project previously used Supabase for authentication.",
+   "subject_key": "auth.provider",
+   "value": "Supabase",
+   "occurred_at": "2026-03-14T16:40:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": true,
+   "superseded_by": "c17",
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "e3692125d02f42a313ca",
+     "quote": "2026-01-19 rohan: feat: supabase auth sign-in (3330dc1)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 204,
+     "match_end": 259,
+     "verdict": "supports",
+     "verdict_reason": "The source log explicitly includes a commit on 2026-01-19 by rohan for 'supabase auth sign-in'.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c24",
+   "type": "risk",
+   "text": "The event page suffers from slow first load times (LCP ~4s on 4G) primarily due to large poster image sizes.",
+   "subject_key": "performance.lcp",
+   "value": "4s",
+   "occurred_at": "2026-08-21T14:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "8041d6436f32b21fefe7",
+     "quote": "Issue #129 'Slow first load on event page' opened by neha on 2026-08-20 (open, assigned to neha) LCP is ~4s on 4G.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 0,
+     "match_end": 115,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt confirms the LCP is ~4s on 4G, but it does not mention large poster image sizes as the primary cause.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "22f94176ad4ab553c5b9",
+     "quote": "Mostly the poster images. Will look at sizes.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 76,
+     "match_end": 121,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt confirms that large poster images are the primary cause of the slow first load on the event page.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c25",
+   "type": "open_work",
+   "text": "The venue map feature is proposed and suggested to use a static image initially.",
+   "subject_key": "map.status",
+   "value": "proposed",
+   "occurred_at": "2026-08-07T12:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "242a10c674a3c094f3ec",
+     "quote": "Could use a static image first.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 60,
+     "match_end": 91,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly suggests using a static image first for the map of venues.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c26",
+   "type": "decision",
+   "text": "The CI/CD pipeline is configured to deploy only from the main branch.",
+   "subject_key": "deploy.process",
+   "value": "main branch only",
+   "occurred_at": "2026-06-16T12:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "5d4738dc14ed9ab2033b",
+     "quote": "2026-03-25 rohan: ci: deploy only from main (6434f4f)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 144,
+     "match_end": 197,
+     "verdict": "supports",
+     "verdict_reason": "The commit log explicitly lists a commit by rohan on 2026-03-25 with the message 'ci: deploy only from main'.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c27",
+   "type": "open_work",
+   "text": "The leaderboard feature is currently implemented as an empty skeleton page behind a feature flag.",
+   "subject_key": "leaderboard.status",
+   "value": "skeleton",
+   "occurred_at": "2026-08-12T13:40:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "1860ce5413f456fb68b4",
+     "quote": "Empty leaderboard page behind a flag. See #120.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 88,
+     "match_end": 135,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that the leaderboard page is an empty skeleton behind a flag.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c28",
+   "type": "decision",
+   "text": "The CI/CD pipeline is configured to timeout after 15 minutes.",
+   "subject_key": "deploy.timeouts",
+   "value": "15 minutes",
+   "occurred_at": "2026-06-16T12:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "5d4738dc14ed9ab2033b",
+     "quote": "2026-04-23 rohan: ci: timeout after 15 min (a6d5ed0)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 514,
+     "match_end": 566,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly lists a commit from 2026-04-23 stating 'ci: timeout after 15 min'.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c29",
+   "type": "contact",
+   "text": "Meera is the admin and reviewer for the project.",
+   "subject_key": "contact.meera",
+   "value": "admin",
+   "occurred_at": "2026-09-19T13:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "8e5dc1fe47309daf95d1",
+     "quote": "Review requested from: meera",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 76,
+     "match_end": 104,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt shows Meera is a requested reviewer, but it does not state whether she is the project admin.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c30",
+   "type": "decision",
+   "text": "Posters must be compressed client-side before upload to prevent timeouts.",
+   "subject_key": "upload.process",
+   "value": "client-side compression",
+   "occurred_at": "2026-06-16T12:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "5d4738dc14ed9ab2033b",
+     "quote": "2026-03-29 rohan: feat: compress posters client-side before upload (#97) (10e65bf)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 200,
+     "match_end": 282,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt shows the feature was added to compress posters client-side, but does not state it was done to prevent timeouts.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c31",
+   "type": "decision",
+   "text": "Event cards now use Asia/Kolkata timezone instead of UTC.",
+   "subject_key": "events.timezone",
+   "value": "Asia/Kolkata",
+   "occurred_at": "2026-09-08T15:05:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "9e4ff1aed04aabe619ea",
+     "quote": "Cards showed UTC times. Now uses Asia/Kolkata.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 94,
+     "match_end": 140,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that event cards now use Asia/Kolkata instead of UTC.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c32",
+   "type": "decision",
+   "text": "The project previously attempted to skip deployments on docs-only changes, but this was reverted because it broke tags.",
+   "subject_key": "deploy.process",
+   "value": "reverted skip docs-only",
+   "occurred_at": "2026-06-16T12:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": true,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "5d4738dc14ed9ab2033b",
+     "quote": "2026-05-29 rohan: ci: revert docs-only skip, it broke tags (70ca2bb)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 802,
+     "match_end": 870,
+     "verdict": "supports",
+     "verdict_reason": "The commit log explicitly shows a commit to skip deployments on docs-only changes and a subsequent revert stating it broke tags.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c33",
+   "type": "dependency",
+   "text": "The RSVP CSV export feature requires faculty coordinator sign-off before it can be merged because it handles student data.",
+   "subject_key": "pr.142.status",
+   "value": "blocked by faculty",
+   "occurred_at": "2026-09-19T13:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "8e5dc1fe47309daf95d1",
+     "quote": "Still WIP: needs the faculty coordinator's sign-off because it exports student data.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 197,
+     "match_end": 281,
+     "verdict": "supports",
+     "verdict_reason": "The excerpt explicitly states that the RSVP CSV export requires the faculty coordinator's sign-off because it exports student data.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c34",
+   "type": "ownership",
+   "text": "Neha is taking over the app from Rohan.",
+   "subject_key": "service.transfer",
+   "value": "Neha",
+   "occurred_at": "2026-10-28T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "dab73ff7400496a98379",
+     "quote": "Rohan leaves on 15 Nov for a six-month internship. Neha takes over the app.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 69,
+     "match_end": 144,
+     "verdict": "supports",
+     "verdict_reason": "The excerpt explicitly states that Neha takes over the app.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c35",
+   "type": "open_work",
+   "text": "PR #142 for RSVP CSV export is waiting for Dr. Rao's review.",
+   "subject_key": "pr.142.status",
+   "value": "pending review",
+   "occurred_at": "2026-10-12T05:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "a3df6dc56719cbf928d4",
+     "quote": "I've forwarded it to Dr. Rao again, he said after midsems.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 75,
+     "match_end": 133,
+     "verdict": "supports",
+     "verdict_reason": "The source states PR #142 was forwarded to Dr. Rao, who said he would review it after midsems.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c36",
+   "type": "open_work",
+   "text": "Duplicate reminder notifications on Android remain unresolved.",
+   "subject_key": "issue.131.status",
+   "value": "open",
+   "occurred_at": "2026-10-28T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "e672d3f882c357f8cad7",
+     "quote": "Duplicate Android reminders (issue #131): Rohan said he'd look but no update yet.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 10,
+     "match_end": 91,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt lists duplicate Android reminders under the 'Open' section with no update yet.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c37",
+   "type": "recurring_issue",
+   "text": "Poster uploads time out on campus Wi-Fi; the workaround is client-side compression.",
+   "subject_key": "upload.timeouts",
+   "value": "timeout",
+   "occurred_at": "2026-10-09T13:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "e511f89757324a82b415",
+     "quote": "Reopening for the record: this happens every fest. Workaround is still compressing client-side before upload.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 85,
+     "match_end": 194,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that poster uploads time out on campus Wi-Fi and that the workaround is client-side compression.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c38",
+   "type": "risk",
+   "text": "PR #142 lacks tests for the RSVP flow.",
+   "subject_key": "testing.coverage",
+   "value": "none",
+   "occurred_at": "2026-09-24T15:40:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "db10b4b5b806c35945cf",
+     "quote": "Looks fine, but there are no tests for the RSVP flow at all.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 121,
+     "match_end": 181,
+     "verdict": "supports",
+     "verdict_reason": "The reviewer explicitly states that there are no tests for the RSVP flow at all.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c39",
+   "type": "open_work",
+   "text": "Marathi translations are requested for cultural events.",
+   "subject_key": "issue.133.status",
+   "value": "open",
+   "occurred_at": "2026-10-01T06:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "b5959aad893df79b62cf",
+     "quote": "Add Marathi translations",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 12,
+     "match_end": 36,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly mentions requesting Marathi translations for cultural events.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c40",
+   "type": "next_action",
+   "text": "Rohan must transfer Vercel project ownership to Neha before 15 Nov.",
+   "subject_key": "hosting.provider",
+   "value": "Vercel",
+   "occurred_at": "2026-10-28T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "ae9699f06823a8c832fc",
+     "quote": "Rohan to transfer Vercel project ownership to Neha before 15 Nov.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 12,
+     "match_end": 77,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states under 'Agreed' that Rohan is to transfer Vercel project ownership to Neha before 15 Nov.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c41",
+   "type": "open_work",
+   "text": "Organiser role management is needed to prevent unauthorized event creation.",
+   "subject_key": "issue.136.status",
+   "value": "open",
+   "occurred_at": "2026-10-05T12:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "8ffc6465caa94ec3ecac",
+     "quote": "Right now any signed-in user can create events.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 89,
+     "match_end": 136,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt mentions the issue name and that any signed-in user can create events, but does not state the purpose is to prevent unauthorized creation.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c42",
+   "type": "next_action",
+   "text": "Neha will receive admin access on the GitHub repository.",
+   "subject_key": "deploy.owner",
+   "value": "admin",
+   "occurred_at": "2026-10-28T12:00:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "ae9699f06823a8c832fc",
+     "quote": "Neha gets admin on the GitHub repo this week.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 80,
+     "match_end": 125,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly states that Neha gets admin on the GitHub repo this week.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c43",
+   "type": "open_work",
+   "text": "A printable fest schedule PDF download is requested.",
+   "subject_key": "issue.144.status",
+   "value": "open",
+   "occurred_at": "2026-10-25T05:30:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "802814930f5241206c0f",
+     "quote": "People keep asking for a printable schedule.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 90,
+     "match_end": 134,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly mentions an issue titled 'Fest schedule PDF download' and states people keep asking for it.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c44",
+   "type": "decision",
+   "text": "The leaderboard feature is parked until after the fest.",
+   "subject_key": "issue.120.status",
+   "value": "parked",
+   "occurred_at": "2026-09-25T17:10:00+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "a4c4d519f4a162dc74c5",
+     "quote": "parking this for now, maybe after fest",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 59,
+     "match_end": 97,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states to park the leaderboard issue for now until maybe after the fest.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c45",
+   "type": "decision",
+   "text": "The project uses Node.js version 20 for deployments.",
+   "subject_key": "deploy.process",
+   "value": "Node 20",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "ebc689544994db220a8f",
+     "quote": "node-version: 20",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 276,
+     "match_end": 292,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly shows 'node-version: 20' under the setup-node action for deployments.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c46",
+   "type": "decision",
+   "text": "The deployment workflow has a 15-minute timeout.",
+   "subject_key": "deploy.timeouts",
+   "value": "15 minutes",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "ebc689544994db220a8f",
+     "quote": "timeout-minutes: 15",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 151,
+     "match_end": 170,
+     "verdict": "supports",
+     "verdict_reason": "The deployment workflow file explicitly specifies 'timeout-minutes: 15' under the deploy job.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c47",
+   "type": "decision",
+   "text": "The project uses Firebase Cloud Messaging for push reminders, having migrated from OneSignal in March.",
+   "subject_key": "notifications.provider",
+   "value": "Firebase Cloud Messaging",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": true,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "a3a589adedfe9e625337",
+     "quote": "Switching push reminders to Firebase Cloud Messaging. The OneSignal free plan caps us at the device limit before fest, and we'd blow past it on day one. FCM is free and we already have Firebase. Removes the OneSignal SDK.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 108,
+     "match_end": 329,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt confirms a pull request to move push reminders from OneSignal to FCM was merged in March 2026.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "8a85f62f17ce91912eca",
+     "quote": "Push reminders via Firebase Cloud Messaging (moved from OneSignal in March, PR #88).",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 34,
+     "match_end": 118,
+     "verdict": "supports",
+     "verdict_reason": "The code comment explicitly states the project uses Firebase Cloud Messaging for push reminders after migrating from OneSignal in March.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c48",
+   "type": "decision",
+   "text": "The application uses Cloudinary for storing event posters and banners.",
+   "subject_key": "images.provider",
+   "value": "Cloudinary",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "5ac8cd766a8801808d9b",
+     "quote": "Files go to Cloudinary under the club account (free plan).",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 123,
+     "match_end": 181,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that files, specifically event posters, go to Cloudinary.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "e3692125d02f42a313ca",
+     "quote": "2026-02-20 rohan: feat: poster uploads to cloudinary (e070a57)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 678,
+     "match_end": 740,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt mentions poster uploads to cloudinary, but does not specify storing event posters and banners.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "f5050714e7d895f090b8",
+     "quote": "Images go to Cloudinary (see README).",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 73,
+     "match_end": 110,
+     "verdict": "supports",
+     "verdict_reason": "The source code comments state that poster and banner uploads go to Cloudinary.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "853d34db54c2f5294b52",
+     "quote": "Images: Cloudinary (free plan, club account)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 159,
+     "match_end": 203,
+     "verdict": "supports",
+     "verdict_reason": "The README stack lists Images as Cloudinary under a club account, which aligns with storing event posters and banners.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c49",
+   "type": "decision",
+   "text": "The project uses Firebase for authentication, Firestore for data, and Firebase Cloud Messaging for push reminders.",
+   "subject_key": "tech.stack",
+   "value": "Firebase",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "853d34db54c2f5294b52",
+     "quote": "Firebase: Firestore (data), Firebase Auth (sign-in), Firebase Cloud Messaging (push reminders)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 62,
+     "match_end": 156,
+     "verdict": "supports",
+     "verdict_reason": "The README stack section explicitly lists Firebase Auth, Firestore, and Firebase Cloud Messaging for these exact purposes.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c50",
+   "type": "decision",
+   "text": "The project uses Vercel for hosting with auto-deploys from the main branch.",
+   "subject_key": "hosting.provider",
+   "value": "Vercel",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "178e2a21338614ea2daf",
+     "quote": "Keep hosting on Vercel's free plan.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 119,
+     "match_end": 154,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt mentions hosting on Vercel's free plan, but does not state anything about auto-deploys from the main branch.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "e3692125d02f42a313ca",
+     "quote": "2026-01-21 rohan: ci: add deploy workflow for Vercel (e316636)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 262,
+     "match_end": 324,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt mentions a deploy workflow for Vercel, but does not state that it auto-deploys from the main branch.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "853d34db54c2f5294b52",
+     "quote": "Hosting: Vercel (auto-deploys main through the GitHub Actions deploy workflow)",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 206,
+     "match_end": 286,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that Hosting is done via Vercel with auto-deploys of the main branch.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c51",
+   "type": "next_action",
+   "text": "Sana is preparing winter fest poster drafts for next week.",
+   "subject_key": "events.winter_fest",
+   "value": null,
+   "occurred_at": "2026-11-03T13:30:00.000067+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "4517e2448bd9a91764de",
+     "quote": "sana: winter fest poster drafts next week",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 47,
+     "match_end": 88,
+     "verdict": "supports",
+     "verdict_reason": "The source message from Sana explicitly states that winter fest poster drafts are for next week.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c52",
+   "type": "decision",
+   "text": "The project uses Next.js 15.1.0.",
+   "subject_key": "tech.stack",
+   "value": "Next.js 15.1.0",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "c8862d6730a0f3b87f11",
+     "quote": "\"next\": \"15.1.0\"",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 227,
+     "match_end": 241,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly lists \"next\": \"15.1.0\" under dependencies.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c53",
+   "type": "decision",
+   "text": "Stripe was previously used for workshop tickets but has been dropped.",
+   "subject_key": "payments.provider",
+   "value": "None",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": true,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "beedb19e1e572e2847c9",
+     "quote": "We tried Stripe for paid workshop tickets in January and dropped it.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 55,
+     "match_end": 123,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly states that they tried Stripe for paid workshop tickets in January and dropped it.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c54",
+   "type": "ownership",
+   "text": "Rohan is the current lead of the app team until November 2026.",
+   "subject_key": "service.owner",
+   "value": "Rohan",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "4975e7b93f0f2bd9ded8",
+     "quote": "Maintained by DevClub's app team. Current lead: Rohan (until Nov 2026).",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 25,
+     "match_end": 96,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that Rohan is the current lead of the app team until November 2026.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c55",
+   "type": "risk",
+   "text": "Campus Wi-Fi is slow during fests, so the client performs image compression before uploading.",
+   "subject_key": "images.upload.compression",
+   "value": null,
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "f5050714e7d895f090b8",
+     "quote": "NOTE: campus Wi-Fi is slow during fest; the client compresses before calling this.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 1084,
+     "match_end": 1166,
+     "verdict": "supports",
+     "verdict_reason": "The source code comment explicitly states that campus Wi-Fi is slow during fests and the client compresses before calling the upload function.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c56",
+   "type": "decision",
+   "text": "The maximum allowed file size for event poster uploads is 2 MB.",
+   "subject_key": "upload.max_size",
+   "value": "2 MB",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": "upload.max_size",
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "9b8a6761646edb626bd5",
+     "quote": "2 MB feels small for posters but ok for now.",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 88,
+     "match_end": 132,
+     "verdict": "insufficient",
+     "verdict_reason": "The excerpt mentions '2 MB' feels small for posters, but does not state it is the maximum allowed file size.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "f5050714e7d895f090b8",
+     "quote": "export const MAX_BYTES = 2 * 1024 * 1024;",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 1232,
+     "match_end": 1273,
+     "verdict": "supports",
+     "verdict_reason": "The source code explicitly defines MAX_BYTES as 2 * 1024 * 1024, which equals 2 MB.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c57",
+   "type": "decision",
+   "text": "Images are organized in Cloudinary using a folder structure based on the event ID.",
+   "subject_key": "images.upload.organization",
+   "value": "campus-events/{eventId}",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "f5050714e7d895f090b8",
+     "quote": "function folderFor(eventId: string) { return `campus-events/${eventId}`; }",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 1003,
+     "match_end": 1079,
+     "verdict": "supports",
+     "verdict_reason": "The code defines a folderFor function that creates a folder path using the event ID to keep the club account tidy.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c58",
+   "type": "decision",
+   "text": "The application only accepts JPEG, PNG, and WebP image formats for uploads.",
+   "subject_key": "images.upload.formats",
+   "value": "image/jpeg, image/png, image/webp",
+   "occurred_at": null,
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "f5050714e7d895f090b8",
+     "quote": "export const ALLOWED_TYPES = [\"image/jpeg\", \"image/png\", \"image/webp\"];",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 471,
+     "match_end": 542,
+     "verdict": "supports",
+     "verdict_reason": "The source code explicitly defines ALLOWED_TYPES as an array containing image/jpeg, image/png, and image/webp.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c59",
+   "type": "open_work",
+   "text": "Neha needs to add the TechNova logo to the app's fest page.",
+   "subject_key": "app.feature",
+   "value": "logo",
+   "occurred_at": "2026-11-03T14:35:00.000091+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "c5bb597488ec93894116",
+     "quote": "easy, neha can add it",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 131,
+     "match_end": 152,
+     "verdict": "supports",
+     "verdict_reason": "The excerpt confirms TechNova wants their logo on the app's fest page and states that Neha can add it.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    },
+    {
+     "chunk": "c5bb597488ec93894116",
+     "quote": "TechNova wants a logo on the app's fest page",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 60,
+     "match_end": 104,
+     "verdict": "supports",
+     "verdict_reason": "The chat excerpt confirms that TechNova wants a logo on the app's fest page and Rohan states Neha can add it.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c60",
+   "type": "ownership",
+   "text": "Neha is not currently in the core team.",
+   "subject_key": "neha.status",
+   "value": "not in core team",
+   "occurred_at": "2026-10-25T13:35:00.000086+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "22c012d54d343977ed08",
+     "quote": "not in core team yet",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 102,
+     "match_end": 122,
+     "verdict": "supports",
+     "verdict_reason": "The source explicitly states that Neha is 'not in core team yet'.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c61",
+   "type": "decision",
+   "text": "The winter fest is scheduled for 19-21 December.",
+   "subject_key": "event.dates",
+   "value": "2026-12-19 to 2026-12-21",
+   "occurred_at": "2026-10-18T14:32:00.000082+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "1f94e1a5668c7d45c589",
+     "quote": "faculty approval for winter fest dates: 19-21 Dec",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 60,
+     "match_end": 109,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states the winter fest dates are 19-21 Dec following faculty approval.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c62",
+   "type": "decision",
+   "text": "The project budget is based solely on the TechNova sponsorship.",
+   "subject_key": "budget.planning",
+   "value": "TechNova",
+   "occurred_at": "2026-10-12T12:35:00.000080+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "c32e8d857d47f7a367a9",
+     "quote": "ok, we budget with TechNova only",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 114,
+     "match_end": 146,
+     "verdict": "supports",
+     "verdict_reason": "Kabir states in the messages that they will budget with TechNova only after the second sponsor fell through.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c63",
+   "type": "ownership",
+   "text": "Neha is the successor taking over the app from Rohan.",
+   "subject_key": "neha.transfer",
+   "value": "Neha",
+   "occurred_at": "2026-10-25T13:35:00.000086+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "22c012d54d343977ed08",
+     "quote": "neha takes over app",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 81,
+     "match_end": 100,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states that Rohan leaves and Neha takes over the app.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c64",
+   "type": "ownership",
+   "text": "Rohan is leaving the project on 15 November 2026.",
+   "subject_key": "rohan.transfer",
+   "value": "2026-11-15",
+   "occurred_at": "2026-10-25T13:35:00.000086+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "22c012d54d343977ed08",
+     "quote": "rohan leaves 15 nov, neha takes over app",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 60,
+     "match_end": 100,
+     "verdict": "supports",
+     "verdict_reason": "The message from Meera on 2026-10-25 states that Rohan leaves on 15 Nov.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c65",
+   "type": "ownership",
+   "text": "Meera holds the contract with TechNova.",
+   "subject_key": "sponsor.technova",
+   "value": "Meera",
+   "occurred_at": "2026-10-05T13:40:00.000077+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "06c0281f7c3f93842188",
+     "quote": "contract is with me",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 199,
+     "match_end": 218,
+     "verdict": "supports",
+     "verdict_reason": "Meera explicitly states in the thread that the contract is with her.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c66",
+   "type": "decision",
+   "text": "TechNova is a confirmed sponsor for the winter fest.",
+   "subject_key": "sponsor.technova",
+   "value": "confirmed",
+   "occurred_at": "2026-10-05T13:40:00.000077+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "06c0281f7c3f93842188",
+     "quote": "sponsor update: TechNova is confirmed",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 58,
+     "match_end": 95,
+     "verdict": "supports",
+     "verdict_reason": "The source excerpt explicitly states from meera that TechNova is confirmed as a sponsor.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c67",
+   "type": "dependency",
+   "text": "TechNova payment of 40,000 is contingent on the app being live by 20 December.",
+   "subject_key": "sponsor.technova",
+   "value": "40000",
+   "occurred_at": "2026-10-05T13:40:00.000077+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "06c0281f7c3f93842188",
+     "quote": "TechNova pays ₹40,000 only if the events app is live for the fest by 20 Dec",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 122,
+     "match_end": 197,
+     "verdict": "supports",
+     "verdict_reason": "Meera states TechNova pays 40,000 only if the events app is live by 20 Dec.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  },
+  {
+   "key": "c68",
+   "type": "decision",
+   "text": "The stage vendor quote is 28,000.",
+   "subject_key": "budget.stage",
+   "value": "28000",
+   "occurred_at": "2026-11-01T12:35:00.000089+00:00",
+   "origin": "extracted",
+   "stated": true,
+   "supersedes_hint": false,
+   "superseded_by": null,
+   "conflict": null,
+   "about_leaver": false,
+   "meta": {},
+   "evidence": [
+    {
+     "chunk": "4eb74e835871ff175dd2",
+     "quote": "stage vendor quote is ₹28k",
+     "match_score": 100,
+     "quote_found": true,
+     "match_start": 60,
+     "match_end": 86,
+     "verdict": "supports",
+     "verdict_reason": "The message from kabir explicitly states that the stage vendor quote is ₹28k.",
+     "verifier": "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    }
+   ]
+  }
+ ]
+}

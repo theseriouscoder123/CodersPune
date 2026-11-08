@@ -92,8 +92,29 @@ def test_handover_transition_is_not_a_conflict():
     plan = plan_conflicts([
         ClaimLite("a", "app.owner", "Rohan", d(1), False, "Rohan is the lead of the app team until November."),
         ClaimLite("b", "app.owner", "Neha", d(10), False, "Neha is taking over the app from Rohan on 15 Nov."),
+    ], people=frozenset({"rohan", "neha"}))
+    assert not plan.groups
+
+
+def test_different_attributes_of_one_subject_do_not_conflict():
+    plan = plan_conflicts([
+        ClaimLite("a", "sponsor.technova", "confirmed", d(10), False, "TechNova is a confirmed sponsor."),
+        ClaimLite("b", "sponsor.technova", "40000", d(10), False, "TechNova pays 40,000 if the app is live."),
+        ClaimLite("c", "sponsor.technova", "Meera", d(10), False, "Meera holds the contract."),
+        ClaimLite("d", "pr.142.status", "pending review", d(9), False, "PR #142 waits for review."),
+        ClaimLite("e", "pr.142.status", "blocked by faculty", d(10), False, "PR #142 needs faculty sign-off."),
+        ClaimLite("f", "tech.stack", "Next.js, Tailwind", d(1), False, "Uses Next.js and Tailwind."),
+        ClaimLite("g", "tech.stack", "Firebase", d(1), False, "Uses Firebase."),
+    ], people=frozenset({"meera"}))
+    assert not plan.groups and not plan.superseded
+
+
+def test_historical_claim_superseded_even_if_dated_later():
+    plan = plan_conflicts([
+        ClaimLite("now", "auth.provider", "Firebase Auth", None, False, "The project uses Firebase Auth."),
+        ClaimLite("old", "auth.provider", "Supabase", d(2), False, "The project previously used Supabase for authentication."),
     ])
-    assert plan.superseded == {"a": "b"}
+    assert plan.superseded == {"old": "now"} and not plan.groups
 
 
 def test_reversal_words_without_old_value_still_conflict():

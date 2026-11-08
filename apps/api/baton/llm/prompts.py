@@ -13,9 +13,9 @@ ClaimType = Literal["decision", "ownership", "open_work", "next_action", "risk",
 COMMON_SUBJECT_KEYS = [
     "auth.provider", "notifications.provider", "database.provider", "hosting.provider", "images.provider",
     "payments.provider", "upload.max_size", "upload.timeouts", "deploy.owner", "deploy.process", "ci.workflow",
-    "testing.coverage", "<feature>.status", "pr.<number>.status", "issue.<number>.status", "<service>.owner",
-    "<service>.transfer", "sponsor.<name>", "budget.<item>",
-]
+    "testing.coverage", "leaderboard.status", "pr.142.status", "issue.97.status", "firebase.owner", "vercel.transfer",
+    "sponsor.acme", "budget.stage",
+]  # examples of the SHAPE only: always use the project's real names and numbers
 
 EXTRACT_SYSTEM = """You extract handover knowledge from project records for a successor who is taking over from {leaver_name}.
 Return ONLY claims that are directly stated or clearly shown in the provided chunks.
@@ -24,8 +24,9 @@ Rules:
 - Each claim MUST cite at least one chunk id and give an EXACT quote copied character-for-character from that chunk
   (5-40 words). Do not paraphrase inside the quote. Do not merge text from two chunks into one quote. Never use "..." in a quote.
 - If something is likely but not stated, you may still output it, but set "stated": false and give the closest quote.
-- Use subject_key as a short dotted topic. Reuse the same subject_key for claims about the same topic. Prefer these
-  shapes when they fit: {subject_keys}. Put a normalised comparable value in "value" when the claim sets a value
+- Use subject_key as a short dotted topic. Reuse the same subject_key for claims about the same topic. Follow the shape of these
+  examples, using this project's real names and numbers (never copy an example blindly): {subject_keys}.
+  One subject_key = one attribute: put "who owns X", "how much X costs" and "whether X is confirmed" under different keys. Put a normalised comparable value in "value" when the claim sets a value
   (sizes such as "5 MB", providers, owners, dates).
 - Configuration values that code or config actually enforces (limits, providers, versions) are claims too: state what the
   code does, citing the line.

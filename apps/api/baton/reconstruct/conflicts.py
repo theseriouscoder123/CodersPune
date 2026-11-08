@@ -18,10 +18,13 @@ from baton.reconstruct.values import normalise_value
 
 REVERSAL = re.compile(
     r"\b(replac(?:e|ed|es|ing)|switch(?:ed|es|ing)?|mov(?:ed|es|ing) (?:from|away)|migrat(?:ed|es|ing)|instead of|"
-    r"revert(?:ed|s|ing)?|revers(?:ed|es|ing)|dropp(?:ed|ing)|no longer|tak(?:es|ing) over|took over|handed over|"
-    r"superseded|previously|initially|formerly)\b",
+    r"revert(?:ed|s|ing)?|revers(?:ed|es|ing)|dropp(?:ed|ing)|no longer|tak(?:es|ing) over|took over|handed over)\b",
     re.I,
 )
+# A claim that describes a PAST state of affairs is itself the old side of a reversal.
+HISTORICAL = re.compile(r"\b(previously|initially|originally|formerly|used to|at first|was replaced|were replaced|"
+                        r"before (?:switching|moving|migrating))\b", re.I)
+_SIZE = re.compile(r"^\d+(?:\.\d+)?(?:b|kb|mb|gb)$")
 
 
 @dataclass(frozen=True)
@@ -65,22 +68,49 @@ def reverses(newer: ClaimLite, older: ClaimLite) -> bool:
     return bool(ov) and (ov in text or (raw and raw in text) or all(t in text for t in _tokens(ov)))
 
 
+def value_class(value: str | None, people: frozenset[str] = frozenset()) -> str | None:
+    """Only values of the same class are comparable. Free text, lists and people's names are not compared
+    (ownership changes between members are the handover itself, not a contradiction)."""
+    v = normalise_value(value)
+    if v is None or v in people:
+        return None
+    if _SIZE.match(v):
+        return "size"
+    if re.fullmatch(r"\d+(?:\.\d+)?", v.replace(",", "")):
+        return "number"
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+        return "date"
+    if re.fullmatch(r"[a-z][a-z0-9.+\-]*", v):
+        return "token"
+    return None
+
+
 def _when(c: ClaimLite):
     return c.occurred_at.replace(tzinfo=None) if c.occurred_at else datetime.min
 
 
-def plan_conflicts(claims: list[ClaimLite]) -> ConflictPlan:
-    by_subject: dict[str, list[ClaimLite]] = {}
+def plan_conflicts(claims: list[ClaimLite], people: frozenset[str] = frozenset()) -> ConflictPlan:
+    by_subject: dict[tuple[str, str], list[ClaimLite]] = {}
     for c in claims:
-        if normalise_value(c.value) is not None:
-            by_subject.setdefault(c.subject_key, []).append(c)
+        cls = value_class(c.value, people)
+        if cls is not None:
+            by_subject.setdefault((c.subject_key, cls), []).append(c)
 
     superseded: dict[str, str] = {}
     groups: dict[str, list[str]] = {}
-    for subject, cs in by_subject.items():
+    for (subject, _cls), cs in by_subject.items():
         cs = sorted(cs, key=_when)
-        # 1. supersession: a later explicit reversal supersedes earlier claims with a different value
+        # 1a. self-described past states are superseded by a current claim with a different value
+        current = [c for c in cs if not HISTORICAL.search(c.text or "")]
+        for old in cs:
+            if HISTORICAL.search(old.text or ""):
+                newer = next((n for n in reversed(current) if not same_value(old.value, n.value)), None)
+                if newer is not None:
+                    superseded[old.id] = newer.id
+        # 1b. a later explicit reversal supersedes earlier claims with a different value
         for i, newer in enumerate(cs):
+            if newer.id in superseded:
+                continue
             for older in cs[:i]:
                 if older.id in superseded or same_value(older.value, newer.value) or _when(older) > _when(newer):
                     continue
@@ -93,5 +123,5 @@ def plan_conflicts(claims: list[ClaimLite]) -> ConflictPlan:
             if not any(same_value(c.value, d.value) for d in distinct):
                 distinct.append(c)
         if len(distinct) > 1:
-            groups[subject] = [c.id for c in live]
+            groups.setdefault(subject, []).extend(c.id for c in live)
     return ConflictPlan(superseded, groups)

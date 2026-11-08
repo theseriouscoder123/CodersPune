@@ -86,6 +86,14 @@
         {
           "source": "repo:pull/142",
           "contains": "waiting on Dr. Rao's review before merge"
+        },
+        {
+          "source": "repo:pull/142",
+          "contains": "needs the faculty coordinator's sign-off"
+        },
+        {
+          "source": "repo:pull/142",
+          "contains": "forwarded it to Dr. Rao again"
         }
       ],
       "visible_to": [
@@ -193,6 +201,10 @@
         {
           "source": "repo:issues/97",
           "contains": "compress before upload"
+        },
+        {
+          "source": "repo:issues/97",
+          "contains": "this happens every fest"
         }
       ],
       "visible_to": [

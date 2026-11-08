@@ -489,24 +489,39 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
     return all(str(i) in retried for i in left)
 
 
+def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[int, int]:
+    """Plan conflicts/supersession for claims not already in a (resolved) group. Deterministic, no LLM."""
+    if reset:  # used by `python -m baton.recompute`: forget unresolved groups and automatic supersessions
+        db.execute(update(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state == "none")
+                   .values(superseded_by=None))
+        unresolved = select(ConflictGroup.id).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False))
+        db.execute(update(Claim).where(Claim.conflict_group_id.in_(unresolved)).values(conflict_group_id=None))
+        db.execute(delete(ConflictGroup).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False)))
+    members, _, _, _ = _people(db, workspace_id)
+    people = frozenset(n.lower() for m in members.values() for n in (m.display_name, m.handle))
+    claims = list(db.scalars(select(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state != "rejected",
+                                                 Claim.conflict_group_id.is_(None))))
+    plan = plan_conflicts([ClaimLite(str(c.id), c.subject_key, c.value, c.occurred_at, c.supersedes_hint, c.text)
+                           for c in claims], people)
+    by_id = {str(c.id): c for c in claims}
+    for old, new in plan.superseded.items():
+        by_id[old].superseded_by = by_id[new].id
+    for subject, ids in plan.groups.items():
+        g = ConflictGroup(workspace_id=workspace_id, subject_key=subject)
+        db.add(g)
+        db.flush()
+        for i in ids:
+            by_id[i].conflict_group_id = g.id
+    db.flush()
+    return len(plan.groups), len(plan.superseded)
+
+
 def step_conflicts(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
-        claims = list(db.scalars(select(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state != "rejected",
-                                                     Claim.conflict_group_id.is_(None))))
-        plan = plan_conflicts([ClaimLite(str(c.id), c.subject_key, c.value, c.occurred_at, c.supersedes_hint, c.text)
-                               for c in claims])
-        by_id = {str(c.id): c for c in claims}
-        for old, new in plan.superseded.items():
-            by_id[old].superseded_by = by_id[new].id
-        for subject, ids in plan.groups.items():
-            g = ConflictGroup(workspace_id=workspace_id, subject_key=subject)
-            db.add(g)
-            db.flush()
-            for i in ids:
-                by_id[i].conflict_group_id = g.id
+        n_groups, n_sup = replan_conflicts(db, workspace_id)
         j = db.get(Job, job_id)
-        j.progress = j.total = len(plan.groups)
-        j.message = f"{len(plan.groups)} conflicts, {len(plan.superseded)} reversed decisions"
+        j.progress = j.total = n_groups
+        j.message = f"{n_groups} conflicts, {n_sup} reversed decisions"
     return True
 
 

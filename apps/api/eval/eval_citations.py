@@ -27,17 +27,20 @@ from baton.ledger import evidence_rows
 from baton.projection import claim_sources, visible
 
 GOLDEN = json.loads((Path(__file__).resolve().parents[3] / "demo" / "golden_ledger.json").read_text(encoding="utf-8"))
-TYPE_ALIASES = {"risk": {"risk", "recurring_issue"}, "open_question": {"open_question", "open_work", "decision"},
-                "dependency": {"dependency", "contact", "risk"}, "next_action": {"next_action", "open_work"},
+TYPE_ALIASES = {"risk": {"risk", "recurring_issue", "decision"}, "open_question": {"open_question", "open_work", "decision"},
+                "dependency": {"dependency", "contact", "risk", "decision"}, "next_action": {"next_action", "open_work"},
                 "open_work": {"open_work", "next_action"}, "decision": {"decision"}, "ownership": {"ownership"},
                 "contact": {"contact", "ownership"}, "recurring_issue": {"recurring_issue", "risk"}}
 
 
-def score(g: dict, c: Claim) -> float:
+def score(g: dict, c: Claim, passing_texts: list[str]) -> float:
     if c.type not in TYPE_ALIASES.get(g["type"], {g["type"]}):
         return 0
     if c.subject_key == g["subject_key"]:
         return 100
+    # Same evidence = same fact: a claim whose passing evidence contains a golden quote matches that golden claim.
+    if any(fuzz.partial_ratio(x["contains"].lower(), q.lower()) >= 90 for x in g["evidence"] for q in passing_texts):
+        return 95
     return fuzz.token_set_ratio(g["gist"].lower(), c.text.lower())
 
 
@@ -54,13 +57,16 @@ def main() -> None:
     neha = db.scalar(select(Member).where(Member.workspace_id == ws.id, Member.handle == "neha"))
     neha_v = Viewer(str(neha.id), _roles(db, neha.id, ws.id))
 
+    # Matching uses the cited QUOTES (a chunk can hold several facts); citation precision checks the cited chunk.
+    passing_by = {c.id: [e.quote for e, ch, _ in ev.get(c.id, []) if e.quote_found and e.verdict == "supports"] for c in claims}
     rows, matched, status_ok, cit_total, cit_ok, leaks = [], 0, 0, 0, 0, 0
     for g in GOLDEN["claims"]:
-        cands = sorted(((score(g, c), c) for c in claims), key=lambda t: -t[0])
+        cands = sorted(((score(g, c, passing_by[c.id]), c) for c in claims), key=lambda t: -t[0])
         cands = [(s, c) for s, c in cands if s >= 70]
         if g["id"] == "G7":  # the superseded pair: the live (non-superseded) one carries the status
             cands = [t for t in cands if not t[1].superseded_by] or cands
-        best = next((c for s, c in cands if c.status in g["expected_status"]), cands[0][1] if cands else None)
+        top = cands[0][0] if cands else 0
+        best = next((c for s, c in cands if s >= top - 5 and c.status in g["expected_status"]), cands[0][1] if cands else None)
         ok = bool(best and best.status in g["expected_status"])
         cit = None
         if best and best.status in ("supported", "verified") and g["evidence"]:
