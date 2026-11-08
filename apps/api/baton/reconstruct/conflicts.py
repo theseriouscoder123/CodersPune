@@ -25,6 +25,16 @@ REVERSAL = re.compile(
 HISTORICAL = re.compile(r"\b(previously|initially|originally|formerly|used to|at first|was replaced|were replaced|"
                         r"before (?:switching|moving|migrating))\b", re.IGNORECASE)
 _SIZE = re.compile(r"^\d+(?:\.\d+)?(?:b|kb|mb|gb)$")
+# One-word values are only mutually exclusive when the subject names a single-choice slot ("auth.provider"), not a
+# grab-bag topic ("project.config", "ci.workflow") where several descriptive words can all be true at once.
+SINGLE_CHOICE_SLOTS = {"provider", "backend", "framework", "library", "tool", "host", "hosting", "database", "db",
+                       "language", "runtime", "platform", "service", "version", "manager", "license", "region",
+                       "model", "engine", "store", "storage", "server", "client", "bundler", "orm", "cdn"}
+
+
+def single_choice(subject_key: str) -> bool:
+    last = subject_key.rsplit(".", 1)[-1]
+    return any(last == s or last.endswith("_" + s) for s in SINGLE_CHOICE_SLOTS)
 
 
 @dataclass(frozen=True)
@@ -93,6 +103,8 @@ def plan_conflicts(claims: list[ClaimLite], people: frozenset[str] = frozenset()
     by_subject: dict[tuple[str, str], list[ClaimLite]] = {}
     for c in claims:
         cls = value_class(c.value, people)
+        if cls == "token" and not single_choice(c.subject_key) and not c.supersedes_hint:
+            cls = None  # descriptive word under a grab-bag topic: not comparable
         if cls is not None:
             by_subject.setdefault((c.subject_key, cls), []).append(c)
 

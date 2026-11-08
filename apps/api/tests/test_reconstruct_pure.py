@@ -50,10 +50,10 @@ def test_same_value_is_not_a_conflict_and_no_value_is_ignored():
 
 def test_hint_on_older_claim_does_not_supersede_newer():
     plan = plan_conflicts([
-        ClaimLite("old", "x", "A", d(1), True),
-        ClaimLite("new", "x", "B", d(5), False),
+        ClaimLite("old", "db.provider", "A", d(1), True),
+        ClaimLite("new", "db.provider", "B", d(5), False),
     ])
-    assert plan.groups == {"x": ["old", "new"]}
+    assert plan.groups == {"db.provider": ["old", "new"]}
 
 
 SIGNALS = {
@@ -144,3 +144,15 @@ def test_extraction_budget_prefers_docs_and_recent_items():
     assert [c.id for c in kept] == ["f", "p2"] and dropped == 2
     kept, dropped = select_for_budget([readme], budget=1000)
     assert dropped == 0
+
+
+def test_grab_bag_topics_do_not_conflict_but_slots_do():
+    plan = plan_conflicts([
+        ClaimLite("a", "project.contribution_policy", "english-only", d(5), False, "PRs must be in English."),
+        ClaimLite("b", "project.contribution_policy", "no-ai", d(6), False, "No AI-generated code."),
+        ClaimLite("c", "ci.workflow", "dependabot", d(1), False, "Dependabot updates actions."),
+        ClaimLite("e", "ci.workflow", "v4", d(9), False, "Replaced dependabot config, actions now on v4."),
+        ClaimLite("f", "build.backend", "flit", d(2), False, "Uses flit_core as the build backend."),
+        ClaimLite("g", "build.backend", "hatchling", d(3), False, "Uses hatchling as the build backend."),
+    ])
+    assert plan.groups == {"build.backend": ["f", "g"]} and not plan.superseded
