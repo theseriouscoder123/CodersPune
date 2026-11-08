@@ -4,30 +4,23 @@ import { useEffect, useState } from "react";
 
 type Health = { status: string; db: { ok: boolean }; llm: { configured: boolean } };
 
-/** Small footer indicator. Also proves the /api rewrite reaches the FastAPI app. */
+/** Footer system indicator. Also proves the /api rewrite reaches the FastAPI app. */
 export function ApiStatus() {
-  const [health, setHealth] = useState<Health | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [state, setState] = useState<{ health?: Health; failed?: boolean }>({});
 
   useEffect(() => {
     fetch("/api/health", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then(setHealth)
-      .catch(() => setFailed(true));
+      .then((health) => setState({ health }))
+      .catch(() => setState({ failed: true }));
   }, []);
 
-  const label = failed
-    ? "API unreachable"
-    : !health
-      ? "Checking API…"
-      : health.db.ok
-        ? `API ok · database ok · LLM ${health.llm.configured ? "configured" : "not configured"}`
-        : "API up · database unreachable";
-  const dot = failed || (health && !health.db.ok) ? "bg-red-500" : health ? "bg-emerald-500" : "bg-zinc-300";
-
+  const { health, failed } = state;
+  const ok = health?.db.ok;
+  const label = failed ? "Service unreachable" : !health ? "Checking service…" : ok ? "All systems operational" : "Database unreachable";
   return (
-    <span className="inline-flex items-center gap-2" data-testid="api-status">
-      <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
+    <span className="inline-flex items-center gap-2" data-testid="api-status" title={health ? `AI pipeline ${health.llm.configured ? "configured" : "not configured"}` : undefined}>
+      <span className={`h-2 w-2 rounded-full ${failed || (health && !ok) ? "bg-missing" : health ? "bg-verified" : "bg-line-2"}`} aria-hidden />
       {label}
     </span>
   );

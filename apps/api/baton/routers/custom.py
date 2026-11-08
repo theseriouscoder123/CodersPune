@@ -27,7 +27,7 @@ from baton.pipeline import create_run
 
 router = APIRouter(prefix="/api")
 
-COLORS = ["#7c3aed", "#0891b2", "#16a34a", "#ea580c", "#db2777", "#4f46e5", "#0d9488", "#ca8a04"]
+COLORS = ["#14213d", "#2b5b88", "#1f6f4a", "#b5531a", "#8a5a06", "#0e7490", "#6d4c41", "#3f5f3a"]
 MAX_FILES = 10
 MAX_MEMBERS = 12
 

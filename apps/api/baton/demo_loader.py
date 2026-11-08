@@ -12,7 +12,7 @@ from baton.ingest.service import store_chunks
 from baton.ingest.uploads import parse_upload
 
 PEOPLE = [  # handle, display name, colour, roles
-    ("meera", "Meera", "#7c3aed", ["admin", "reviewer"]),
+    ("meera", "Meera", "#14213d", ["admin", "reviewer"]),
     ("rohan", "Rohan", "#0891b2", ["leaver", "member"]),
     ("neha", "Neha", "#16a34a", ["successor", "member"]),
     ("kabir", "Kabir", "#ea580c", ["member"]),

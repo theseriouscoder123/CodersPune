@@ -1,8 +1,10 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui";
 import { api } from "@/lib/api";
 
 export function TryDemoButton() {
@@ -12,9 +14,9 @@ export function TryDemoButton() {
 
   return (
     <div>
-      <button
-        type="button"
-        disabled={busy}
+      <Button
+        size="lg"
+        loading={busy}
         onClick={async () => {
           setBusy(true);
           setError(null);
@@ -26,12 +28,11 @@ export function TryDemoButton() {
             setBusy(false);
           }
         }}
-        className="rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy/90 disabled:opacity-60"
         data-testid="try-demo"
       >
-        {busy ? "Opening the demo…" : "Try the demo (no sign-up)"}
-      </button>
-      {error && <p className="mt-2 text-sm text-rose-700">Couldn&apos;t open the demo: {error}</p>}
+        {busy ? "Preparing your copy…" : "Try the demo"} {!busy && <ArrowRight className="h-4 w-4" />}
+      </Button>
+      {error && <p className="mt-2 text-sm text-missing">Couldn&apos;t open the demo: {error}</p>}
     </div>
   );
 }

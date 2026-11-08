@@ -44,6 +44,8 @@ See `docs/DECISIONS.md` D8.
 
 - **AI-assisted:** the code in this repository was written with **Claude Code (Anthropic)** under Archit's direction.
 - **Scaffolding:** `apps/web` was generated with `create-next-app` (Next.js, TypeScript, Tailwind CSS, ESLint).
+- **UI libraries/assets:** icons from `lucide-react` (ISC licence); fonts Fraunces, Geist and Geist Mono (SIL Open Font
+  License) loaded through `next/font/google`. The visual design and components were written for this project.
 - **Data:** all demo data is **synthetic**, written for this project. No real club or workplace data is used.
 - No code was written before the official build window (opened Sun 8 Nov 2026, 10:00 IST). Planning documents in
   `docs/` predate the code, which the rules permit.

@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb, X } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
 const listeners = new Set<() => void>();
@@ -17,19 +18,19 @@ function isDismissed(key: string): boolean {
   }
 }
 
-/** One-sentence, dismissible explanation of the current step (usability: first-time visitors, no walkthrough). */
-export function CoachBar({ id, children }: { id: string; children: React.ReactNode }) {
+/** One-sentence, dismissible explanation of the current step (first-time visitors, no walkthrough). */
+export function CoachBar({ id, step, children }: { id: string; step?: string; children: React.ReactNode }) {
   const key = `baton:coach:${id}`;
-  // Server snapshot = hidden, so prerendered HTML never flashes a bar the visitor already dismissed.
   const dismissed = useSyncExternalStore(subscribe, () => isDismissed(key), () => true);
   if (dismissed) return null;
   return (
-    <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-navy" role="note">
-      <span aria-hidden className="mt-0.5">💡</span>
-      <div className="flex-1">{children}</div>
-      <button
-        type="button"
-        className="text-xs font-semibold text-muted hover:text-navy"
+    <div className="animate-rise mb-6 flex items-start gap-3 rounded-2xl border border-amber/30 bg-amber-soft/70 px-4 py-3.5 text-sm text-ink" role="note">
+      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-amber/20 text-amber-ink"><Lightbulb className="h-4 w-4" /></span>
+      <div className="flex-1 leading-relaxed">
+        {step && <span className="mr-1.5 font-semibold text-amber-ink">{step}</span>}
+        {children}
+      </div>
+      <button type="button" aria-label="Dismiss tip" className="rounded-lg p-1 text-muted transition hover:bg-amber/15 hover:text-ink"
         onClick={() => {
           try {
             localStorage.setItem(key, "1");
@@ -37,9 +38,8 @@ export function CoachBar({ id, children }: { id: string; children: React.ReactNo
             /* ignore */
           }
           listeners.forEach((l) => l());
-        }}
-      >
-        Got it
+        }}>
+        <X className="h-4 w-4" />
       </button>
     </div>
   );

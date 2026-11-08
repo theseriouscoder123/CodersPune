@@ -70,6 +70,7 @@ def test_mask_phone_and_email():
     assert "rohan.d@example.com" not in out and "r***@…" in out
 
 
-@pytest.mark.parametrize("text", ["fest on 2026-04-02", "₹40,000 by 20 Dec", "PR #142", "33 commits; rohan 31"])
+@pytest.mark.parametrize("text", ["fest on 2026-04-02", "₹40,000 by 20 Dec", "PR #142", "33 commits; rohan 31",
+                                  "[2026-11-03 20:30] sana: winter fest posters", "#dev messages on 2026-11-03\n[2026-11-03 20:30] x"])
 def test_mask_leaves_dates_amounts_numbers(text):
     assert mask_pii(text) == text

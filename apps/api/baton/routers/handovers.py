@@ -141,6 +141,10 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
     return {"version": n, "items": len(items)}
 
 
+def _ts(iso: str | None) -> float:
+    return datetime.fromisoformat(iso).timestamp() if iso else 0.0
+
+
 def _latest(db: Session, h: Handover, version: int | None) -> HandoverVersion | None:
     q = select(HandoverVersion).where(HandoverVersion.handover_id == h.id)
     q = q.where(HandoverVersion.version == version) if version else q.order_by(HandoverVersion.version.desc())
@@ -170,6 +174,10 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
             sections["decisions"].append(out)
         else:
             sections[_section(it)].append(out)
+    # Start with concrete next actions, newest first; then unfinished work. Other sections newest first.
+    sections["start_here"].sort(key=lambda it: (it["type"] != "next_action", -_ts(it.get("occurred_at"))))
+    for key in ("owners", "decisions", "risks", "dependencies"):
+        sections[key].sort(key=lambda it: (bool(it.get("history")), -_ts(it.get("occurred_at"))))
     approver = db.get(Member, v.approved_by) if v.approved_by else None
     return {
         "handover_id": str(h.id), "version": v.version, "approved_at": v.approved_at.isoformat(),

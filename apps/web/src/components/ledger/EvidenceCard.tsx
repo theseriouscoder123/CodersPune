@@ -1,54 +1,67 @@
+import { CheckCircle2, CircleSlash, ExternalLink, Lock, Quote, Users, XCircle } from "lucide-react";
+
 import type { EvidenceInfo } from "@/lib/api";
 
-const VERDICT_STYLE: Record<string, string> = {
-  supports: "text-emerald-700",
-  contradicts: "text-orange-700",
-  insufficient: "text-zinc-600",
-  pending: "text-zinc-500",
+const VERDICT: Record<string, { label: string; cls: string }> = {
+  supports: { label: "supports the claim", cls: "text-verified" },
+  contradicts: { label: "contradicts the claim", cls: "text-conflicting" },
+  insufficient: { label: "doesn't establish the claim", cls: "text-inferred" },
+  pending: { label: "not checked yet", cls: "text-muted" },
 };
 
 export function EvidenceCard({ e }: { e: EvidenceInfo }) {
   const url = typeof e.location?.url === "string" ? (e.location.url as string) : null;
+  const restricted = e.source.access !== "All members";
+  const v = VERDICT[e.verdict] ?? VERDICT.pending;
   return (
-    <div className="rounded-xl border border-line bg-white p-4" data-testid="evidence-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-        <span>
-          <span className="font-semibold text-navy">{e.ref}</span> · {e.source.name}
-          {e.author ? ` · ${e.author}` : ""}
-          {e.occurred_at ? ` · ${e.occurred_at.slice(0, 10)}` : ""}
+    <div className="animate-rise overflow-hidden rounded-2xl border border-line bg-card" data-testid="evidence-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper/60 px-4 py-2.5">
+        <span className="flex min-w-0 items-center gap-2 text-xs">
+          <span className="font-mono font-semibold text-supported">{e.ref}</span>
+          <span className="truncate text-muted">· {e.source.name}{e.author ? ` · ${e.author}` : ""}{e.occurred_at ? ` · ${e.occurred_at.slice(0, 10)}` : ""}</span>
         </span>
-        <span className="rounded-full bg-panel px-2 py-0.5 ring-1 ring-line">Visible to: {e.source.access}</span>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${restricted ? "bg-missing-soft text-missing ring-missing/20" : "bg-paper-2 text-ink-2 ring-line"}`}>
+          {restricted ? <Lock className="h-3 w-3" /> : <Users className="h-3 w-3" />} {e.source.access}
+        </span>
       </div>
-      <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-panel p-3 font-mono text-[12.5px] leading-relaxed text-zinc-700">
-        {e.excerpt.truncated_start && "…"}
+
+      <pre className="scroll-quiet max-h-72 overflow-auto whitespace-pre-wrap break-words px-4 py-3.5 font-mono text-[12.5px] leading-[1.65] text-ink-2">
+        {e.excerpt.truncated_start && <span className="text-muted">… </span>}
         {e.excerpt.before}
-        {e.excerpt.match && <mark className="rounded bg-amber/40 px-0.5 text-navy" data-testid="evidence-highlight">{e.excerpt.match}</mark>}
-        {e.excerpt.after}
-        {e.excerpt.truncated_end && "…"}
-      </pre>
-      <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-2">
-        <div>
-          <dt className="inline text-muted">Quote check: </dt>
-          <dd className={`inline font-semibold ${e.quote_found ? "text-emerald-700" : "text-rose-700"}`}>
-            {e.quote_found ? `found in source (match ${e.match_score})` : `not found (best match ${e.match_score})`}
-          </dd>
-        </div>
-        <div>
-          <dt className="inline text-muted">Separate verifier: </dt>
-          <dd className={`inline font-semibold ${VERDICT_STYLE[e.verdict] ?? ""}`}>
-            {!e.quote_found ? "not run (quote failed)" : e.verdict}
-          </dd>
-        </div>
-        {e.verdict_reason && e.quote_found && <p className="text-muted sm:col-span-2">“{e.verdict_reason}”</p>}
-        {!e.quote_found && (
-          <p className="text-rose-700 sm:col-span-2">
-            The AI cited “{e.quote}”, but that text isn&apos;t in the source, so it can&apos;t support the claim.
-          </p>
+        {e.excerpt.match && (
+          <mark className="rounded-[3px] bg-amber/30 px-0.5 text-ink shadow-[inset_0_-2px_0_var(--amber)]" data-testid="evidence-highlight">{e.excerpt.match}</mark>
         )}
-      </dl>
+        {e.excerpt.after}
+        {e.excerpt.truncated_end && <span className="text-muted"> …</span>}
+      </pre>
+
+      <div className="grid gap-px border-t border-line bg-line text-xs sm:grid-cols-2">
+        <div className="flex items-start gap-2 bg-card px-4 py-2.5">
+          {e.quote_found ? <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-verified" /> : <XCircle className="mt-px h-3.5 w-3.5 shrink-0 text-missing" />}
+          <span>
+            <span className="font-semibold text-ink">Quote check</span>
+            <span className={`block ${e.quote_found ? "text-verified" : "text-missing"}`}>
+              {e.quote_found ? `Found verbatim in the source (match ${e.match_score})` : `Not in the source (best match ${e.match_score})`}
+            </span>
+          </span>
+        </div>
+        <div className="flex items-start gap-2 bg-card px-4 py-2.5">
+          {e.quote_found ? <Quote className={`mt-px h-3.5 w-3.5 shrink-0 ${v.cls}`} /> : <CircleSlash className="mt-px h-3.5 w-3.5 shrink-0 text-muted" />}
+          <span>
+            <span className="font-semibold text-ink">Independent verifier</span>
+            <span className={`block ${e.quote_found ? v.cls : "text-muted"}`}>{e.quote_found ? `Excerpt ${v.label}` : "Not run: the quote failed"}</span>
+            {e.verdict_reason && e.quote_found && <span className="mt-0.5 block italic text-muted">“{e.verdict_reason}”</span>}
+          </span>
+        </div>
+      </div>
+      {!e.quote_found && (
+        <p className="border-t border-line bg-missing-soft/60 px-4 py-2.5 text-xs text-missing">
+          The AI cited “{e.quote}”, but that text isn&apos;t in the source, so it can&apos;t support the claim.
+        </p>
+      )}
       {url && (
-        <p className="mt-2 text-[11px] text-muted">
-          Source location: <span className="font-mono">{url.replace(/^https?:\/\//, "")}</span>
+        <p className="flex items-center gap-1.5 border-t border-line px-4 py-2 text-[11px] text-muted">
+          <ExternalLink className="h-3 w-3" /> <span className="truncate font-mono">{url.replace(/^https?:\/\//, "")}</span>
         </p>
       )}
     </div>

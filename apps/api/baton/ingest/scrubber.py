@@ -70,13 +70,16 @@ _EMAIL = re.compile(r"\b([A-Za-z0-9._%+\-])[A-Za-z0-9._%+\-]*@([A-Za-z0-9.\-]+\.
 _PHONE = re.compile(r"(?<![\w.])(\+\d{1,3}[\s\-]?)?(\d[\d\s\-]{8,}\d)(?![\w.])")
 
 
+_DATEISH = re.compile(r"\b(?:19|20)\d{2}-\d{2}-\d{2}\b")  # ISO date inside a digit run = timestamp, not phone
+
+
 def mask_pii(text: str) -> str:
     text = _EMAIL.sub(lambda m: f"{m.group(1)}***@…", text)
 
     def _phone(m: re.Match[str]) -> str:
         digits = re.sub(r"\D", "", m.group(2))
-        if len(digits) < 10:
-            return m.group(0)
+        if len(digits) < 10 or _DATEISH.search(m.group(0)):
+            return m.group(0)  # dates/timestamps such as "2026-11-03 20:30" are not phone numbers
         cc = (m.group(1) or "").strip()
         return f"{cc + ' ' if cc else ''}{digits[:2]}{'*' * (len(digits) - 2)}"
 
