@@ -7,8 +7,9 @@ they are allowed to access.
 
 > CodersInPune Hackathon · Round 2 (The Build) · Team LoneWolf (Archit Dandavate)
 
-- **Live app:** _coming soon_
-- **API health:** _coming soon_ (`/api/health`)
+- **Live app:** https://baton-lac.vercel.app
+- **API health:** https://baton-lac.vercel.app/api/health
+- **Repo:** https://github.com/theseriouscoder123/CodersPune
 
 ## 60-second tour
 

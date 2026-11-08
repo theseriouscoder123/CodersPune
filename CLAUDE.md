@@ -122,6 +122,11 @@ cd apps/api && pytest -q
 cd apps/api && python -m eval.eval_citations  # prints citation precision/recall vs golden ledger
 cd apps/web && pnpm install && pnpm dev       # :3000, expects NEXT_PUBLIC_API_URL
 cd apps/web && pnpm exec playwright test      # judge-flow e2e
+# deploy (Vercel CLI, linked projects: apps/api -> baton-api, apps/web -> baton)
+cd apps/api && uv export --no-hashes --no-dev --no-emit-project -o requirements.txt   # after any dep change
+cd apps/api && DATABASE_URL="$PROD_DATABASE_URL" uv run alembic upgrade head        # migrate Neon
+cd apps/api && npx vercel deploy --prod --yes     # https://baton-api-peach.vercel.app
+cd apps/web && npx vercel deploy --prod --yes     # https://baton-lac.vercel.app (API_ORIGIN set at build time)
 ```
 
 ## 6. Working rules for you
