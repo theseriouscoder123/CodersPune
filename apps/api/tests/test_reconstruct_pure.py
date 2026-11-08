@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from baton.reconstruct.checklist import build_checklist
-from baton.reconstruct.conflicts import ClaimLite, plan_conflicts
+from baton.reconstruct.conflicts import ClaimLite, plan_conflicts, same_value
 from baton.reconstruct.values import normalise_value
 
 
@@ -78,3 +78,35 @@ def test_checklist_items_from_signals():
     assert "owner.src_a_ts" not in items         # 50% share is not ownership
     deps = [k for k in items if k.startswith("dependency.")]
     assert deps == ["dependency.firebase", "dependency.cloudinary", "dependency.papaparse"]  # boring deps skipped, max 3
+
+
+def test_reversal_language_supersedes_without_llm_hint():
+    plan = plan_conflicts([
+        ClaimLite("jan", "auth.provider", "Supabase Auth", d(1), False, "The project adopted Supabase Auth for sign-in."),
+        ClaimLite("feb", "auth.provider", "Firebase Auth", d(2), False, "Firebase Auth replaced Supabase Auth to use one console."),
+    ])
+    assert plan.superseded == {"jan": "feb"} and not plan.groups
+
+
+def test_handover_transition_is_not_a_conflict():
+    plan = plan_conflicts([
+        ClaimLite("a", "app.owner", "Rohan", d(1), False, "Rohan is the lead of the app team until November."),
+        ClaimLite("b", "app.owner", "Neha", d(10), False, "Neha is taking over the app from Rohan on 15 Nov."),
+    ])
+    assert plan.superseded == {"a": "b"}
+
+
+def test_reversal_words_without_old_value_still_conflict():
+    plan = plan_conflicts([
+        ClaimLite("notes", "upload.max_size", "5 MB", d(4), False, "Agreed to raise the poster upload limit to 5 MB."),
+        ClaimLite("code", "upload.max_size", "2 MB", d(2), False, "The API route limits poster uploads to 2 MB."),
+        ClaimLite("code2", "upload.max_size", "2 MB", d(2), False, "Poster uploads are limited to 2 MB."),
+    ])
+    assert set(plan.groups["upload.max_size"]) == {"notes", "code", "code2"} and not plan.superseded
+
+
+def test_same_value_token_subset():
+    assert same_value("Tailwind", "Tailwind CSS")
+    assert same_value("FCM", "Firebase Cloud Messaging")
+    assert not same_value("Supabase", "Firebase")
+    assert not same_value("5 MB", "2 MB")

@@ -35,8 +35,7 @@ class GeminiTransport:
             raise TransientError(f"gemini network error {type(exc).__name__}") from exc
 
         if r.status_code in (429, 500, 502, 503, 504):
-            retry = r.headers.get("retry-after")
-            raise TransientError(f"gemini {r.status_code}", float(retry) if retry and retry.isdigit() else None)
+            raise TransientError(f"gemini {r.status_code}", _retry_delay(r))
         if r.status_code >= 400:
             msg = ""
             try:
@@ -55,3 +54,16 @@ class GeminiTransport:
         text = "".join(p.get("text", "") for p in cands[0]["content"]["parts"] if not p.get("thought"))
         um = data.get("usageMetadata", {})
         return text, {"tokens_in": um.get("promptTokenCount"), "tokens_out": um.get("candidatesTokenCount")}
+
+
+def _retry_delay(r: httpx.Response) -> float | None:
+    """Gemini puts the wait in error.details[RetryInfo].retryDelay (e.g. '37s'); fall back to Retry-After."""
+    try:
+        for d in r.json().get("error", {}).get("details", []):
+            delay = d.get("retryDelay")
+            if isinstance(delay, str) and delay.endswith("s"):
+                return min(float(delay[:-1]) + 1, 60)
+    except (ValueError, AttributeError):
+        pass
+    h = r.headers.get("retry-after")
+    return float(h) if h and h.isdigit() else None

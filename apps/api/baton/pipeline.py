@@ -46,6 +46,7 @@ STEP_LABELS = {"ingest": "Ingest sources", "checklist": "Build expected-knowledg
                "verify": "Verify evidence (separate model)", "conflicts": "Detect conflicts and reversals",
                "status": "Assign statuses (rules)", "handover": "Prepare handover"}
 PARALLEL = 4
+VERIFY_PARALLEL = 3  # the verify model has the tightest free-tier rate limit
 LEASE = timedelta(seconds=330)
 
 
@@ -98,8 +99,9 @@ def advance(run_id, budget_s: float | None = None) -> dict:
                     break
                 if run.status == "queued":
                     run.status, run.started_at = "running", datetime.now(UTC)
-                job = db.scalar(select(Job).where(Job.run_id == run_id, Job.status.in_(["pending", "running"]))
-                                .order_by(Job.created_at))
+                open_jobs = list(db.scalars(select(Job).where(Job.run_id == run_id, Job.status.in_(["pending", "running"]))))
+                # Jobs share one created_at (same transaction), so order by pipeline position, never by timestamp.
+                job = min(open_jobs, key=lambda j: STEPS.index(j.step)) if open_jobs else None
                 if job is None:
                     _finish(db, run)
                     break
@@ -149,7 +151,7 @@ def _finish(db: Session, run: Run) -> None:
 def run_progress(run_id) -> dict:
     with SessionLocal() as db:
         run = db.get(Run, run_id)
-        jobs = list(db.scalars(select(Job).where(Job.run_id == run_id).order_by(Job.created_at)))
+        jobs = sorted(db.scalars(select(Job).where(Job.run_id == run_id)), key=lambda j: STEPS.index(j.step) if j.step in STEPS else 99)
         return {
             "id": str(run.id), "workspace_id": str(run.workspace_id), "status": run.status, "error": run.error,
             "started_at": run.started_at.isoformat() if run.started_at else None,
@@ -208,13 +210,13 @@ def _chunk_label(ch: Chunk, src: Source) -> str:
     return f"{ch.kind} · {source_ref(ch.kind, ch.location, ch.occurred_at, src.name)} · {when}{who}"
 
 
-def _waves(units: list, deadline: float, fn, on_result) -> int:
+def _waves(units: list, deadline: float, fn, on_result, parallel: int = PARALLEL) -> int:
     """Run `fn(unit)` in parallel waves until the deadline; `on_result(unit, result|exception)` in the main thread."""
     done = 0
-    with ThreadPoolExecutor(max_workers=PARALLEL) as pool:
+    with ThreadPoolExecutor(max_workers=parallel) as pool:
         i = 0
         while i < len(units) and time.monotonic() < deadline:
-            wave = units[i : i + PARALLEL]
+            wave = units[i : i + parallel]
             futures = [(u, pool.submit(fn, u)) for u in wave]
             for u, f in futures:
                 try:
@@ -445,8 +447,12 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
         rows = db.execute(select(Evidence.id, Claim.text, Chunk.text, Evidence.match_start, Evidence.match_end, Evidence.quote)
                           .join(Claim, Claim.id == Evidence.claim_id).join(Chunk, Chunk.id == Evidence.chunk_id)
                           .where(Claim.workspace_id == workspace_id, Evidence.quote_found.is_(True),
-                                 Evidence.verdict == "pending", Evidence.verifier.is_(None))).all()
+                                 Evidence.verdict == "pending",
+                                 (Evidence.verifier.is_(None)) | (Evidence.verifier == "error"))).all()
         job = db.get(Job, job_id)
+        state = dict(job.state or {})
+        retried = set(state.get("retried", []))
+        rows = [r for r in rows if str(r[0]) not in retried]  # an errored item gets exactly one more attempt
         if not job.total:
             _set_job(job_id, total=len(rows))
         base = job.progress or 0
@@ -461,29 +467,34 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
     def save(row, result):
         with SessionLocal.begin() as db:
             ev = db.get(Evidence, row[0])
+            j = db.get(Job, job_id)
+            if ev.verifier == "error":  # this was the retry; never loop on it again
+                j.state = {**(j.state or {}), "retried": sorted(set((j.state or {}).get("retried", [])) | {str(ev.id)})}
+            else:
+                counter["n"] += 1
             if isinstance(result, Exception):
                 _job_error(job_id, f"verify: {getattr(result, 'user_message', None) or type(result).__name__}")
                 ev.verifier = "error"  # stays 'pending' -> status explains 'verification unavailable'
             else:
                 ev.verdict, ev.verdict_reason, ev.verifier = result.verdict, result.reason[:300], s.llm_model_verify
-            counter["n"] += 1
-            j = db.get(Job, job_id)
-            j.progress = counter["n"]
-            j.message = f"{counter['n']}/{j.total} evidence items checked"
+            j.progress = min(counter["n"], j.total or counter["n"])
+            j.message = f"{j.progress}/{j.total} evidence items checked"
 
-    _waves(list(rows), deadline, check, save)
+    _waves(list(rows), deadline, check, save, parallel=VERIFY_PARALLEL)
     with SessionLocal() as db:
-        left = db.scalar(select(func.count()).select_from(Evidence).join(Claim, Claim.id == Evidence.claim_id)
-                         .where(Claim.workspace_id == workspace_id, Evidence.quote_found.is_(True),
-                                Evidence.verdict == "pending", Evidence.verifier.is_(None)))
-    return left == 0
+        retried = set((db.get(Job, job_id).state or {}).get("retried", []))
+        left = [i for (i,) in db.execute(select(Evidence.id).join(Claim, Claim.id == Evidence.claim_id).where(
+            Claim.workspace_id == workspace_id, Evidence.quote_found.is_(True), Evidence.verdict == "pending",
+            (Evidence.verifier.is_(None)) | (Evidence.verifier == "error")))]
+    return all(str(i) in retried for i in left)
 
 
 def step_conflicts(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
         claims = list(db.scalars(select(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state != "rejected",
                                                      Claim.conflict_group_id.is_(None))))
-        plan = plan_conflicts([ClaimLite(str(c.id), c.subject_key, c.value, c.occurred_at, c.supersedes_hint) for c in claims])
+        plan = plan_conflicts([ClaimLite(str(c.id), c.subject_key, c.value, c.occurred_at, c.supersedes_hint, c.text)
+                               for c in claims])
         by_id = {str(c.id): c for c in claims}
         for old, new in plan.superseded.items():
             by_id[old].superseded_by = by_id[new].id

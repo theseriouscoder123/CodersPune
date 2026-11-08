@@ -79,7 +79,7 @@ class LLM:
         self.transport = transport
 
     def structured(self, *, system: str, user: str, schema: type[T], model: str, purpose: str,
-                   temperature: float = 0.0, workspace_id=None, run_id=None, max_transient_retries: int = 4) -> T:
+                   temperature: float = 0.0, workspace_id=None, run_id=None, max_transient_retries: int = 6) -> T:
         json_schema = inline_refs(schema.model_json_schema())
         schema_attempts = 0
         transient = 0
@@ -108,7 +108,7 @@ class LLM:
                 transient += 1
                 if transient > max_transient_retries:
                     raise LLMError(last_err, "The AI provider is busy or out of quota. Try again in a few minutes.") from exc
-                time.sleep(min(exc.retry_after or (2 ** transient), 20))
+                time.sleep(min(exc.retry_after or (2 ** transient), 60))
 
 
 def get_llm() -> LLM:
