@@ -46,3 +46,23 @@ def test_chat_threads_and_channels_are_separate():
     assert any("root" in t and "reply" in t for t in dev_texts)          # thread grouped
     assert not any("much later" in t and "unrelated" in t for t in dev_texts)  # >20 min apart split
     assert all("secret plans" not in t for t in dev_texts)               # channels never mix
+
+
+def test_discord_export_replies_become_threads():
+    export = {
+        "guild": {"name": "Robotics"},
+        "channel": {"name": "build-team"},
+        "messages": [
+            {"id": "1", "type": "Default", "timestamp": "2026-03-01T10:00:00+00:00", "content": "Which motor driver?", "author": {"name": "asha"}},
+            {"id": "2", "type": "Reply", "timestamp": "2026-03-01T10:05:00+00:00", "content": "Going with the TB6612", "author": {"name": "ben"},
+             "reference": {"messageId": "1"}},
+            {"id": "3", "type": "ChannelPinnedMessage", "timestamp": "2026-03-01T10:06:00+00:00", "content": "pinned", "author": {"name": "x"}},
+            {"id": "4", "type": "Default", "timestamp": "2026-03-02T18:00:00+00:00", "content": "unrelated later", "author": {"name": "cy"}},
+        ],
+    }
+    out = parse_chat_export(json.dumps(export))
+    assert set(out) == {"build-team"}
+    texts = [c.text for c in out["build-team"]]
+    assert any("Which motor driver?" in t and "TB6612" in t for t in texts)  # reply grouped with its parent
+    assert not any("pinned" in t for t in texts)
+    assert not any("unrelated later" in t and "TB6612" in t for t in texts)

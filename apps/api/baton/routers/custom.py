@@ -81,6 +81,7 @@ async def create_workspace(
     notes: list[UploadFile] | None = File(None),
     chat: UploadFile | None = File(None),
     confirm_authorised: bool = Form(False),
+    github_token: str | None = Form(None, max_length=255),
 ) -> dict:
     s = get_settings()
     notes = [f for f in (notes or []) if f.filename]
@@ -156,8 +157,26 @@ async def create_workspace(
 
     if repo:
         owner, rname = parse_repo(repo)
-        db.add(Source(workspace_id=ws.id, type="github_repo", name=f"{owner}/{rname}",
-                      uri=f"https://github.com/{owner}/{rname}", acl=_acl(repo_access, ids), meta={"pending": True}))
+        src = Source(workspace_id=ws.id, type="github_repo", name=f"{owner}/{rname}",
+                     uri=f"https://github.com/{owner}/{rname}", acl=_acl(repo_access, ids), meta={"pending": True})
+        db.add(src)
+        db.flush()
+        token = (github_token or "").strip()
+        if token:
+            # Private repo: read it now with the visitor's token, then forget the token (never stored or logged).
+            from baton.ingest.github import fetch_repo
+            from baton.ingest.github_normalise import normalise
+
+            try:
+                data = fetch_repo(repo, user_token=token)
+            except GitHubError as exc:
+                db.rollback()
+                raise HTTPException(422, f"GitHub: {exc.args[0]}") from exc
+            finally:
+                token = ""
+            drafts, meta = normalise(data)
+            src.meta = {**meta, "private": bool(data.repo.get("private")), "repo": data.repo.get("full_name")}
+            store_chunks(db, src, drafts)
     if note_drafts:
         src = Source(workspace_id=ws.id, type="upload", name="Uploaded notes", acl=_acl(notes_access, ids),
                      meta={"files": [f.filename for f in notes]})

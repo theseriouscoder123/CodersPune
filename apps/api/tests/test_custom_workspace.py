@@ -89,3 +89,34 @@ def test_daily_limit_per_visitor():
     r = post(c)
     assert r.status_code == 429 and "Limit" in r.json()["detail"]
     cleanup(v)
+
+
+def test_private_repo_token_is_used_once_and_never_stored(monkeypatch):
+    from baton.ingest import github
+    from baton.ingest.github_normalise import RepoData
+
+    seen = {}
+
+    def fake_fetch(url, token=None, *, user_token=None):
+        seen["user_token"] = user_token
+        return RepoData(repo={"full_name": "acme/secret-app", "html_url": "https://github.com/acme/secret-app",
+                              "private": True, "default_branch": "main"},
+                        files={"README.md": "# Secret app\n\nDeploys with fly.io."})
+
+    monkeypatch.setattr(github, "fetch_repo", fake_fetch)
+    v = "pytest-custom-private"
+    cleanup(v)
+    c = client(v)
+    token = "github_pat_" + "x" * 40
+    r = post(c, data={"repo_url": "https://github.com/acme/secret-app", "github_token": token}, files=[])
+    assert r.status_code == 200, r.text
+    assert seen["user_token"] == token
+    from sqlalchemy import text as sql_text
+
+    with SessionLocal() as db:
+        dump = db.execute(sql_text("SELECT string_agg(meta::text || name || coalesce(uri,''), ' ') FROM sources WHERE workspace_id = :w"),
+                          {"w": r.json()["workspace_id"]}).scalar()
+        chunks = db.execute(sql_text("SELECT string_agg(text, ' ') FROM chunks WHERE workspace_id = :w"), {"w": r.json()["workspace_id"]}).scalar()
+        assert token not in (dump or "") and token not in (chunks or "")
+        assert '"private": true' in dump and "Deploys with fly.io" in chunks
+    cleanup(v)

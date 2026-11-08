@@ -60,7 +60,7 @@ class _Client:
         async with self.sem:
             r = await self.http.get(path, params=params or None)
         if r.status_code == 404:
-            raise GitHubError("Repository not found. It must be public (private repos aren't supported in this build).")
+            raise GitHubError("Repository not found. Check the URL; for a private repository, add a read-only token.")
         if r.status_code in (403, 429) and r.headers.get("x-ratelimit-remaining") == "0":
             raise GitHubError("GitHub rate limit reached. Try again in a few minutes.")
         if r.status_code >= 400:
@@ -81,13 +81,13 @@ class _Client:
         return out[:limit]
 
 
-async def _fetch(owner: str, name: str, token: str) -> RepoData:
+async def _fetch(owner: str, name: str, token: str, allow_private: bool = False) -> RepoData:
     c = _Client(token)
     try:
         base = f"/repos/{owner}/{name}"
         repo = await c.get(base)
-        if repo.get("private"):
-            raise GitHubError("Private repositories aren't supported in this build.")
+        if repo.get("private") and not allow_private:
+            raise GitHubError("This repository is private. Add a read-only access token to read it.")
         branch = repo.get("default_branch", "main")
 
         tree_task = c.get(f"{base}/git/trees/{branch}", recursive="1")
@@ -136,6 +136,10 @@ async def _fetch(owner: str, name: str, token: str) -> RepoData:
         await c.http.aclose()
 
 
-def fetch_repo(url_or_slug: str, token: str | None = None) -> RepoData:
+def fetch_repo(url_or_slug: str, token: str | None = None, *, user_token: str | None = None) -> RepoData:
+    """`user_token`: a visitor-supplied read-only token for a private repo. It is used for this call only and never
+    stored or logged."""
     owner, name = parse_repo(url_or_slug)
+    if user_token:
+        return asyncio.run(_fetch(owner, name, user_token, allow_private=True))
     return asyncio.run(_fetch(owner, name, get_settings().github_token if token is None else token))

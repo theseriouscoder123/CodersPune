@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, GitBranch, MessageSquare, Plus, ShieldCheck, Trash2, Upload, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, GitBranch, Lock, MessageSquare, Plus, ShieldCheck, Trash2, Upload, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -72,6 +72,7 @@ export default function NewWorkspacePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [repo, setRepo] = useState("");
+  const [ghToken, setGhToken] = useState("");
   const [people, setPeople] = useState<Person[]>([
     { name: "", handle: "", role: "reviewer" },
     { name: "", handle: "", role: "leaver" },
@@ -105,6 +106,7 @@ export default function NewWorkspacePage() {
     fd.set("name", name.trim());
     fd.set("members", JSON.stringify(people.map((p) => ({ name: p.name.trim(), handle: p.handle.trim(), roles: [p.role] }))));
     if (repo.trim()) fd.set("repo_url", repo.trim());
+    if (repo.trim() && ghToken.trim()) fd.set("github_token", ghToken.trim());
     fd.set("repo_access", accessValue(repoAccess));
     fd.set("notes_access", accessValue(notesAccess));
     fd.set("chat_access", accessValue(chatAccess));
@@ -191,6 +193,17 @@ export default function NewWorkspacePage() {
                   <input id="repo" value={repo} onChange={(e) => setRepo(e.target.value)} className={`${INPUT} pl-9`} placeholder="https://github.com/owner/repo" />
                 </div>
                 <p className="mt-1.5 text-xs text-muted">Reads the latest 300 commits, 60 PRs, 60 issues and up to 30 docs/config files. Very old history may be skipped to stay within the free AI budget.</p>
+                {repo.trim() && (
+                  <details className="group mt-3 rounded-xl border border-line bg-paper/60 px-3 py-2 text-sm">
+                    <summary className="flex cursor-pointer list-none items-center gap-2 text-ink-2"><Lock className="h-3.5 w-3.5" /> Private repository? Add a read-only token</summary>
+                    <input type="password" autoComplete="off" value={ghToken} onChange={(e) => setGhToken(e.target.value)} placeholder="github_pat_…"
+                      className={`${INPUT} mt-2 font-mono`} aria-label="GitHub read-only token" />
+                    <p className="mt-1.5 text-xs text-muted">
+                      Use a fine-grained token with <b>read-only</b> access to this one repository. It&apos;s used once to read the repo while the workspace is
+                      created and is <b>never stored or logged</b>. Private repos can&apos;t be auto-refreshed later for the same reason.
+                    </p>
+                  </details>
+                )}
                 {repo.trim() && <AccessPicker label="Repository access" value={repoAccess} onChange={setRepoAccess} people={people} />}
               </div>
               <div className="border-t border-line pt-4">
@@ -206,12 +219,12 @@ export default function NewWorkspacePage() {
                 <span className="text-sm font-semibold text-ink">Chat export</span>
                 <label className={FILE_ZONE}>
                   <MessageSquare className="h-4 w-4 shrink-0 text-muted" />
-                  <span className="flex-1 truncate">{chat ? chat.name : "Choose a Slack-style JSON export"}</span>
+                  <span className="flex-1 truncate">{chat ? chat.name : "Choose a Slack or Discord JSON export"}</span>
                   <input id="chat" type="file" accept=".json" onChange={(e) => setChat(e.target.files?.[0] ?? null)} className="sr-only" />
                 </label>
                 <p className="mt-1.5 text-xs text-muted">
                   A JSON array of messages with <code className="font-mono">ts</code>, <code className="font-mono">text</code>, <code className="font-mono">user</code> and optional{" "}
-                  <code className="font-mono">thread_ts</code>/<code className="font-mono">channel</code>. Each channel becomes its own source.
+                  <code className="font-mono">thread_ts</code>/<code className="font-mono">channel</code>, or a Discord export from DiscordChatExporter (JSON). Each channel becomes its own source.
                 </p>
                 {chat && <AccessPicker label="Chat access" value={chatAccess} onChange={setChatAccess} people={people} />}
               </div>

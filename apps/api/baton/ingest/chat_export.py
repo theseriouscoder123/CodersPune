@@ -3,7 +3,9 @@ its own ACL; this is how #core-team stays restricted).
 
 Accepted shapes:
   * a JSON array of messages, each with `channel` (the demo format), or
-  * {"channel": "dev", "messages": [...]} / {"messages": [...]} with a default channel name.
+  * {"channel": "dev", "messages": [...]} / {"messages": [...]} with a default channel name, or
+  * a Discord export (DiscordChatExporter JSON: {"channel": {"name"}, "messages": [{"id", "timestamp", "content",
+    "author": {"name"}, "reference": {"messageId"}}]}); replies become threads.
 Messages need `ts` and `text`; `user`/`user_profile.name`/`thread_ts` are optional.
 """
 
@@ -37,7 +39,9 @@ def parse_chat_export(data: bytes | str, default_channel: str = "chat") -> dict[
         raw = json.loads(data)
     except json.JSONDecodeError as exc:
         raise ChatExportError(f"chat export is not valid JSON ({exc.msg})") from exc
-    if isinstance(raw, dict):
+    if isinstance(raw, dict) and _is_discord(raw):
+        raw, default_channel = _from_discord(raw, default_channel)
+    elif isinstance(raw, dict):
         default_channel = raw.get("channel") or raw.get("name") or default_channel
         raw = raw.get("messages", [])
     if not isinstance(raw, list):
@@ -52,6 +56,39 @@ def parse_chat_export(data: bytes | str, default_channel: str = "chat") -> dict[
         by_channel[(m.get("channel") or default_channel).lstrip("#")].append(m)
 
     return {ch: _chunk_channel(ch, msgs) for ch, msgs in by_channel.items()}
+
+
+def _is_discord(raw: dict) -> bool:
+    msgs = raw.get("messages") or []
+    return isinstance(raw.get("channel"), dict) or (bool(msgs) and isinstance(msgs[0], dict)
+                                                    and "content" in msgs[0] and "timestamp" in msgs[0])
+
+
+def _from_discord(raw: dict, default_channel: str) -> tuple[list[dict], str]:
+    """Normalise a Discord export to the Slack-like shape. A reply joins the thread of the message it replies to."""
+    channel = (raw.get("channel") or {}).get("name") or default_channel
+    by_id: dict[str, dict] = {}
+    out: list[dict] = []
+    for m in raw.get("messages") or []:
+        if not isinstance(m, dict) or not (m.get("content") or "").strip():
+            continue
+        if m.get("type") not in (None, "Default", "Reply"):
+            continue  # pins, joins, calls...
+        try:
+            ts = f"{datetime.fromisoformat(m['timestamp']).timestamp():.6f}"
+        except (KeyError, ValueError):
+            continue
+        author = m.get("author") or {}
+        row = {"ts": ts, "text": m["content"], "channel": channel,
+               "user_profile": {"name": author.get("nickname") or author.get("name") or "unknown"}}
+        parent = by_id.get(str((m.get("reference") or {}).get("messageId") or ""))
+        if parent is not None:
+            root_ts = parent.get("thread_ts") or parent["ts"]
+            parent["thread_ts"] = root_ts
+            row["thread_ts"] = root_ts
+        by_id[str(m.get("id"))] = row
+        out.append(row)
+    return out, channel
 
 
 def _chunk_channel(channel: str, msgs: list[dict]) -> list[ChunkDraft]:
