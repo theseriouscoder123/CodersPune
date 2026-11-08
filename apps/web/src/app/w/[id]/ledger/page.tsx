@@ -148,6 +148,9 @@ export default function LedgerPage() {
               </ol>
             ) : run.loading ? <Skeleton className="mt-3 h-40" /> : <p className="mt-2 text-sm text-muted">No pipeline run recorded.</p>}
             {ws.synthetic && <p className="mt-4 border-t border-line pt-3 text-xs text-muted">This demo ledger was computed in advance, so you never wait on the AI.</p>}
+            {(isAdmin || ws.persona.roles.includes("reviewer")) && (
+              <Link href={`/w/${ws.id}/health`} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-supported hover:underline">View pipeline health <ArrowRight className="h-3 w-3" /></Link>
+            )}
           </Card>
         </aside>
       </div>

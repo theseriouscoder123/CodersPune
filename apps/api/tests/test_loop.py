@@ -193,3 +193,13 @@ def test_bulk_confirm_skips_claims_without_passing_evidence(world):
     assert ledger(c, ws, p["meera"])["progress"]["reviewed"] == body["updated"]
     assert c.post(f"/api/workspaces/{ws}/claims/bulk-review", headers=as_(p["neha"]),
                   json={"claim_ids": ids, "action": "reject"}).status_code == 403
+
+
+def test_pipeline_health_is_admin_only(world):
+    c = client("visitor-one")
+    ws = world["s1"]
+    p = personas(c, ws)
+    r = c.get(f"/api/workspaces/{ws}/pipeline-health", headers=as_(p["meera"]))
+    assert r.status_code == 200 and {"config", "totals", "by_model", "runs"} <= set(r.json())
+    assert "api_key" not in r.text.lower()
+    assert c.get(f"/api/workspaces/{ws}/pipeline-health", headers=as_(p["neha"])).status_code == 403
