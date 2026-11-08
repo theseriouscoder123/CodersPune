@@ -90,6 +90,9 @@ async def create_workspace(
     since = datetime.now(UTC) - timedelta(days=1)
     made = db.scalar(select(func.count()).select_from(Workspace).where(
         Workspace.visitor_id == visitor.id, Workspace.sandbox_of.is_(None), Workspace.created_at > since))
+    from baton.limits import check_custom, client_ip
+
+    check_custom(db, client_ip(request))
     if made >= s.custom_workspace_daily_limit:
         raise HTTPException(429, f"Limit reached: {s.custom_workspace_daily_limit} custom workspaces per visitor per day.")
     if not s.llm_configured:

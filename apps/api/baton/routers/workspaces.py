@@ -10,6 +10,7 @@ from baton.acl import access_label, can_view_acl
 from baton.auth import Ctx, get_or_create_visitor, workspace_ctx
 from baton.db.models import Member, Membership, Source, Workspace
 from baton.db.session import get_db
+from baton.limits import check_new_sandbox, check_reset, client_ip, collect_garbage, touch
 from baton.sandbox import clone_workspace
 
 router = APIRouter(prefix="/api")
@@ -36,6 +37,7 @@ def demo_start(request: Request, response: Response, db: Session = Depends(get_d
     template = _template(db)
     ws = db.get(Workspace, visitor.sandbox_workspace_id) if visitor.sandbox_workspace_id else None
     if ws is None or ws.sandbox_of != template.id or ws.visitor_id != visitor.id:
+        check_new_sandbox(db, client_ip(request))
         new_id = clone_workspace(db, template.id, visitor.id)
         visitor.sandbox_workspace_id = new_id
         ws = db.get(Workspace, new_id)
@@ -49,6 +51,7 @@ def demo_reset(request: Request, response: Response, db: Session = Depends(get_d
     """Throw away this visitor's sandbox edits and re-clone the template."""
     visitor = get_or_create_visitor(request, response, db)
     old = db.get(Workspace, visitor.sandbox_workspace_id) if visitor.sandbox_workspace_id else None
+    check_reset(old)
     template = _template(db)
     new_id = clone_workspace(db, template.id, visitor.id)
     visitor.sandbox_workspace_id = new_id
@@ -72,6 +75,12 @@ def _members(db: Session, ws_id) -> list[dict]:
 @router.get("/workspaces/{workspace_id}")
 def get_workspace(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
     ws = ctx.workspace
+    if ctx.visitor_id:
+        from baton.db.models import Visitor
+
+        visitor = db.get(Visitor, ctx.visitor_id)
+        touch(db, visitor)
+        db.commit()
     return {
         "id": str(ws.id),
         "name": ws.name,
@@ -107,3 +116,16 @@ def list_sources(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db
             "ingested_at": s.ingested_at.isoformat() if s.ingested_at else None,
         })
     return {"sources": visible}
+
+
+@router.get("/maintenance/gc")
+def maintenance_gc(request: Request, db: Session = Depends(get_db)) -> dict:
+    """Daily Vercel cron: delete sandboxes/custom workspaces untouched for 7 days. Requires CRON_SECRET."""
+    import os
+
+    secret = os.environ.get("CRON_SECRET", "")
+    if not secret or request.headers.get("authorization") != f"Bearer {secret}":
+        raise HTTPException(401, "Unauthorized")
+    result = collect_garbage(db)
+    db.commit()
+    return result

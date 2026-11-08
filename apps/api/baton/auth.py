@@ -27,7 +27,9 @@ def get_or_create_visitor(request: Request, response: Response, db: Session) -> 
     vid = request.cookies.get(VISITOR_COOKIE)
     visitor = db.get(Visitor, vid) if vid else None
     if visitor is None:
-        visitor = Visitor(id=secrets.token_urlsafe(24))
+        from baton.limits import client_ip
+
+        visitor = Visitor(id=secrets.token_urlsafe(24), ip=client_ip(request))
         db.add(visitor)
         db.flush()
     response.set_cookie(VISITOR_COOKIE, visitor.id, max_age=60 * 60 * 24 * 30, httponly=True, samesite="lax",
