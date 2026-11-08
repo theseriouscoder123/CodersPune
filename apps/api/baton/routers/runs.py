@@ -1,0 +1,61 @@
+"""Pipeline runs. The run page drives progress by calling /advance while it polls (resumable; DECISIONS D8)."""
+
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from baton.auth import Ctx, resolve_ctx, workspace_ctx
+from baton.config import get_settings
+from baton.db.models import Run
+from baton.db.session import get_db
+from baton.pipeline import RunBusy, advance, create_run, run_progress
+
+router = APIRouter(prefix="/api")
+
+
+@router.post("/workspaces/{workspace_id}/runs")
+def start_run(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    if not ctx.is_admin:
+        raise HTTPException(403, "Only the workspace admin can start a pipeline run")
+    if not ctx.can_write:
+        raise HTTPException(403, "This is the shared read-only template. Click 'Try the demo' to get your own copy.")
+    if not get_settings().llm_configured:
+        raise HTTPException(503, "AI pipeline unavailable: no LLM key is configured on the server.")
+    try:
+        run = create_run(db, ctx.workspace.id)
+    except RunBusy as exc:
+        raise HTTPException(409, {"message": "A run is already in progress", "run_id": str(exc)}) from exc
+    db.commit()
+    return {"run_id": str(run.id)}
+
+
+@router.get("/workspaces/{workspace_id}/runs/latest")
+def latest_run(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    run = db.scalars(select(Run).where(Run.workspace_id == ctx.workspace.id).order_by(Run.created_at.desc())).first()
+    return {"run": run_progress(run.id) if run else None}
+
+
+def _run_ctx(db: Session, request: Request, run_id: uuid.UUID) -> Ctx:
+    run = db.get(Run, run_id)
+    if run is None:
+        raise HTTPException(404, "Run not found")
+    return resolve_ctx(db, request, run.workspace_id)
+
+
+@router.get("/runs/{run_id}")
+def get_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
+    _run_ctx(db, request, run_id)
+    return run_progress(run_id)
+
+
+@router.post("/runs/{run_id}/advance")
+def advance_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
+    ctx = _run_ctx(db, request, run_id)
+    if not ctx.can_write:
+        raise HTTPException(403, "Read-only workspace")
+    db.close()  # the pipeline manages its own short transactions
+    return advance(run_id)

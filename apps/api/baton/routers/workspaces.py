@@ -3,13 +3,14 @@ from __future__ import annotations
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from baton.acl import access_label, can_view_acl
 from baton.auth import Ctx, get_or_create_visitor, workspace_ctx
 from baton.db.models import Member, Membership, Source, Workspace
 from baton.db.session import get_db
+from baton.sandbox import clone_workspace
 
 router = APIRouter(prefix="/api")
 
@@ -20,18 +21,41 @@ SOURCE_KIND_LABELS = {
 }
 
 
+def _template(db: Session) -> Workspace:
+    t = db.scalars(select(Workspace).where(Workspace.is_demo_template.is_(True))
+                   .order_by(Workspace.created_at.desc()).limit(1)).first()
+    if t is None:
+        raise HTTPException(503, "The demo workspace hasn't been seeded yet.")
+    return t
+
+
 @router.post("/demo/start")
 def demo_start(request: Request, response: Response, db: Session = Depends(get_db)) -> dict:
-    """Return this visitor's demo workspace. (M1: the shared read-only template; M3: a per-visitor sandbox clone.)"""
+    """Return this visitor's own sandbox copy of the demo, cloning it on first visit (judges never collide)."""
     visitor = get_or_create_visitor(request, response, db)
-    template = db.scalars(select(Workspace).where(Workspace.is_demo_template.is_(True))
-                          .order_by(Workspace.created_at.desc()).limit(1)).first()
-    if template is None:
-        db.commit()
-        raise HTTPException(503, "The demo workspace hasn't been seeded yet.")
-    visitor.sandbox_workspace_id = template.id
+    template = _template(db)
+    ws = db.get(Workspace, visitor.sandbox_workspace_id) if visitor.sandbox_workspace_id else None
+    if ws is None or ws.sandbox_of != template.id or ws.visitor_id != visitor.id:
+        new_id = clone_workspace(db, template.id, visitor.id)
+        visitor.sandbox_workspace_id = new_id
+        ws = db.get(Workspace, new_id)
+    visitor.last_seen_at = func.now()
     db.commit()
-    return {"workspace_id": str(template.id), "sandbox": False}
+    return {"workspace_id": str(ws.id), "sandbox": True}
+
+
+@router.post("/demo/reset")
+def demo_reset(request: Request, response: Response, db: Session = Depends(get_db)) -> dict:
+    """Throw away this visitor's sandbox edits and re-clone the template."""
+    visitor = get_or_create_visitor(request, response, db)
+    old = db.get(Workspace, visitor.sandbox_workspace_id) if visitor.sandbox_workspace_id else None
+    template = _template(db)
+    new_id = clone_workspace(db, template.id, visitor.id)
+    visitor.sandbox_workspace_id = new_id
+    if old is not None and old.visitor_id == visitor.id and not old.is_demo_template:
+        db.delete(old)
+    db.commit()
+    return {"workspace_id": str(new_id), "sandbox": True}
 
 
 def _members(db: Session, ws_id) -> list[dict]:

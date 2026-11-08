@@ -66,6 +66,10 @@ def _roles(db: Session, member_id, workspace_id) -> frozenset[str]:
 
 
 def workspace_ctx(workspace_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> Ctx:
+    return resolve_ctx(db, request, workspace_id)
+
+
+def resolve_ctx(db: Session, request: Request, workspace_id) -> Ctx:
     ws = db.get(Workspace, workspace_id)
     visitor_id = request.cookies.get(VISITOR_COOKIE)
     # Visible workspaces: the demo template (read-only) and the visitor's own sandbox / custom workspaces.
