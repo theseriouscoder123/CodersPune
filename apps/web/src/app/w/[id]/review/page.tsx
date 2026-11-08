@@ -170,13 +170,13 @@ function Review() {
 
       {/* Filter bar */}
       <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex w-fit rounded-xl bg-paper-2 p-1 ring-1 ring-line" role="tablist">
+        <div className="no-scrollbar inline-flex w-fit max-w-full overflow-x-auto rounded-xl bg-paper-2 p-1 ring-1 ring-line" role="tablist">
           {TABS.map((t) => {
             const n = ledger.data?.tab_counts[t.key as keyof Ledger["tab_counts"]];
             const active = tab === t.key;
             return (
               <button key={t.key} role="tab" aria-selected={active} onClick={() => setParam("tab", t.key)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${active ? "bg-card text-ink shadow-[var(--shadow-sm)]" : "text-muted hover:text-ink"}`}>
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${active ? "bg-card text-ink shadow-[var(--shadow-sm)]" : "text-muted hover:text-ink"}`}>
                 {t.label}{n !== undefined && <span className={`ml-1.5 rounded-md px-1.5 py-px text-[11px] ${active ? "bg-paper-2" : ""}`}>{n}</span>}
               </button>
             );
