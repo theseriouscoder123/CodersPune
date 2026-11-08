@@ -7,6 +7,9 @@ export type WorkspaceInfo = {
   name: string;
   synthetic: boolean;
   read_only: boolean;
+  identity_mode?: "switcher" | "invites";
+  persona_locked?: boolean;
+  is_owner?: boolean;
   members: Member[];
   persona: { id: string; name: string; roles: string[] };
 };

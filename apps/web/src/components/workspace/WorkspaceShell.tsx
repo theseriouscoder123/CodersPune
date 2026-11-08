@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, Lock, RotateCcw, Scale, UserCheck } from "lucide-react";
+import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, Lock, RotateCcw, Scale, UserCheck, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -9,7 +9,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import { ButtonLink, Spinner } from "@/components/ui";
-import { api, ApiError, storePersona, type Member, type WorkspaceInfo } from "@/lib/api";
+import { api, ApiError, storePersona, type WorkspaceInfo } from "@/lib/api";
 
 type Ctx = { ws: WorkspaceInfo; personaVersion: number };
 const WorkspaceContext = createContext<Ctx | null>(null);
@@ -49,7 +49,7 @@ export function avatarColor(handle: string) {
   return AVATAR[h % AVATAR.length];
 }
 
-export function Avatar({ m, size = 28 }: { m: Pick<Member, "name" | "handle">; size?: number }) {
+export function Avatar({ m, size = 28 }: { m: { name: string; handle: string }; size?: number }) {
   return (
     <span className="grid shrink-0 place-items-center rounded-full font-semibold text-white ring-2 ring-card"
       style={{ background: avatarColor(m.handle), width: size, height: size, fontSize: size * 0.42 }} aria-hidden>
@@ -65,6 +65,7 @@ function shownRoles(roles: string[]) {
 
 function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: string) => void }) {
   const [open, setOpen] = useState(false);
+  const me = ws.members.find((m) => m.id === ws.persona.id);
   const ref = useRef<HTMLDivElement>(null);
   const current = ws.members.find((m) => m.id === ws.persona.id);
   useEffect(() => {
@@ -79,6 +80,20 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
     };
   }, [open]);
 
+  if (ws.persona_locked) {
+    // Identity comes from this person's invite link; the server won't accept anyone else.
+    return (
+      <div className="flex items-center gap-2.5 rounded-xl border border-line bg-card py-1.5 pl-1.5 pr-3 text-sm" data-testid="persona-locked"
+        title="You joined through a private invite link, so you always see this workspace as yourself.">
+        {me && <Avatar m={me} size={28} />}
+        <span className="text-left leading-tight">
+          <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted"><Lock className="h-2.5 w-2.5" /> Signed in as</span>
+          <span className="block font-semibold text-ink">{ws.persona.name}</span>
+        </span>
+        <span className="hidden gap-1 sm:flex">{shownRoles(ws.persona.roles).map((r) => <RoleBadge key={r} role={r} />)}</span>
+      </div>
+    );
+  }
   return (
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open} data-testid="persona-switcher"
@@ -238,6 +253,12 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
                   className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-muted transition hover:bg-paper-2 hover:text-ink sm:inline-flex">
                   {resetting ? <Spinner className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />} Reset demo
                 </button>
+              )}
+              {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
+                <Link href={`/w/${ws.id}/team`} title="People, invite links and access"
+                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="team-link">
+                  <UsersRound className="h-4 w-4" />
+                </Link>
               )}
               <ThemeToggle />
               <PersonaSwitcher ws={ws} onSwitch={switchPersona} />

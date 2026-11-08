@@ -86,6 +86,9 @@ def get_workspace(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_d
         "name": ws.name,
         "synthetic": ws.synthetic,
         "read_only": not ctx.can_write,
+        "identity_mode": ws.identity_mode,
+        "persona_locked": ctx.bound,
+        "is_owner": ctx.is_owner,
         "members": _members(db, ws.id),
         "persona": {"id": str(ctx.member.id), "name": ctx.member.display_name, "roles": sorted(ctx.roles)},
     }

@@ -43,6 +43,7 @@ class Ctx:
     member: Member
     roles: frozenset[str]
     visitor_id: str | None
+    bound: bool = False  # identity fixed by an invite link (cannot switch persona)
 
     @property
     def viewer(self) -> Viewer:
@@ -57,9 +58,14 @@ class Ctx:
         return "admin" in self.roles
 
     @property
-    def can_write(self) -> bool:
-        """The shared template is read-only; visitors write only to their own sandbox."""
+    def is_owner(self) -> bool:
         return not self.workspace.is_demo_template and self.workspace.visitor_id == self.visitor_id
+
+    @property
+    def can_write(self) -> bool:
+        """The shared template is read-only. Writers: the visitor who owns the workspace, or a member who joined
+        through an invite link. Role checks still apply on top of this."""
+        return not self.workspace.is_demo_template and (self.is_owner or self.bound)
 
 
 def _roles(db: Session, member_id, workspace_id) -> frozenset[str]:
@@ -72,10 +78,25 @@ def workspace_ctx(workspace_id: uuid.UUID, request: Request, db: Session = Depen
 
 
 def resolve_ctx(db: Session, request: Request, workspace_id) -> Ctx:
+    from baton.db.models import MemberBinding
+
     ws = db.get(Workspace, workspace_id)
     visitor_id = request.cookies.get(VISITOR_COOKIE)
-    # Visible workspaces: the demo template (read-only) and the visitor's own sandbox / custom workspaces.
-    if ws is None or not (ws.is_demo_template or (visitor_id and ws.visitor_id == visitor_id)):
+    binding = db.get(MemberBinding, (visitor_id, ws.id)) if (ws is not None and visitor_id) else None
+    owner = bool(ws is not None and visitor_id and ws.visitor_id == visitor_id)
+    # Visible workspaces: the demo template (read-only), the visitor's own sandbox / custom workspaces, and workspaces
+    # the visitor joined through an invite link.
+    if ws is None or not (ws.is_demo_template or owner or binding is not None):
+        raise HTTPException(404, "Workspace not found")
+
+    # Identity is fixed by the server for anyone who joined via an invite, and for everyone (owner included) once the
+    # workspace is locked to invites. The persona header can't override it.
+    if binding is not None and (not owner or ws.identity_mode == "invites"):
+        member = db.get(Member, binding.member_id)
+        if member is None:
+            raise HTTPException(404, "Workspace not found")
+        return Ctx(ws, member, _roles(db, member.id, ws.id), visitor_id, bound=True)
+    if ws.identity_mode == "invites" and not ws.is_demo_template:
         raise HTTPException(404, "Workspace not found")
 
     member = None
