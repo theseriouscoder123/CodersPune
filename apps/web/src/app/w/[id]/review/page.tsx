@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ClipboardCopy, Edit3, History, Inbox, Keyboard, ListChecks, RotateCcw, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, ListChecks, RotateCcw, Search, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -248,9 +248,24 @@ function ClaimRow({ c, active, onClick, selectable, checked, onToggle }:
   );
 }
 
+type QuestionsOut = { markdown: string; questions: unknown[]; leaver: string; issue_title: string; issue_body: string };
+
 function QuestionsBar({ workspaceId }: { workspaceId: string }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const get = () => api<QuestionsOut>(`/workspaces/${workspaceId}/questions`, { workspaceId });
+  const download = async () => {
+    const r = await get();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([r.markdown], { type: "text/markdown" }));
+    a.download = "questions-for-leaver.md";
+    a.click();
+  };
+  const copyIssue = async () => {
+    const r = await get();
+    await navigator.clipboard.writeText(`# ${r.issue_title}\n\n${r.issue_body}`).catch(() => undefined);
+    toast("Copied as a GitHub issue (title + checklist). Paste it into a new issue.");
+  };
   return (
     <div className="animate-rise mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-missing/20 bg-missing-soft/60 px-4 py-3 text-sm text-missing">
       <span>Missing and conflicting items become targeted questions for the leaver.</span>
@@ -269,6 +284,10 @@ function QuestionsBar({ workspaceId }: { workspaceId: string }) {
         }}>
         <ClipboardCopy className="h-4 w-4" /> Copy questions for the leaver
       </Button>
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={() => void copyIssue()}><Github className="h-4 w-4" /> Copy as GitHub issue</Button>
+        <Button variant="ghost" size="sm" onClick={() => void download()}><Download className="h-4 w-4" /> Download .md</Button>
+      </div>
     </div>
   );
 }

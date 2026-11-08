@@ -276,3 +276,23 @@ body {
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ---------------------------------------------------------------- print: a clean, light, paper handover */
+@media print {
+  :root, :root[data-theme="dark"] {
+    color-scheme: light;
+    --paper: #ffffff; --paper-2: #f3f1ec; --card: #ffffff; --ink: #111827; --ink-2: #374151; --muted: #6b7280;
+    --line: #e5e7eb; --line-2: #d1d5db;
+    --verified: #1f6f4a; --verified-soft: #e3f1e8; --supported: #2b5b88; --supported-soft: #e3edf6;
+    --inferred: #6d6a63; --inferred-soft: #eeebe5; --conflicting: #b5531a; --conflicting-soft: #fbe9dc;
+    --missing: #a8323b; --missing-soft: #f8e4e5; --amber-ink: #8a5a06; --amber-soft: #fbf0d9;
+  }
+  body { background: #fff !important; }
+  .paper-grain { background-image: none !important; }
+  .no-print, header.sticky, [role="note"] { display: none !important; }
+  main { padding: 0 !important; max-width: none !important; }
+  * { animation: none !important; transition: none !important; box-shadow: none !important; }
+  section, li { break-inside: avoid; }
+  a { text-decoration: none; }
+  @page { margin: 16mm; }
+}

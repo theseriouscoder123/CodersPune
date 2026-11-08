@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, Download, FileText, HelpCircle, History, Hourglass, Lock, Network, Rocket, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Download, FileText, HelpCircle, History, Hourglass, Lock, Network, Printer, Rocket, Users, X } from "lucide-react";
 import { useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
@@ -93,9 +93,12 @@ export default function HandoverPage() {
                   Approved by <b className="text-ink-2">{v.approved_by}</b> on {v.approved_at.slice(0, 10)}{v.note ? ` · “${v.note}”` : ""} · viewing as {ws.persona.name}
                 </p>
               </div>
-              <Button variant="secondary" loading={exporting} onClick={() => exportMd(v.version)}><Download className="h-4 w-4" /> Export Markdown</Button>
+              <div className="no-print flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => window.print()} data-testid="print"><Printer className="h-4 w-4" /> Print / Save as PDF</Button>
+                <Button variant="secondary" loading={exporting} onClick={() => exportMd(v.version)}><Download className="h-4 w-4" /> Export Markdown</Button>
+              </div>
             </div>
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="no-print mt-6 flex flex-wrap gap-2">
               {v.sections.map((s) => {
                 const meta = SECTION_META[s.key];
                 return (
@@ -107,7 +110,7 @@ export default function HandoverPage() {
             </div>
           </Card>
 
-          <div className="stagger mt-6 grid gap-5 lg:grid-cols-2" data-testid="handover-sections">
+          <div className="stagger mt-6 grid gap-5 lg:grid-cols-2 print:block print:space-y-4" data-testid="handover-sections">
             {v.sections.map((s) => {
               const meta = SECTION_META[s.key];
               return (
