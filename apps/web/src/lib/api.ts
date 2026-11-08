@@ -128,6 +128,7 @@ export type Ledger = {
   status_counts: Partial<Record<Status, number>>;
   type_counts: Record<string, number>;
   tab_counts: { all: number; conflicts: number; missing: number; rejected: number; superseded: number };
+  progress?: { reviewed: number; total: number; supported_unconfirmed: number };
 };
 
 export type RunStep = { step: string; label: string; status: string; progress: number; total: number; message: string | null; errors: string[] };

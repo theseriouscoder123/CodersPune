@@ -177,3 +177,19 @@ def test_no_secret_in_any_response(world):
         texts.append(c.get(f"/api/claims/{cl['id']}", headers=as_(p["meera"])).text)
     for secret in golden["secrets"]:
         assert all(secret not in t for t in texts)
+
+
+def test_bulk_confirm_skips_claims_without_passing_evidence(world):
+    c = client("visitor-two")
+    ws = world["s2"]
+    p = personas(c, ws)
+    claims = ledger(c, ws, p["meera"])["claims"]
+    ids = [x["id"] for x in claims]
+    r = c.post(f"/api/workspaces/{ws}/claims/bulk-review", headers=as_(p["meera"]), json={"claim_ids": ids, "action": "confirm"})
+    body = r.json()
+    assert r.status_code == 200 and body["updated"] >= 1 and body["skipped"] >= 2  # missing + inferred never confirmed
+    after = {x["text"][:20]: x["status"] for x in ledger(c, ws, p["meera"])["claims"]}
+    assert after["The leaderboard was "] == "inferred" and after["Who owns the Firebas"] == "missing"
+    assert ledger(c, ws, p["meera"])["progress"]["reviewed"] == body["updated"]
+    assert c.post(f"/api/workspaces/{ws}/claims/bulk-review", headers=as_(p["neha"]),
+                  json={"claim_ids": ids, "action": "reject"}).status_code == 403

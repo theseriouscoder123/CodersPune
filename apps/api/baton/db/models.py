@@ -58,6 +58,9 @@ class Workspace(Base):
     sandbox_of: Mapped[uuid.UUID | None] = fk("workspaces.id", nullable=True, ondelete="SET NULL")
     visitor_id: Mapped[str | None] = mapped_column(Text)
     synthetic: Mapped[bool] = mapped_column(Boolean, server_default=sql("false"), nullable=False)
+    # "switcher": anyone with access can switch persona (demo). "invites": each person is bound to one member via an
+    # invite link and cannot switch (real team use).
+    identity_mode: Mapped[str] = mapped_column(Text, server_default=sql("'switcher'"), nullable=False)
     created_at: Mapped[datetime] = created()
 
 
@@ -229,7 +232,8 @@ class Handover(Base):
     workspace_id: Mapped[uuid.UUID] = fk("workspaces.id")
     leaver_member_id: Mapped[uuid.UUID] = fk("members.id")
     successor_member_id: Mapped[uuid.UUID] = fk("members.id")
-    scope: Mapped[str | None] = mapped_column(Text)
+    scope: Mapped[str | None] = mapped_column(Text)  # comma-separated keywords/paths; empty = whole project
+    name: Mapped[str | None] = mapped_column(Text)
     show_restricted_stubs: Mapped[bool] = mapped_column(Boolean, server_default=sql("false"), nullable=False)
     created_at: Mapped[datetime] = created()
 
@@ -262,6 +266,7 @@ class Visitor(Base):
     __tablename__ = "visitors"
     id: Mapped[str] = mapped_column(String, primary_key=True)
     sandbox_workspace_id: Mapped[uuid.UUID | None] = fk("workspaces.id", nullable=True, ondelete="SET NULL")
+    ip: Mapped[str | None] = mapped_column(Text)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     created_at: Mapped[datetime] = created()
 
@@ -281,4 +286,28 @@ class LlmCall(Base):
     latency_ms: Mapped[int | None] = mapped_column(Integer)
     ok: Mapped[bool] = mapped_column(Boolean, nullable=False)
     error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = created()
+
+
+class MemberInvite(Base):
+    """A private link that binds whoever opens it to one member (identity_mode = invites). Only the hash is stored."""
+
+    __tablename__ = "member_invites"
+    __table_args__ = (Index("member_invites_hash_idx", "token_hash", unique=True),)
+    id: Mapped[uuid.UUID] = pk()
+    workspace_id: Mapped[uuid.UUID] = fk("workspaces.id")
+    member_id: Mapped[uuid.UUID] = fk("members.id")
+    token_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = created()
+
+
+class MemberBinding(Base):
+    """visitor (browser) -> member of a workspace, created when an invite link is opened."""
+
+    __tablename__ = "member_bindings"
+    visitor_id: Mapped[str] = mapped_column(String, ForeignKey("visitors.id", ondelete="CASCADE"), primary_key=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"),
+                                                    primary_key=True)
+    member_id: Mapped[uuid.UUID] = fk("members.id")
     created_at: Mapped[datetime] = created()

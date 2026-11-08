@@ -86,8 +86,11 @@ def list_claims(tab: str = "all", status: str | None = None, type: str | None = 
 
     order = {"conflicting": 0, "missing": 1, "inferred": 2, "supported": 3, "verified": 4, "rejected": 5}
     rows.sort(key=lambda c: (order.get(c.status or "", 9), c.type, c.text))
+    reviewed = sum(1 for c in live if c.review_state != "none")
     return {"claims": [claim_summary(c, refs.get(c.id, [])) for c in rows], "status_counts": counts,
-            "type_counts": type_counts, "tab_counts": tab_counts}
+            "type_counts": type_counts, "tab_counts": tab_counts,
+            "progress": {"reviewed": reviewed, "total": len(live),
+                         "supported_unconfirmed": sum(1 for c in live if c.status == "supported" and c.review_state == "none")}}
 
 
 def _load_claim(db: Session, request: Request, claim_id: uuid.UUID) -> tuple[Claim, Ctx]:
@@ -317,3 +320,39 @@ def questions(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) 
     name = leaver.display_name if leaver else "the leaver"
     md = f"## Questions for {name}\n\n" + "\n".join(f"{i}. {q['text']}" for i, q in enumerate(qs, start=1))
     return {"questions": qs, "markdown": md, "leaver": name}
+
+
+class BulkIn(BaseModel):
+    claim_ids: list[uuid.UUID] = Field(min_length=1, max_length=200)
+    action: Literal["confirm", "reject"]
+    note: str | None = Field(default=None, max_length=500)
+
+
+@router.post("/workspaces/{workspace_id}/claims/bulk-review")
+def bulk_review(body: BulkIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    """Confirm or reject many claims at once. Confirm only applies where a quote passed both checks: a bulk action can
+    never turn an unsupported claim into Verified."""
+    if not ctx.is_reviewer:
+        raise HTTPException(403, "Only the reviewer can review claims")
+    if not ctx.can_write:
+        raise HTTPException(403, "This is the shared read-only template. Click 'Try the demo' to get your own copy.")
+    claims = list(db.scalars(select(Claim).where(Claim.workspace_id == ctx.workspace.id, Claim.id.in_(body.claim_ids))))
+    passing = {cid for (cid,) in db.execute(select(Evidence.claim_id).where(
+        Evidence.claim_id.in_([c.id for c in claims]), Evidence.quote_found.is_(True), Evidence.verdict == "supports"))}
+    done, skipped = [], []
+    for c in claims:
+        if body.action == "confirm" and (c.id not in passing or c.status in ("rejected", "conflicting")):
+            skipped.append(str(c.id))
+            continue
+        before = _snap(c)
+        if body.action == "confirm":
+            c.review_state = "confirmed"
+        else:
+            c.review_state, c.reviewer_note = "rejected", body.note or c.reviewer_note
+        db.add(ReviewEvent(claim_id=c.id, actor_member_id=ctx.member.id, actor_role="reviewer",
+                           action=f"bulk_{body.action}", before=before, after=None, note=body.note))
+        done.append(c.id)
+    db.flush()
+    recompute_statuses(db, ctx.workspace.id, done)
+    db.commit()
+    return {"updated": len(done), "skipped": len(skipped), "skipped_ids": skipped}

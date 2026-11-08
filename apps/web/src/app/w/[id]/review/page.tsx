@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight, Check, ClipboardCopy, Edit3, History, Inbox, RotateCcw, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ClipboardCopy, Edit3, History, Inbox, Keyboard, ListChecks, RotateCcw, Search, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
 import { EvidenceCard } from "@/components/ledger/EvidenceCard";
@@ -44,8 +44,59 @@ function Review() {
   const canSee = ws.persona.roles.some((r) => ["reviewer", "admin", "leaver"].includes(r));
   const qs = new URLSearchParams({ tab, ...(status ? { status } : {}), ...(type ? { type } : {}) }).toString();
   const ledger = useApi<Ledger>(canSee ? `/workspaces/${ws.id}/claims?${qs}` : null);
+  const toast = useToast();
+  const [selectMode, setSelectMode] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [showKeys, setShowKeys] = useState(false);
+
+  const claimsAll = (ledger.data?.claims ?? []).filter((c) => !q || c.text.toLowerCase().includes(q.toLowerCase()));
+  const currentId = selected && claimsAll.some((c) => c.id === selected) ? selected : claimsAll[0]?.id ?? null;
+
+  // Keyboard review: j/k move, c confirm, r reject, e edit, x select, ? help. Ignored while typing.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.metaKey || e.ctrlKey || e.altKey || t.closest("input, textarea, select, [contenteditable=true]")) return;
+      const idx = claimsAll.findIndex((c) => c.id === currentId);
+      if (e.key === "j" || e.key === "ArrowDown") {
+        const n = claimsAll[Math.min(idx + 1, claimsAll.length - 1)];
+        if (n) { setSelected(n.id); document.getElementById(`claim-${n.id}`)?.scrollIntoView({ block: "nearest" }); e.preventDefault(); }
+      } else if (e.key === "k" || e.key === "ArrowUp") {
+        const p = claimsAll[Math.max(idx - 1, 0)];
+        if (p) { setSelected(p.id); document.getElementById(`claim-${p.id}`)?.scrollIntoView({ block: "nearest" }); e.preventDefault(); }
+      } else if (e.key === "x" && currentId) {
+        setSelectMode(true);
+        setPicked((s) => { const n = new Set(s); if (n.has(currentId)) n.delete(currentId); else n.add(currentId); return n; });
+      } else if (e.key === "?") {
+        setShowKeys((v) => !v);
+      } else if (["c", "r", "e"].includes(e.key)) {
+        window.dispatchEvent(new CustomEvent("baton:shortcut", { detail: e.key }));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [claimsAll, currentId]);
 
   if (!canSee) return <NotForPersona step="The draft ledger" />;
+
+  async function bulk(action: "confirm" | "reject") {
+    if (action === "reject" && !confirm(`Reject ${picked.size} claims? They won't reach the successor.`)) return;
+    setBulkBusy(true);
+    try {
+      const r = await api<{ updated: number; skipped: number }>(`/workspaces/${ws.id}/claims/bulk-review`, {
+        workspaceId: ws.id, method: "POST", body: { claim_ids: [...picked], action },
+      });
+      toast(`${action === "confirm" ? "Confirmed" : "Rejected"} ${r.updated}${r.skipped ? ` · ${r.skipped} skipped (no passing evidence or in conflict)` : ""}`);
+      setPicked(new Set());
+      setSelectMode(false);
+      ledger.reload();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params.toString());
@@ -59,8 +110,9 @@ function Review() {
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
 
-  const claims = (ledger.data?.claims ?? []).filter((c) => !q || c.text.toLowerCase().includes(q.toLowerCase()));
-  const current = selected && claims.some((c) => c.id === selected) ? selected : claims[0]?.id ?? null;
+  const claims = claimsAll;
+  const current = currentId;
+  const progress = ledger.data?.progress;
   const isReviewer = ws.persona.roles.includes("reviewer");
   const successor = ws.members.find((m) => m.roles.includes("successor"))?.name ?? "the successor";
 
@@ -73,6 +125,47 @@ function Review() {
 
       <PageHeader eyebrow="Verify" title="Inspect and review claims"
         actions={isReviewer ? <ButtonLink href={`/w/${ws.id}/review/preview`}>Preview what {successor} will see <ArrowRight className="h-4 w-4" /></ButtonLink> : undefined} />
+      {progress && progress.total > 0 && (
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-line bg-card px-4 py-3" data-testid="review-progress">
+          <div className="min-w-[200px] flex-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-ink">{progress.reviewed} of {progress.total} claims reviewed</span>
+              <span className="text-muted">{Math.round((100 * progress.reviewed) / progress.total)}%</span>
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-paper-2">
+              <div className="h-full rounded-full bg-verified-solid transition-all duration-700" style={{ width: `${(100 * progress.reviewed) / progress.total}%` }} />
+            </div>
+          </div>
+          {progress.supported_unconfirmed > 0 && isReviewer && !ws.read_only && (
+            <span className="text-xs text-muted">{progress.supported_unconfirmed} supported claims await confirmation</span>
+          )}
+          <button onClick={() => setShowKeys((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted hover:bg-paper-2 hover:text-ink" title="Keyboard shortcuts">
+            <Keyboard className="h-3.5 w-3.5" /> Shortcuts
+          </button>
+          {isReviewer && !ws.read_only && (
+            <Button size="sm" variant={selectMode ? "primary" : "secondary"} onClick={() => { setSelectMode((v) => !v); setPicked(new Set()); }}>
+              <ListChecks className="h-4 w-4" /> {selectMode ? "Done selecting" : "Select"}
+            </Button>
+          )}
+        </div>
+      )}
+      {showKeys && (
+        <div className="animate-fade mt-3 flex flex-wrap gap-x-5 gap-y-1.5 rounded-xl bg-paper-2 px-4 py-2.5 text-xs text-ink-2">
+          {[["j / ↓", "next claim"], ["k / ↑", "previous"], ["c", "confirm"], ["r", "reject"], ["e", "edit"], ["x", "select for bulk"], ["?", "toggle this help"]].map(([k, d]) => (
+            <span key={k}><kbd className="rounded-md border border-line-2 bg-card px-1.5 py-0.5 font-mono text-[11px] text-ink">{k}</kbd> {d}</span>
+          ))}
+        </div>
+      )}
+      {picked.size > 0 && (
+        <div className="animate-pop sticky top-36 z-10 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/15 bg-strong px-4 py-2.5 text-sm text-on-strong shadow-[var(--shadow-lg)]" data-testid="bulk-bar">
+          <span><b>{picked.size}</b> selected</span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="success" loading={bulkBusy} onClick={() => bulk("confirm")}><Check className="h-4 w-4" /> Confirm</Button>
+            <Button size="sm" variant="danger" disabled={bulkBusy} onClick={() => bulk("reject")}><X className="h-4 w-4" /> Reject</Button>
+            <Button size="sm" variant="ghost" className="text-on-strong hover:bg-on-strong/10" onClick={() => setPicked(new Set())}>Clear</Button>
+          </div>
+        </div>
+      )}
       {ws.read_only && <Alert tone="warn" className="mt-4">This is the shared read-only copy. Go back to the start page and choose <b>Try the demo</b> to get your own editable copy.</Alert>}
 
       {/* Filter bar */}
@@ -117,7 +210,11 @@ function Review() {
           {ledger.loading && <SkeletonList rows={6} />}
           {ledger.error && <Alert tone="error">{ledger.error}</Alert>}
           {ledger.data && claims.length === 0 && <EmptyState icon={<Inbox className="h-5 w-5" />} title="Nothing here">No claims match this view.</EmptyState>}
-          {claims.map((c) => <ClaimRow key={c.id} c={c} active={c.id === current} onClick={() => setSelected(c.id)} />)}
+          {claims.map((c) => (
+            <ClaimRow key={c.id} c={c} active={c.id === current} onClick={() => setSelected(c.id)}
+              selectable={selectMode} checked={picked.has(c.id)}
+              onToggle={() => setPicked((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })} />
+          ))}
         </ul>
         <div className="scroll-quiet lg:sticky lg:top-40 lg:max-h-[calc(100vh-11rem)] lg:overflow-auto lg:rounded-2xl">
           {current ? <ClaimPanel key={current} id={current} onChanged={ledger.reload} /> : !ledger.loading && <Card className="p-8 text-center text-sm text-muted">Select a claim to inspect its evidence.</Card>}
@@ -127,9 +224,14 @@ function Review() {
   );
 }
 
-function ClaimRow({ c, active, onClick }: { c: ClaimSummary; active: boolean; onClick: () => void }) {
+function ClaimRow({ c, active, onClick, selectable, checked, onToggle }:
+  { c: ClaimSummary; active: boolean; onClick: () => void; selectable: boolean; checked: boolean; onToggle: () => void }) {
   return (
-    <li>
+    <li id={`claim-${c.id}`} className="flex items-start gap-2">
+      {selectable && (
+        <input type="checkbox" checked={checked} onChange={onToggle} aria-label="Select claim"
+          className="animate-fade mt-4 h-4 w-4 shrink-0 accent-[var(--ink)]" />
+      )}
       <button onClick={onClick} aria-current={active}
         className={`group relative w-full overflow-hidden rounded-2xl border p-3.5 pl-4 text-left transition ${active ? "border-ink/25 bg-card shadow-[var(--shadow-md)]" : "border-line bg-card/70 hover:border-line-2 hover:bg-card"}`}>
         <span className={`absolute inset-y-0 left-0 w-1 transition ${active ? STATUS_META[c.status].dot : "bg-transparent group-hover:bg-line-2"}`} />
@@ -231,8 +333,15 @@ function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
   }
 
   const canConfirm = c.evidence.some((e) => e.quote_found && e.verdict === "supports") && c.review_state !== "confirmed";
+  const onShortcut = (k: string) => {
+    if (!writable || !isReviewer || busy || mode !== "idle") return;
+    if (k === "c" && canConfirm && c.status !== "rejected") void act("confirm");
+    else if (k === "r" && c.status !== "rejected") setMode("reject");
+    else if (k === "e") { setText(c.text); setMode("edit"); }
+  };
   return (
     <article className="animate-pop overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--shadow-md)]" data-testid="claim-panel">
+      <ShortcutBinder onKey={onShortcut} />
       <div className={`h-1 ${m.dot}`} />
       <div className="p-5">
         <div className="flex flex-wrap items-center gap-2">
@@ -340,4 +449,18 @@ function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
       {!writable && <p className="border-t border-line px-5 py-3 text-xs text-muted">Read-only copy. <Link href="/" className="underline">Open your own demo</Link> to review.</p>}
     </article>
   );
+}
+
+/** Subscribes to the page's keyboard shortcuts and always calls the latest handler. */
+function ShortcutBinder({ onKey }: { onKey: (k: string) => void }) {
+  const latest = useRef(onKey);
+  useEffect(() => {
+    latest.current = onKey;
+  });
+  useEffect(() => {
+    const on = (e: Event) => latest.current((e as CustomEvent<string>).detail);
+    window.addEventListener("baton:shortcut", on);
+    return () => window.removeEventListener("baton:shortcut", on);
+  }, []);
+  return null;
 }

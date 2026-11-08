@@ -101,8 +101,15 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
             withheld.append({**item, "reason": withheld_reason(db, h.workspace_id, tv, cited.get(c.id, []))})
     hidden_inferred = sum(1 for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
                           if c.status == "inferred" and not c.superseded_by)
+    all_live = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
+                if c.status != "rejected" and not c.superseded_by]
+    warnings = {
+        "unresolved_conflicts": sum(1 for c in all_live if c.status == "conflicting"),
+        "unreviewed": sum(1 for c in all_live if c.review_state == "none"),
+        "missing": sum(1 for c in all_live if c.status == "missing"),
+    }
     return {"member": {"id": str(target.id), "name": target.display_name}, "visible": shown, "withheld": withheld,
-            "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs}
+            "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings}
 
 
 class ApproveIn(BaseModel):
