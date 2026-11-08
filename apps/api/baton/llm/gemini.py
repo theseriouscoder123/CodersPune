@@ -35,7 +35,7 @@ class GeminiTransport:
             raise TransientError(f"gemini network error {type(exc).__name__}") from exc
 
         if r.status_code in (429, 500, 502, 503, 504):
-            raise TransientError(f"gemini {r.status_code}", _retry_delay(r))
+            raise TransientError(f"gemini {r.status_code}", _retry_delay(r), daily_quota=_is_daily_quota(r))
         if r.status_code >= 400:
             msg = ""
             try:
@@ -67,3 +67,14 @@ def _retry_delay(r: httpx.Response) -> float | None:
         pass
     h = r.headers.get("retry-after")
     return float(h) if h and h.isdigit() else None
+
+
+def _is_daily_quota(r: httpx.Response) -> bool:
+    try:
+        for d in r.json().get("error", {}).get("details", []):
+            for v in d.get("violations", []) or []:
+                if "PerDay" in (v.get("quotaId") or ""):
+                    return True
+    except (ValueError, AttributeError):
+        pass
+    return False

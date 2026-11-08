@@ -75,3 +75,92 @@ export async function api<T>(path: string, opts: { workspaceId?: string; method?
   }
   return res.json() as Promise<T>;
 }
+
+export type Status = "verified" | "supported" | "inferred" | "conflicting" | "missing" | "rejected";
+
+export type ClaimSummary = {
+  id: string;
+  type: string;
+  type_label: string;
+  text: string;
+  status: Status;
+  status_reason: string;
+  origin: "extracted" | "checklist" | "testimony";
+  review_state: string;
+  subject_key: string;
+  value: string | null;
+  stated: boolean;
+  occurred_at: string | null;
+  superseded_by: string | null;
+  superseded_by_text?: string | null;
+  conflict_group_id: string | null;
+  reviewer_note: string | null;
+  source_refs: string[];
+  flags: { reviewer_confirmed_without_evidence?: boolean };
+  question: string | null;
+};
+
+export type EvidenceInfo = {
+  id: string;
+  quote: string;
+  quote_found: boolean;
+  match_score: number;
+  verdict: string;
+  verdict_reason: string | null;
+  verifier: string | null;
+  ref: string;
+  source: { id: string; name: string; type: string; access: string };
+  location: Record<string, unknown>;
+  kind: string;
+  author: string | null;
+  occurred_at: string | null;
+  excerpt: { before: string; match: string; after: string; truncated_start: boolean; truncated_end: boolean };
+};
+
+export type ClaimDetail = ClaimSummary & {
+  evidence: EvidenceInfo[];
+  conflict?: { id: string; resolved: boolean; resolution: string | null; others: ClaimSummary[] };
+  history: { action: string; actor_role: string; note: string | null; at: string }[];
+};
+
+export type Ledger = {
+  claims: ClaimSummary[];
+  status_counts: Partial<Record<Status, number>>;
+  type_counts: Record<string, number>;
+  tab_counts: { all: number; conflicts: number; missing: number; rejected: number; superseded: number };
+};
+
+export type RunStep = { step: string; label: string; status: string; progress: number; total: number; message: string | null; errors: string[] };
+export type RunInfo = { id: string; status: string; error: string | null; started_at: string | null; finished_at: string | null; steps: RunStep[]; stats: Record<string, unknown> };
+
+export type HandoverRef = { id: string; leaver: string; successor: string; successor_id: string; show_restricted_stubs: boolean; latest_version: number | null };
+
+export type HandoverItem = {
+  claim_id: string;
+  type: string;
+  type_label: string;
+  text: string;
+  status: Status;
+  status_reason: string;
+  flags: { reviewer_confirmed_without_evidence?: boolean };
+  occurred_at: string | null;
+  history?: boolean;
+  superseded_by_text?: string | null;
+  restricted?: boolean;
+  evidence: { evidence_id: string; chunk_id: string; ref: string }[];
+};
+
+export type HandoverView =
+  | { approved: false; leaver: string; successor: string; message: string }
+  | {
+      approved: true;
+      leaver: string;
+      successor: string;
+      handover_id: string;
+      version: number;
+      approved_at: string;
+      approved_by: string | null;
+      note: string | null;
+      sections: { key: string; title: string; help: string; items: HandoverItem[] }[];
+      withheld_count: number | null;
+    };

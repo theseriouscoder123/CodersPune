@@ -17,11 +17,11 @@ export function useWorkspace(): Ctx {
 }
 
 const STEPS = [
-  { key: "sources", label: "Connect", ready: true },
-  { key: "reconstruct", label: "Reconstruct", ready: false },
-  { key: "verify", label: "Verify", ready: false },
-  { key: "review", label: "Review", ready: false },
-  { key: "handover", label: "Handover", ready: false },
+  { key: "sources", href: "sources", label: "Connect", who: "all" },
+  { key: "ledger", href: "ledger", label: "Reconstruct", who: "ledger" },
+  { key: "review", href: "review", label: "Verify", who: "ledger" },
+  { key: "preview", href: "review/preview", label: "Review", who: "reviewer" },
+  { key: "handover", href: "handover", label: "Handover", who: "all" },
 ];
 
 const ROLE_STYLE: Record<string, string> = {
@@ -104,13 +104,19 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
   );
 }
 
-function Stepper({ workspaceId }: { workspaceId: string }) {
+function Stepper({ ws }: { ws: WorkspaceInfo }) {
   const pathname = usePathname();
+  const roles = ws.persona.roles;
+  const allowed = (who: string) =>
+    who === "all" || (who === "reviewer" ? roles.includes("reviewer") : roles.some((r) => ["reviewer", "admin", "leaver"].includes(r)));
+  const activeKey = pathname.endsWith("/review/preview") ? "preview" : STEPS.find((s) => pathname.includes(`/${s.href}`))?.key
+    ?? (pathname.includes("/runs/") ? "ledger" : "");
   return (
     <nav aria-label="Workflow steps" className="overflow-x-auto">
       <ol className="flex min-w-max items-center gap-1 text-sm">
         {STEPS.map((s, i) => {
-          const active = pathname.includes(`/${s.key}`);
+          const active = s.key === activeKey;
+          const ok = allowed(s.who);
           const base = "flex items-center gap-2 rounded-lg px-3 py-1.5";
           const body = (
             <>
@@ -122,12 +128,12 @@ function Stepper({ workspaceId }: { workspaceId: string }) {
           );
           return (
             <li key={s.key} className="flex items-center gap-1">
-              {s.ready ? (
-                <Link href={`/w/${workspaceId}/${s.key}`} className={`${base} ${active ? "bg-white/10" : "hover:bg-white/5"}`} aria-current={active ? "step" : undefined}>
+              {ok ? (
+                <Link href={`/w/${ws.id}/${s.href}`} className={`${base} ${active ? "bg-white/10" : "hover:bg-white/5"}`} aria-current={active ? "step" : undefined} data-testid={`step-${s.key}`}>
                   {body}
                 </Link>
               ) : (
-                <span className={`${base} cursor-not-allowed opacity-50`} title="Available in the next build milestone">
+                <span className={`${base} cursor-not-allowed opacity-45`} title={`Not shared with ${ws.persona.name}`}>
                   {body}
                 </span>
               )}
@@ -186,7 +192,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
         </div>
         <div className="bg-navy">
           <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
-            <Stepper workspaceId={workspaceId} />
+            <Stepper ws={ws} />
           </div>
         </div>
       </header>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
@@ -138,7 +139,7 @@ export default function SourcesPage() {
         <p className="mt-1 text-muted">
           Baton reads these sources and reconstructs a ledger of claims (decisions, owners, open work, risks), each tied to a
           quoted source. Restricted sources are processed separately, so their content never mixes into claims others can see.
-          <span className="ml-1 font-medium text-navy">The ledger arrives in the next build milestone.</span>
+          <Link href={`/w/${ws.id}/ledger`} className="ml-1 font-semibold text-navy underline">See the reconstructed ledger →</Link>
         </p>
       </div>
     </div>

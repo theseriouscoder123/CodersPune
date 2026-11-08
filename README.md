@@ -13,7 +13,12 @@ they are allowed to access.
 
 ## 60-second tour
 
-_To be written once the judge flow is live (see `docs/04_DEMO_DATA.md §6`)._
+1. Open the live app and click **Try the demo**. You get your own copy of a fictional student-club project ("Campus Events App"), so your edits don't affect anyone else.
+2. **Connect:** 4 sources and who can read each one. `#core-team` is restricted, and 2 planted fake secrets were removed before storage.
+3. **Reconstruct:** the ledger with counts by status, and a decision timeline in which reversed decisions show as superseded.
+4. **Verify:** open any claim to see the exact quote highlighted in its source and why it got its status. Confirm, edit, reject or promote it, and resolve the 5 MB vs 2 MB conflict. The **Missing** tab gives you "Copy questions for the leaver".
+5. **Review:** preview what Neha (the successor) will see. The sponsor deal from `#core-team` is withheld, with the reason. Then approve v1.
+6. **Handover:** switch to Neha (top right). You'll see her continuation plan: start here, owners, decisions, risks, dependencies, and the unresolved items.
 
 ## Workflow
 
@@ -25,6 +30,7 @@ Connect → Reconstruct → Verify → Review → Handover
 cp .env.example .env                     # fill in keys
 docker compose up -d db                  # or point DATABASE_URL at a Neon dev branch
 cd apps/api && uv sync && uv run alembic upgrade head
+cd apps/api && uv run python -m baton.seed_demo     # ingest demo/ and run the AI pipeline once (needs LLM_* in .env)
 cd apps/api && uv run uvicorn baton.main:app --reload --port 8000
 cd apps/web && pnpm install && pnpm dev  # http://localhost:3000
 ```

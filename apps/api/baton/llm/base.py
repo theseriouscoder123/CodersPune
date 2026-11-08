@@ -39,9 +39,10 @@ class Transport(Protocol):
 
 
 class TransientError(Exception):
-    def __init__(self, message: str, retry_after: float | None = None):
+    def __init__(self, message: str, retry_after: float | None = None, daily_quota: bool = False):
         super().__init__(message)
         self.retry_after = retry_after
+        self.daily_quota = daily_quota  # this model is done for the day: switch models instead of waiting
 
 
 def inline_refs(schema: dict) -> dict:
@@ -80,6 +81,23 @@ class LLM:
 
     def structured(self, *, system: str, user: str, schema: type[T], model: str, purpose: str,
                    temperature: float = 0.0, workspace_id=None, run_id=None, max_transient_retries: int = 6) -> T:
+        """`model` may be a comma-separated fallback chain; a model whose daily quota is exhausted is skipped."""
+        chain = [m.strip() for m in model.split(",") if m.strip()]
+        last: LLMError | None = None
+        for m in chain:
+            if m in _EXHAUSTED:
+                continue
+            try:
+                return self._structured_one(system=system, user=user, schema=schema, model=m, purpose=purpose,
+                                            temperature=temperature, workspace_id=workspace_id, run_id=run_id,
+                                            max_transient_retries=max_transient_retries)
+            except _DailyQuota:
+                _EXHAUSTED.add(m)
+                last = LLMError(f"{m} daily quota exhausted", "The AI provider's daily free quota is used up. Try again tomorrow.")
+        raise last or LLMError("all models exhausted", "The AI provider's daily free quota is used up. Try again tomorrow.")
+
+    def _structured_one(self, *, system: str, user: str, schema: type[T], model: str, purpose: str,
+                        temperature: float, workspace_id, run_id, max_transient_retries: int) -> T:
         json_schema = inline_refs(schema.model_json_schema())
         schema_attempts = 0
         transient = 0
@@ -103,12 +121,24 @@ class LLM:
                     raise LLMError(last_err, "The AI returned malformed output twice for this batch.") from exc
             except TransientError as exc:
                 last_err = str(exc)
+                if exc.daily_quota:
+                    _log(purpose=purpose, provider=self.transport.provider, model=model, ok=False, usage=usage,
+                         latency_ms=int((time.monotonic() - t0) * 1000), error="daily quota exhausted",
+                         workspace_id=workspace_id, run_id=run_id)
+                    raise _DailyQuota() from exc
                 _log(purpose=purpose, provider=self.transport.provider, model=model, ok=False, usage=usage,
                      latency_ms=int((time.monotonic() - t0) * 1000), error=last_err, workspace_id=workspace_id, run_id=run_id)
                 transient += 1
                 if transient > max_transient_retries:
                     raise LLMError(last_err, "The AI provider is busy or out of quota. Try again in a few minutes.") from exc
                 time.sleep(min(exc.retry_after or (2 ** transient), 60))
+
+
+class _DailyQuota(Exception):
+    pass
+
+
+_EXHAUSTED: set[str] = set()  # per-process memo of models out of daily quota
 
 
 def get_llm() -> LLM:
