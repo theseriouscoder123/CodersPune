@@ -72,8 +72,8 @@ def clone_workspace(db: Session, template_id: uuid.UUID, visitor_id: str) -> uui
             SELECT {_m('e.id')}, {_m('e.claim_id')}, {_m('e.chunk_id')}, e.quote, e.match_score, e.quote_found,
                    e.match_start, e.match_end, e.verdict, e.verdict_reason, e.verifier
             FROM evidence e JOIN claims c ON c.id = e.claim_id WHERE c.workspace_id = :t""",
-        f"""INSERT INTO handovers (id, workspace_id, leaver_member_id, successor_member_id, scope, show_restricted_stubs)
-            SELECT {_m('id')}, {_m('workspace_id')}, {_m('leaver_member_id')}, {_m('successor_member_id')}, scope,
+        f"""INSERT INTO handovers (id, workspace_id, leaver_member_id, successor_member_id, scope, name, show_restricted_stubs)
+            SELECT {_m('id')}, {_m('workspace_id')}, {_m('leaver_member_id')}, {_m('successor_member_id')}, scope, name,
                    show_restricted_stubs FROM handovers WHERE workspace_id = :t""",
     ]
     for s in stmts:

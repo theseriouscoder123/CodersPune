@@ -1,11 +1,12 @@
 "use client";
 
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
 import { StatusChip } from "@/components/ledger/StatusChip";
 import { useToast } from "@/components/Toast";
+import { HandoverPicker, useHandoverSelection } from "@/components/workspace/HandoverPicker";
 import { NotForPersona } from "@/components/workspace/NotForPersona";
 import { Avatar, useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, Button, ButtonLink, Card, EmptyState, Modal, PageHeader, SkeletonList } from "@/components/ui";
@@ -23,11 +24,19 @@ const SECTION_NAMES: Record<string, string> = {
 const ORDER = Object.keys(SECTION_NAMES);
 
 export default function PreviewPage() {
+  return (
+    <Suspense fallback={<SkeletonList rows={4} />}>
+      <PreviewInner />
+    </Suspense>
+  );
+}
+
+function PreviewInner() {
   const { ws } = useWorkspace();
   const toast = useToast();
   const isReviewer = ws.persona.roles.includes("reviewer");
-  const h = useApi<{ handover: HandoverRef | null }>(isReviewer ? `/workspaces/${ws.id}/handover` : null);
-  const handover = h.data?.handover;
+  const sel = useHandoverSelection();
+  const handover: HandoverRef | null = isReviewer ? sel.selected : null;
   const pv = useApi<Preview>(handover ? `/handovers/${handover.id}/preview?as=${handover.successor_id}` : null);
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -37,7 +46,7 @@ export default function PreviewPage() {
   const [err, setErr] = useState<string | null>(null);
 
   if (!isReviewer) return <NotForPersona step="The visibility preview" />;
-  if (h.data && !handover) return <EmptyState title="No handover set up">This workspace has no successor yet.</EmptyState>;
+  if (!sel.loading && !handover) return <EmptyState title="No handover set up">This workspace has no successor yet.</EmptyState>;
   const name = handover?.successor ?? "the successor";
   const successor = ws.members.find((m) => m.id === handover?.successor_id);
   const showStubs = stubs ?? handover?.show_restricted_stubs ?? false;
@@ -53,7 +62,7 @@ export default function PreviewPage() {
       setDone(r.version);
       setOpen(false);
       toast(`Version ${r.version} approved. ${name} can see it now`);
-      h.reload();
+      sel.reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -76,6 +85,8 @@ export default function PreviewPage() {
           <ButtonLink href={`/w/${ws.id}/review`} variant="secondary"><ArrowLeft className="h-4 w-4" /> Back to claims</ButtonLink>
           {!ws.read_only && <Button variant="success" onClick={() => setOpen(true)} data-testid="approve-open"><ShieldCheck className="h-4 w-4" /> Approve handover v{nextVersion}</Button>}
         </>} />
+      <HandoverPicker handovers={sel.handovers} selected={handover} onCreated={sel.reload} />
+      {handover?.scope && <p className="mt-2 text-xs text-muted">Scope: only claims about <b className="text-ink-2">{handover.scope}</b> are included in this handover.</p>}
 
       {done && handover && (
         <div className="animate-pop mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-verified/25 bg-verified-soft px-5 py-4" data-testid="approved-banner">

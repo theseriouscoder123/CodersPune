@@ -45,6 +45,22 @@ def _section(item: dict) -> str:
             "dependency": "dependencies", "contact": "dependencies"}.get(item["type"], "decisions")
 
 
+def scope_keywords(scope: str | None) -> list[str]:
+    return [k.strip().lower() for k in (scope or "").replace("\n", ",").split(",") if k.strip()]
+
+
+def in_scope(c: Claim, rows: list, keywords: list[str]) -> bool:
+    """Scoped handover (e.g. 'payments, src/billing/'): a claim is in scope if any keyword appears in its topic, its
+    text, or the file/source its evidence comes from. No keywords = the whole project."""
+    if not keywords:
+        return True
+    hay = [c.subject_key.lower(), c.text.lower()]
+    for _ev, ch, src in rows:
+        hay.append(str((ch.location or {}).get("file") or "").lower())
+        hay.append(src.name.lower())
+    return any(k in h for k in keywords for h in hay)
+
+
 def eligible_for_successor(c: Claim) -> bool:
     """Rejected and superseded claims never ship; Inferred claims are not shown as fact (trust rule 4)."""
     if c.status == "rejected" or c.superseded_by:
@@ -77,6 +93,50 @@ def workspace_handover(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(
                          "latest_version": latest.version if latest else None}}
 
 
+def _handover_row(db: Session, h: Handover, names: dict) -> dict:
+    latest = db.scalar(select(HandoverVersion).where(HandoverVersion.handover_id == h.id).order_by(HandoverVersion.version.desc()))
+    return {"id": str(h.id), "name": h.name or f"{names.get(h.leaver_member_id)} → {names.get(h.successor_member_id)}",
+            "leaver": names.get(h.leaver_member_id), "successor": names.get(h.successor_member_id),
+            "leaver_id": str(h.leaver_member_id), "successor_id": str(h.successor_member_id), "scope": h.scope or "",
+            "show_restricted_stubs": h.show_restricted_stubs, "latest_version": latest.version if latest else None}
+
+
+@router.get("/workspaces/{workspace_id}/handovers")
+def list_handovers(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == ctx.workspace.id))}
+    hs = list(db.scalars(select(Handover).where(Handover.workspace_id == ctx.workspace.id).order_by(Handover.created_at)))
+    if not ctx.is_reviewer:  # people only see handovers they are part of
+        hs = [h for h in hs if ctx.member.id in (h.successor_member_id, h.leaver_member_id)]
+    return {"handovers": [_handover_row(db, h, names) for h in hs]}
+
+
+class HandoverIn(BaseModel):
+    name: str | None = Field(default=None, max_length=80)
+    leaver_member_id: uuid.UUID
+    successor_member_id: uuid.UUID
+    scope: str | None = Field(default=None, max_length=300)
+
+
+@router.post("/workspaces/{workspace_id}/handovers")
+def create_handover(body: HandoverIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    if not ctx.is_reviewer:
+        raise HTTPException(403, "Only the reviewer can create handovers")
+    if not ctx.can_write:
+        raise HTTPException(403, "This is the shared read-only template. Click 'Try the demo' to get your own copy.")
+    ids = {m.id for m in db.scalars(select(Member).where(Member.workspace_id == ctx.workspace.id))}
+    if body.leaver_member_id not in ids or body.successor_member_id not in ids:
+        raise HTTPException(422, "Leaver and successor must be members of this workspace")
+    if body.leaver_member_id == body.successor_member_id:
+        raise HTTPException(422, "The successor must be someone other than the leaver")
+    h = Handover(workspace_id=ctx.workspace.id, leaver_member_id=body.leaver_member_id,
+                 successor_member_id=body.successor_member_id, name=(body.name or "").strip() or None,
+                 scope=(body.scope or "").strip() or None)
+    db.add(h)
+    db.commit()
+    names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == ctx.workspace.id))}
+    return {"handover": _handover_row(db, h, names)}
+
+
 @router.get("/handovers/{handover_id}/preview")
 def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_db), as_: str | None = None) -> dict:
     h, ctx = _handover(db, request, handover_id)
@@ -88,8 +148,10 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
         raise HTTPException(404, "Member not found")
     tv = _viewer_for(db, target.id, h.workspace_id)
     claims = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id)) if eligible_for_successor(c)]
-    cited = claim_sources(db, [c.id for c in claims])
     ev = evidence_rows(db, [c.id for c in claims])
+    kws = scope_keywords(h.scope)
+    claims = [c for c in claims if in_scope(c, ev.get(c.id, []), kws)]
+    cited = claim_sources(db, [c.id for c in claims])
     shown, withheld = [], []
     for c in claims:
         item = {"id": str(c.id), "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
@@ -108,7 +170,7 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
         "unreviewed": sum(1 for c in all_live if c.review_state == "none"),
         "missing": sum(1 for c in all_live if c.status == "missing"),
     }
-    return {"member": {"id": str(target.id), "name": target.display_name}, "visible": shown, "withheld": withheld,
+    return {"member": {"id": str(target.id), "name": target.display_name}, "scope": kws, "visible": shown, "withheld": withheld,
             "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings}
 
 
@@ -130,9 +192,12 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
     by_id = {c.id: c for c in claims}
     ev = evidence_rows(db, [c.id for c in claims])
     items = []
+    kws = scope_keywords(h.scope)
     for c in claims:
         superseded_history = c.superseded_by is not None and c.type == "decision" and c.status != "rejected"
         if not (eligible_for_successor(c) or superseded_history):
+            continue
+        if not in_scope(c, ev.get(c.id, []), kws):
             continue
         items.append({
             "claim_id": str(c.id), "type": c.type, "text": c.text, "status": c.status, "status_reason": c.status_reason,
@@ -202,7 +267,8 @@ def get_handover(handover_id: uuid.UUID, request: Request, db: Session = Depends
         raise HTTPException(403, "This handover is shared with the successor, the leaver and the reviewer only")
     names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == h.workspace_id))}
     v = _latest(db, h, version)
-    meta = {"leaver": names.get(h.leaver_member_id), "successor": names.get(h.successor_member_id)}
+    meta = {"leaver": names.get(h.leaver_member_id), "successor": names.get(h.successor_member_id),
+            "name": h.name, "scope": scope_keywords(h.scope)}
     if v is None:
         return {**meta, "approved": False,
                 "message": f"Your handover is being prepared by {next((names[m] for m in names if 'reviewer' in _roles(db, m, h.workspace_id)), 'the reviewer')}."}

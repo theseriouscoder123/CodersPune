@@ -134,7 +134,7 @@ export type Ledger = {
 export type RunStep = { step: string; label: string; status: string; progress: number; total: number; message: string | null; errors: string[] };
 export type RunInfo = { id: string; status: string; error: string | null; started_at: string | null; finished_at: string | null; steps: RunStep[]; stats: Record<string, unknown> };
 
-export type HandoverRef = { id: string; leaver: string; successor: string; successor_id: string; show_restricted_stubs: boolean; latest_version: number | null };
+export type HandoverRef = { id: string; name: string; leaver: string; successor: string; leaver_id: string; successor_id: string; scope: string; show_restricted_stubs: boolean; latest_version: number | null };
 
 export type HandoverItem = {
   claim_id: string;

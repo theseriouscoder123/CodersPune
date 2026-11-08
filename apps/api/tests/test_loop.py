@@ -203,3 +203,23 @@ def test_pipeline_health_is_admin_only(world):
     assert r.status_code == 200 and {"config", "totals", "by_model", "runs"} <= set(r.json())
     assert "api_key" not in r.text.lower()
     assert c.get(f"/api/workspaces/{ws}/pipeline-health", headers=as_(p["neha"])).status_code == 403
+
+
+def test_scoped_second_handover_for_kabir(world):
+    c = client("visitor-two")
+    ws = world["s2"]
+    p = personas(c, ws)
+    r = c.post(f"/api/workspaces/{ws}/handovers", headers=as_(p["meera"]),
+               json={"name": "Sponsor & deploy", "leaver_member_id": p["rohan"], "successor_member_id": p["kabir"], "scope": "sponsor, deploy"})
+    assert r.status_code == 200, r.text
+    h = r.json()["handover"]["id"]
+    pv = c.get(f"/api/handovers/{h}/preview", headers=as_(p["meera"]), params={"as": p["kabir"]}).json()
+    texts = [v["text"] for v in pv["visible"]]
+    assert pv["scope"] == ["sponsor", "deploy"]
+    assert any("TechNova" in t for t in texts)          # Kabir may read #core-team, and it's in scope
+    assert not any("leaderboard" in t.lower() or "OneSignal" in t for t in texts)  # out of scope
+    # Neha sees only her own handover in the list; Kabir only his
+    assert [x["id"] for x in c.get(f"/api/workspaces/{ws}/handovers", headers=as_(p["kabir"])).json()["handovers"]] == [h]
+    assert h not in [x["id"] for x in c.get(f"/api/workspaces/{ws}/handovers", headers=as_(p["neha"])).json()["handovers"]]
+    assert c.post(f"/api/workspaces/{ws}/handovers", headers=as_(p["neha"]),
+                  json={"leaver_member_id": p["rohan"], "successor_member_id": p["neha"]}).status_code == 403

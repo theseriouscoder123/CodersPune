@@ -1,14 +1,15 @@
 "use client";
 
 import { AlertTriangle, ArrowRight, Download, FileText, HelpCircle, History, Hourglass, Lock, Network, Printer, Rocket, Users, X } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
 import { EvidenceCard } from "@/components/ledger/EvidenceCard";
 import { STATUS_META, StatusChip } from "@/components/ledger/StatusChip";
+import { HandoverPicker, useHandoverSelection } from "@/components/workspace/HandoverPicker";
 import { Avatar, useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, Button, Card, Drawer, EmptyState, SkeletonList, Spinner } from "@/components/ui";
-import { api, type EvidenceInfo, type HandoverItem, type HandoverRef, type HandoverView } from "@/lib/api";
+import { api, type EvidenceInfo, type HandoverItem, type HandoverView } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
 const SECTION_META: Record<string, { Icon: typeof Rocket; tone: string; accent: string }> = {
@@ -23,18 +24,26 @@ const SECTION_META: Record<string, { Icon: typeof Rocket; tone: string; accent: 
 type Versions = { versions: { version: number; approved_by: string; approved_at: string; note: string | null; items: number; added: number; removed: number }[] };
 
 export default function HandoverPage() {
+  return (
+    <Suspense fallback={<SkeletonList rows={4} />}>
+      <HandoverInner />
+    </Suspense>
+  );
+}
+
+function HandoverInner() {
   const { ws } = useWorkspace();
-  const ref = useApi<{ handover: HandoverRef | null }>(`/workspaces/${ws.id}/handover`);
-  const hid = ref.data?.handover?.id;
+  const sel = useHandoverSelection();
+  const hid = sel.selected?.id;
   const view = useApi<HandoverView>(hid ? `/handovers/${hid}` : null);
   const isReviewer = ws.persona.roles.includes("reviewer");
   const versions = useApi<Versions>(hid && isReviewer ? `/handovers/${hid}/versions` : null);
   const [drawer, setDrawer] = useState<{ item: HandoverItem; evidence: EvidenceInfo[] | null; error?: string } | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  if (ref.data && !ref.data.handover) return <EmptyState title="No handover set up">This workspace has no successor yet.</EmptyState>;
+  if (!sel.loading && !sel.selected) return <div className="mx-auto max-w-lg pt-6"><EmptyState title="No handover for you yet">There is no handover addressed to {ws.persona.name} in this workspace.</EmptyState></div>;
   if (view.status === 403) return <div className="mx-auto max-w-lg pt-6"><EmptyState icon={<Lock className="h-5 w-5" />} title="Not shared with you">{view.error}</EmptyState></div>;
-  if (view.loading || ref.loading || !view.data) return view.error ? <Alert tone="error">{view.error}</Alert> : <SkeletonList rows={4} />;
+  if (view.loading || sel.loading || !view.data) return view.error ? <Alert tone="error">{view.error}</Alert> : <SkeletonList rows={4} />;
   const v = view.data;
 
   async function openEvidence(item: HandoverItem) {
@@ -70,6 +79,7 @@ export default function HandoverPage() {
         This is the approved continuation plan, filtered to what {ws.persona.name} may see. Every item links to its evidence. Items under
         <b> Unresolved</b> have no answer yet, so ask before relying on them.
       </CoachBar>
+      <HandoverPicker handovers={sel.handovers} selected={sel.selected} onCreated={sel.reload} />
 
       {!v.approved ? (
         <div className="mx-auto max-w-lg pt-6" data-testid="handover-pending">
@@ -85,7 +95,8 @@ export default function HandoverPage() {
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber via-amber/60 to-transparent" />
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Handover · version {v.version}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">{sel.selected?.name ? `${sel.selected.name} · ` : "Handover · "}version {v.version}</p>
+                {sel.selected?.scope && <p className="mt-1 text-xs text-muted">Scoped to: {sel.selected.scope}</p>}
                 <h1 className="font-display mt-2 flex flex-wrap items-center gap-3 text-[30px] font-semibold leading-tight text-ink">
                   {leaver && <Avatar m={leaver} size={34} />} {v.leaver} <ArrowRight className="h-5 w-5 text-muted" /> {successor && <Avatar m={successor} size={34} />} {v.successor}
                 </h1>
