@@ -46,7 +46,7 @@ export default function Home() {
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1 text-xs font-medium text-ink-2">
               <span className="animate-pulse-dot h-1.5 w-1.5 rounded-full bg-amber" /> Knowledge handover for small software teams
             </p>
-            <h1 className="font-display mt-5 text-[42px] font-semibold leading-[1.05] text-ink sm:text-[56px]">
+            <h1 className="font-display mt-5 text-[40px] font-semibold leading-[1.05] text-ink sm:text-[46px] lg:text-[56px]">
               When someone leaves,<br className="hidden lg:block" /> keep the <em className="font-normal italic text-amber-ink">reasoning</em>,<br className="hidden lg:block" /> not just the files.
             </h1>
             <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-ink-2">
