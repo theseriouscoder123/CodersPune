@@ -70,16 +70,24 @@ class AskResult(BaseModel):
     cited: list[str] = Field(default_factory=list)
 
 
+PINNED_START = 6  # the first "Start here" items (next actions first) are always in context
+PINNED_UNRESOLVED = 4
+
+
 def _rank(question: str, items: list[dict]) -> list[dict]:
+    """Pick the items the model sees: the top next actions and unresolved items are always included (so "what should I
+    do first?" or "what's unknown?" can't miss them), then the rest by similarity to the question."""
     q = question.lower()
 
     def score(it: dict) -> float:
         t = f"{it['type_label']} {it['text']}".lower()
         return max(fuzz.token_set_ratio(q, t), fuzz.partial_ratio(q, t) * 0.9)
 
-    # Always keep the top next actions/unresolved items for "what should I do / what's unknown" style questions.
-    ranked = sorted(items, key=score, reverse=True)
-    return ranked[:MAX_CONTEXT_ITEMS]
+    start = [it for it in items if it.get("_section") == "start_here"][:PINNED_START]
+    unresolved = [it for it in items if it.get("_section") == "unresolved"][:PINNED_UNRESOLVED]
+    pinned_ids = {id(it) for it in start + unresolved}
+    rest = sorted((it for it in items if id(it) not in pinned_ids), key=score, reverse=True)
+    return (start + unresolved + rest)[:MAX_CONTEXT_ITEMS]
 
 
 @router.post("/handovers/{handover_id}/ask")
@@ -98,7 +106,7 @@ def ask(handover_id: uuid.UUID, body: AskIn, request: Request, db: Session = Dep
         raise HTTPException(429, "Lots of questions this hour. Please try again in a little while.")
 
     projected = _project(db, h, v, ctx.viewer, mask=not ctx.is_reviewer)  # permission projection FIRST
-    items = [it for s in projected["sections"] for it in s["items"] if not it.get("restricted")]
+    items = [{**it, "_section": s["key"]} for s in projected["sections"] for it in s["items"] if not it.get("restricted")]
     if not items:
         return {"answered": False, "answer": None, "citations": [], "fallback": "The approved handover has no items you can see."}
     context = _rank(body.question, items)

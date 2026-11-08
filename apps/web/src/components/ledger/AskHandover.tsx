@@ -74,9 +74,10 @@ export function AskHandover({ handoverId, workspaceId, onOpenEvidence }:
               )}
               <p className="mt-3 text-xs font-semibold text-muted">Based on</p>
               <ul className="mt-1 space-y-1.5">
-                {res.answer.citations.map((c) => (
+                {res.answer.citations.map((c, i) => (
                   <li key={c.claim_id}>
                     <button onClick={() => onOpenEvidence({ ...c, type: c.type_label, occurred_at: null })} className="group flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-card">
+                      <span className="mt-0.5 w-6 shrink-0 font-mono text-xs text-muted">[{i + 1}]</span>
                       <StatusChip status={c.status} promoted={!!c.flags?.reviewer_confirmed_without_evidence} />
                       <span className="flex-1 text-sm text-ink-2">{c.text}</span>
                       <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted transition group-hover:translate-x-0.5" />
