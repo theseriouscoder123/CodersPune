@@ -154,7 +154,7 @@ JWTs, PEM private-key blocks, and generic `(?i)(api[_-]?key|secret|token|passwor
 ## 7. Environment variables (`.env.example`)
 
 ```
-DATABASE_URL=postgresql+psycopg://baton:baton@localhost:5432/baton
+DATABASE_URL=postgresql+psycopg://baton:baton@localhost:5433/baton
 GITHUB_TOKEN=                 # fine-grained, public repos read-only
 LLM_PROVIDER=anthropic        # anthropic | openai | gemini
 LLM_API_KEY=

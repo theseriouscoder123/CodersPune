@@ -113,7 +113,7 @@ baton/
 ## 5. Commands (keep these working; update if you change them)
 
 ```bash
-docker compose up -d db                       # Postgres + pgvector on :5432
+docker compose up -d db                       # Postgres + pgvector on host :5433
 cd apps/api && uv sync                        # or: pip install -e ".[dev]"
 cd apps/api && alembic upgrade head
 cd apps/api && python -m baton.seed_demo      # load demo/ into the template demo workspace, run pipeline, freeze
