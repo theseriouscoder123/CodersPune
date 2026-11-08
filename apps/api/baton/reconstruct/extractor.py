@@ -10,7 +10,7 @@ from rapidfuzz import fuzz
 from baton.llm.prompts import COMMON_SUBJECT_KEYS, EXTRACT_SYSTEM, ExtractionResult
 
 MAX_BATCH_CHARS = 7_000
-MAX_EXTRACT_CHARS = 90_000  # per run: keeps a custom repo inside the free LLM quota and the ~5 minute target
+MAX_EXTRACT_CHARS = 60_000  # per run: keeps a custom repo inside the free LLM quota and the ~5 minute target
 
 # What a successor most needs first. Old commit logs are the least informative per character.
 _KIND_PRIORITY = {"file": 0, "note_para": 0, "chat_thread": 1, "pr": 1, "issue": 1, "pr_comment": 2,
