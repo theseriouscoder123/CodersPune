@@ -7,6 +7,7 @@ from sqlalchemy import text
 from baton import __version__
 from baton.config import get_settings
 from baton.db.session import engine
+from baton.routers import workspaces
 
 settings = get_settings()
 
@@ -50,3 +51,4 @@ def health() -> dict:
 
 
 app.include_router(api)
+app.include_router(workspaces.router)

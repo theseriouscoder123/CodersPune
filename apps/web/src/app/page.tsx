@@ -1,4 +1,6 @@
 import { ApiStatus } from "@/components/ApiStatus";
+import { Logo } from "@/components/Logo";
+import { TryDemoButton } from "@/components/TryDemoButton";
 
 const STEPS = [
   { n: "01", name: "Connect", text: "Bring in a GitHub repo, meeting notes and a chat export. Each source is tagged with who may read it." },
@@ -15,17 +17,6 @@ const STATUSES = [
   { name: "Conflicting", cls: "bg-orange-50 text-orange-800 ring-orange-200" },
   { name: "Missing", cls: "bg-rose-50 text-rose-800 ring-rose-200" },
 ];
-
-function Logo() {
-  return (
-    <span className="inline-flex items-center gap-2.5">
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-navy">
-        <span className="block h-1.5 w-5 -rotate-[30deg] rounded-full bg-amber" />
-      </span>
-      <span className="text-xl font-bold tracking-tight text-navy">Baton</span>
-    </span>
-  );
-}
 
 export default function Home() {
   return (
@@ -48,14 +39,7 @@ export default function Home() {
             has reviewed and approved it.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              disabled
-              className="rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white opacity-60"
-              title="The demo goes live in the next milestone"
-            >
-              Try the demo (no sign-up)
-            </button>
+            <TryDemoButton />
             <button
               type="button"
               disabled
@@ -65,7 +49,7 @@ export default function Home() {
               Start with a public GitHub repo
             </button>
           </div>
-          <p className="mt-3 text-xs text-muted">Build in progress: the demo opens in the next milestone.</p>
+          <p className="mt-3 text-xs text-muted">Opens a fictional student-club project. Build in progress: Connect works today; the ledger and handover arrive next.</p>
         </section>
 
         <section aria-labelledby="how" className="pb-16">

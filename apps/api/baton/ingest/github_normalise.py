@@ -33,7 +33,7 @@ class RepoData:
 def parse_time(s: str | None) -> datetime | None:
     if not s:
         return None
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    return datetime.fromisoformat(s)
 
 
 def _day(s: str | None) -> str:

@@ -59,5 +59,5 @@ def access_label(acl: Mapping | None, member_names: Mapping[str, str] | None = N
     if ALL_MEMBERS in a["roles"]:
         return "All members"
     names = [r.capitalize() + "s" for r in a["roles"]]
-    names += [(member_names or {}).get(m, "1 member") for m in a["members"]]
+    names += sorted((member_names or {}).get(m, "1 member") for m in a["members"])
     return ", ".join(names) if names else "Reviewers only"
