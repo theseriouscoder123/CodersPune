@@ -29,9 +29,97 @@
   --missing: #a8323b;
   --missing-soft: #f8e4e5;
 
+  /* inverse surface (primary buttons, toasts) and solid fills that carry white text */
+  --strong: #14213d;
+  --on-strong: #ffffff;
+  --verified-solid: #1f6f4a;
+  --missing-solid: #a8323b;
+  --on-amber: #1a1406;
+  --logo-tile: #14213d;
+  --grain: rgba(20, 33, 61, 0.035);
+  --skeleton-hi: #f6f1e7;
+  --overlay: rgba(20, 33, 61, 0.42);
+
   --shadow-sm: 0 1px 2px rgba(20, 33, 61, 0.06), 0 1px 1px rgba(20, 33, 61, 0.04);
   --shadow-md: 0 6px 18px -6px rgba(20, 33, 61, 0.18), 0 2px 6px -2px rgba(20, 33, 61, 0.08);
   --shadow-lg: 0 24px 48px -16px rgba(20, 33, 61, 0.28);
+}
+
+/* ---------------------------------------------------------------- dark theme
+ * Same identity at night: deep ink-charcoal paper, warm off-white text, amber accent.
+ * Applied when the OS prefers dark (unless the visitor chose light) or when data-theme="dark".
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0e131d;
+  --paper-2: #182032;
+  --card: #131a27;
+  --ink: #ece6da;
+  --ink-2: #c9c2b4;
+  --muted: #8e93a0;
+  --line: #243046;
+  --line-2: #33405a;
+  --amber: #e5a530;
+  --amber-ink: #f0bd5c;
+  --amber-soft: #2a2316;
+  --verified: #6cc79a;
+  --verified-soft: #12291f;
+  --supported: #82b3e3;
+  --supported-soft: #142335;
+  --inferred: #aaa59a;
+  --inferred-soft: #1d212b;
+  --conflicting: #f0a06b;
+  --conflicting-soft: #2e1d12;
+  --missing: #f08a91;
+  --missing-soft: #2e1619;
+  --strong: #ece6da;
+  --on-strong: #0e131d;
+  --verified-solid: #23845a;
+  --missing-solid: #b83a44;
+  --logo-tile: #1f2c4a;
+  --grain: rgba(236, 230, 218, 0.03);
+  --skeleton-hi: #222c42;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 22px -8px rgba(0, 0, 0, 0.6), 0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 28px 56px -18px rgba(0, 0, 0, 0.75);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  --paper: #0e131d;
+  --paper-2: #182032;
+  --card: #131a27;
+  --ink: #ece6da;
+  --ink-2: #c9c2b4;
+  --muted: #8e93a0;
+  --line: #243046;
+  --line-2: #33405a;
+  --amber: #e5a530;
+  --amber-ink: #f0bd5c;
+  --amber-soft: #2a2316;
+  --verified: #6cc79a;
+  --verified-soft: #12291f;
+  --supported: #82b3e3;
+  --supported-soft: #142335;
+  --inferred: #aaa59a;
+  --inferred-soft: #1d212b;
+  --conflicting: #f0a06b;
+  --conflicting-soft: #2e1d12;
+  --missing: #f08a91;
+  --missing-soft: #2e1619;
+  --strong: #ece6da;
+  --on-strong: #0e131d;
+  --verified-solid: #23845a;
+  --missing-solid: #b83a44;
+  --logo-tile: #1f2c4a;
+  --grain: rgba(236, 230, 218, 0.03);
+  --skeleton-hi: #222c42;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 22px -8px rgba(0, 0, 0, 0.6), 0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 28px 56px -18px rgba(0, 0, 0, 0.75);
+  }
 }
 
 @theme inline {
@@ -56,6 +144,11 @@
   --color-conflicting-soft: var(--conflicting-soft);
   --color-missing: var(--missing);
   --color-missing-soft: var(--missing-soft);
+  --color-strong: var(--strong);
+  --color-on-strong: var(--on-strong);
+  --color-verified-solid: var(--verified-solid);
+  --color-missing-solid: var(--missing-solid);
+  --color-on-amber: var(--on-amber);
   /* legacy aliases used by older components */
   --color-navy: var(--ink);
   --color-panel: var(--paper-2);
@@ -74,6 +167,7 @@ html {
 
 body {
   background: var(--paper);
+  transition: background-color 0.25s ease, color 0.25s ease;
   color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
@@ -92,7 +186,7 @@ body {
 
 /* Subtle paper grain so large surfaces don't feel flat. */
 .paper-grain {
-  background-image: radial-gradient(rgba(20, 33, 61, 0.035) 1px, transparent 1px);
+  background-image: radial-gradient(var(--grain) 1px, transparent 1px);
   background-size: 18px 18px;
 }
 
@@ -159,7 +253,7 @@ body {
 .stagger > *:nth-child(n + 9) { animation-delay: 300ms; }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--paper-2) 25%, #f6f1e7 50%, var(--paper-2) 75%);
+  background: linear-gradient(90deg, var(--paper-2) 25%, var(--skeleton-hi) 50%, var(--paper-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;

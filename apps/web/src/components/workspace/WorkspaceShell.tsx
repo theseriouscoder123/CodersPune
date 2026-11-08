@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import { ButtonLink, Spinner } from "@/components/ui";
 import { api, ApiError, storePersona, type Member, type WorkspaceInfo } from "@/lib/api";
@@ -28,8 +29,8 @@ const STEPS = [
 ];
 
 const ROLE_STYLE: Record<string, string> = {
-  admin: "bg-ink text-white ring-ink",
-  reviewer: "bg-ink text-white ring-ink",
+  admin: "bg-strong text-on-strong ring-strong",
+  reviewer: "bg-strong text-on-strong ring-strong",
   leaver: "bg-amber-soft text-amber-ink ring-amber/40",
   successor: "bg-verified-soft text-verified ring-verified/30",
   member: "bg-paper-2 text-ink-2 ring-line",
@@ -140,7 +141,7 @@ function Stepper({ ws }: { ws: WorkspaceInfo }) {
           const node = (
             <span className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition ${active ? "bg-card shadow-[var(--shadow-sm)] ring-1 ring-line" : ok ? "hover:bg-card/70" : ""}`}>
               <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold transition ${
-                active ? "bg-ink text-white" : done ? "bg-verified text-white" : ok ? "bg-card text-ink-2 ring-1 ring-line-2" : "bg-paper-2 text-muted"}`}>
+                active ? "bg-strong text-on-strong" : done ? "bg-verified-solid text-white" : ok ? "bg-card text-ink-2 ring-1 ring-line-2" : "bg-paper-2 text-muted"}`}>
                 {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : !ok ? <Lock className="h-3 w-3" /> : <s.Icon className="h-3.5 w-3.5" strokeWidth={2.2} />}
               </span>
               <span className="leading-tight">
@@ -158,7 +159,7 @@ function Stepper({ ws }: { ws: WorkspaceInfo }) {
               )}
               {i < STEPS.length - 1 && (
                 <span className="relative mx-1 h-px w-6 bg-line-2 sm:w-10" aria-hidden>
-                  <span className={`absolute inset-0 origin-left bg-verified transition-transform duration-500 ${i < activeIdx && allowed(STEPS[i + 1].who) ? "scale-x-100" : "scale-x-0"}`} />
+                  <span className={`absolute inset-0 origin-left bg-verified-solid transition-transform duration-500 ${i < activeIdx && allowed(STEPS[i + 1].who) ? "scale-x-100" : "scale-x-0"}`} />
                 </span>
               )}
             </li>
@@ -238,6 +239,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
                   {resetting ? <Spinner className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />} Reset demo
                 </button>
               )}
+              <ThemeToggle />
               <PersonaSwitcher ws={ws} onSwitch={switchPersona} />
             </div>
           </div>

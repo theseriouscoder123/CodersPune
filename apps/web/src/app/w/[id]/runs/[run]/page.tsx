@@ -86,7 +86,7 @@ export default function RunPage() {
             <li key={s.step} className={`rounded-2xl border p-4 transition ${running ? "border-amber/40 bg-card shadow-[var(--shadow-md)]" : "border-line bg-card/60"}`}>
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-3">
-                  <span className={`grid h-7 w-7 place-items-center rounded-full ${s.status === "done" ? "bg-verified text-white" : s.status === "failed" ? "bg-missing text-white" : running ? "bg-amber-soft text-amber-ink" : "bg-paper-2 text-muted"}`}>
+                  <span className={`grid h-7 w-7 place-items-center rounded-full ${s.status === "done" ? "bg-verified-solid text-white" : s.status === "failed" ? "bg-missing-solid text-white" : running ? "bg-amber-soft text-amber-ink" : "bg-paper-2 text-muted"}`}>
                     {s.status === "done" ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : s.status === "failed" ? <X className="h-3.5 w-3.5" /> : running ? <Spinner className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                   </span>
                   <span className={`text-sm font-medium ${s.status === "pending" ? "text-muted" : "text-ink"}`}>{s.label}</span>

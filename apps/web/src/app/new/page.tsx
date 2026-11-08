@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Alert, Button, Card } from "@/components/ui";
 
 type Role = "reviewer" | "leaver" | "successor" | "member";
@@ -58,7 +59,7 @@ function AccessPicker({ label, value, onChange, people }: { label: string; value
 function SectionTitle({ n, title, icon }: { n: number; title: string; icon: React.ReactNode }) {
   return (
     <h2 className="flex items-center gap-2.5">
-      <span className="grid h-7 w-7 place-items-center rounded-full bg-ink text-xs font-bold text-white">{n}</span>
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-strong text-xs font-bold text-on-strong">{n}</span>
       <span className="font-display text-lg font-semibold text-ink">{title}</span>
       <span className="text-muted">{icon}</span>
     </h2>
@@ -125,7 +126,10 @@ export default function NewWorkspacePage() {
     <div className="paper-grain flex flex-1 flex-col">
       <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-5 sm:px-6">
         <Logo />
-        <Link href="/" className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-paper-2"><ArrowLeft className="h-4 w-4" /> Back</Link>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Link href="/" className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-paper-2"><ArrowLeft className="h-4 w-4" /> Back</Link>
+        </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-20 sm:px-6">
         <div className="animate-rise">

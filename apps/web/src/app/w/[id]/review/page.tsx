@@ -107,7 +107,7 @@ function Review() {
               </button>
             );
           })}
-          {type && <button onClick={() => setParam("type", null)} className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs font-medium capitalize text-white">{type.replace("_", " ")} <X className="h-3 w-3" /></button>}
+          {type && <button onClick={() => setParam("type", null)} className="inline-flex items-center gap-1 rounded-full bg-strong px-2.5 py-1 text-xs font-medium capitalize text-on-strong">{type.replace("_", " ")} <X className="h-3 w-3" /></button>}
         </div>
       )}
       {tab === "missing" && isReviewer && <QuestionsBar workspaceId={ws.id} />}

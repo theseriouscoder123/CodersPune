@@ -10,12 +10,12 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "amber
 type Size = "sm" | "md" | "lg";
 
 const VARIANT: Record<Variant, string> = {
-  primary: "bg-ink text-white hover:bg-ink-2 shadow-[var(--shadow-sm)]",
+  primary: "bg-strong text-on-strong hover:bg-strong/90 shadow-[var(--shadow-sm)]",
   secondary: "bg-card text-ink ring-1 ring-line-2 hover:bg-paper-2 hover:ring-ink/20",
   ghost: "text-ink-2 hover:bg-paper-2",
   danger: "bg-card text-missing ring-1 ring-missing/30 hover:bg-missing-soft",
-  success: "bg-verified text-white hover:bg-verified/90 shadow-[var(--shadow-sm)]",
-  amber: "bg-amber text-ink hover:brightness-105 shadow-[var(--shadow-sm)]",
+  success: "bg-verified-solid text-white hover:bg-verified-solid/90 shadow-[var(--shadow-sm)]",
+  amber: "bg-amber text-on-amber hover:brightness-105 shadow-[var(--shadow-sm)]",
 };
 const SIZE: Record<Size, string> = {
   sm: "h-8 px-3 text-[13px] gap-1.5",
@@ -125,7 +125,7 @@ export function Pill({ children, className = "" }: { children: React.ReactNode; 
 export function Modal({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
   if (!open || typeof document === "undefined") return null;
   return createPortal(
-    <div className="animate-fade fixed inset-0 z-40 grid place-items-center bg-ink/40 p-4 backdrop-blur-[2px]" role="dialog" aria-modal aria-label={label}
+    <div className="animate-fade fixed inset-0 z-40 grid place-items-center bg-[var(--overlay)] p-4 backdrop-blur-[2px]" role="dialog" aria-modal aria-label={label}
       onClick={onClose} onKeyDown={(e) => e.key === "Escape" && onClose()}>
       <div className="animate-pop w-full max-w-md rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-lg)]" onClick={(e) => e.stopPropagation()}>
         {children}
@@ -138,7 +138,7 @@ export function Modal({ open, onClose, children, label }: { open: boolean; onClo
 export function Drawer({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
   if (!open || typeof document === "undefined") return null;
   return createPortal(
-    <div className="animate-fade fixed inset-0 z-40 flex justify-end bg-ink/30 backdrop-blur-[1px]" onClick={onClose} role="dialog" aria-modal aria-label={label}
+    <div className="animate-fade fixed inset-0 z-40 flex justify-end bg-[var(--overlay)] backdrop-blur-[1px]" onClick={onClose} role="dialog" aria-modal aria-label={label}
       onKeyDown={(e) => e.key === "Escape" && onClose()}>
       <aside className="animate-drawer scroll-quiet h-full w-full max-w-xl overflow-auto border-l border-line bg-paper shadow-[var(--shadow-lg)]" onClick={(e) => e.stopPropagation()}>
         {children}

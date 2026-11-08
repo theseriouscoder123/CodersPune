@@ -81,7 +81,7 @@ export default function SourcesPage() {
 
       <PageHeader eyebrow="Connect" title="Connected sources"
         description={isReviewer ? "As the reviewer, you can see every source in this workspace." : `Only the sources ${ws.persona.name} is allowed to read are listed.`}
-        actions={total > 0 ? <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white"><ShieldCheck className="h-3.5 w-3.5" /> {total} secrets removed in total</span> : undefined} />
+        actions={total > 0 ? <span className="inline-flex items-center gap-1.5 rounded-full bg-strong px-3 py-1.5 text-xs font-semibold text-on-strong"><ShieldCheck className="h-3.5 w-3.5" /> {total} secrets removed in total</span> : undefined} />
 
       <div className="mt-7">
         {error && <Alert tone="error">Couldn&apos;t load sources: {error}</Alert>}
@@ -94,10 +94,10 @@ export default function SourcesPage() {
         )}
       </div>
 
-      <Card className="mt-8 flex flex-col items-start justify-between gap-4 bg-ink p-6 text-white sm:flex-row sm:items-center">
+      <Card className="mt-8 flex flex-col items-start justify-between gap-4 bg-strong p-6 text-on-strong sm:flex-row sm:items-center">
         <div>
           <p className="font-display text-lg font-semibold">What happens next</p>
-          <p className="mt-1 max-w-2xl text-sm text-white/75">
+          <p className="mt-1 max-w-2xl text-sm text-on-strong/75">
             Baton reconstructs a ledger of claims (decisions, owners, open work, risks), each tied to a quoted source. Restricted sources are
             processed separately, so their content never mixes into claims others can see.
           </p>

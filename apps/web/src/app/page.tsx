@@ -3,6 +3,7 @@ import { ArrowRight, Eye, FileSearch, GitBranch, Handshake, Lock, Scale, ShieldC
 import { ApiStatus } from "@/components/ApiStatus";
 import { Logo } from "@/components/Logo";
 import { StatusChip } from "@/components/ledger/StatusChip";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TryDemoButton } from "@/components/TryDemoButton";
 import { ButtonLink } from "@/components/ui";
 import type { Status } from "@/lib/api";
@@ -36,7 +37,8 @@ export default function Home() {
         <nav className="flex items-center gap-1 text-sm">
           <a href="#how" className="rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2">How it works</a>
           <a href="#trust" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 sm:block">Trust</a>
-          <ButtonLink href="/new" variant="secondary" size="sm" className="ml-2">Use your repo</ButtonLink>
+          <ThemeToggle />
+          <ButtonLink href="/new" variant="secondary" size="sm" className="ml-1">Use your repo</ButtonLink>
         </nav>
       </header>
 
