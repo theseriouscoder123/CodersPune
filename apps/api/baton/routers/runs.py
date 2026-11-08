@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,8 +19,12 @@ from baton.pipeline import RunBusy, advance, create_run, run_progress
 router = APIRouter(prefix="/api")
 
 
+class RunIn(BaseModel):
+    mode: Literal["full", "refresh"] = "full"
+
+
 @router.post("/workspaces/{workspace_id}/runs")
-def start_run(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+def start_run(body: RunIn | None = None, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
     if not ctx.is_admin:
         raise HTTPException(403, "Only the workspace admin can start a pipeline run")
     if not ctx.can_write:
@@ -26,11 +32,11 @@ def start_run(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) 
     if not get_settings().llm_configured:
         raise HTTPException(503, "AI pipeline unavailable: no LLM key is configured on the server.")
     try:
-        run = create_run(db, ctx.workspace.id)
+        run = create_run(db, ctx.workspace.id, mode=(body.mode if body else "full"))
     except RunBusy as exc:
         raise HTTPException(409, {"message": "A run is already in progress", "run_id": str(exc)}) from exc
     db.commit()
-    return {"run_id": str(run.id)}
+    return {"run_id": str(run.id), "mode": (run.stats or {}).get("mode")}
 
 
 @router.get("/workspaces/{workspace_id}/runs/latest")

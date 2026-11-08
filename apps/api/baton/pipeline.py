@@ -56,11 +56,24 @@ class RunBusy(Exception):
 
 # ------------------------------------------------------------------------------------------------ run lifecycle
 
-def create_run(db: Session, workspace_id) -> Run:
+def create_run(db: Session, workspace_id, mode: str = "full") -> Run:
+    """mode="full": replace unreviewed claims from scratch. mode="refresh": re-fetch live sources, keep existing claims
+    and only extract what is new since the last completed run."""
     busy = db.scalar(select(Run).where(Run.workspace_id == workspace_id, Run.status.in_(["queued", "running"])))
     if busy:
         raise RunBusy(str(busy.id))
-    run = Run(workspace_id=workspace_id, status="queued", stats={})
+    prev = db.scalars(select(Run).where(Run.workspace_id == workspace_id, Run.status == "done")
+                      .order_by(Run.created_at.desc())).first()
+    if mode == "refresh" and prev is None:
+        mode = "full"
+    if mode == "refresh":
+        for s in db.scalars(select(Source).where(Source.workspace_id == workspace_id, Source.type == "github_repo")):
+            if not (s.meta or {}).get("private"):
+                s.meta = {**(s.meta or {}), "refresh": True}
+    stats = {"mode": mode}
+    if prev is not None and prev.started_at:
+        stats["since"] = prev.started_at.isoformat()
+    run = Run(workspace_id=workspace_id, status="queued", stats=stats)
     db.add(run)
     db.flush()
     for step in STEPS:
@@ -242,7 +255,8 @@ def step_ingest(run_id, job_id, workspace_id, deadline) -> bool:
 
     with SessionLocal() as db:
         pending = [(s.id, s.type, s.uri, s.name) for s in db.scalars(
-            select(Source).where(Source.workspace_id == workspace_id, Source.ingested_at.is_(None)))]
+            select(Source).where(Source.workspace_id == workspace_id))
+            if s.ingested_at is None or (s.meta or {}).get("refresh")]
         total = db.scalar(select(func.count()).select_from(Source).where(Source.workspace_id == workspace_id))
     if pending:
         src_id, typ, uri, name = pending[0]
@@ -258,12 +272,14 @@ def step_ingest(run_id, job_id, workspace_id, deadline) -> bool:
             raise _UserError(f"GitHub: {name} has no readable files, commits, PRs or issues.")
         with SessionLocal.begin() as db:
             src = db.get(Source, src_id)
-            src.meta = {**meta, "repo": data.repo.get("full_name"), "capped": {
+            src.meta = {**{k: v for k, v in (src.meta or {}).items() if k in ("private",)}, **meta,
+                        "repo": data.repo.get("full_name"), "capped": {
                 "commits": len(data.commits), "pulls": len(data.pulls), "issues": len(data.issues), "files": len(data.files)}}
             res = store_chunks(db, src, drafts)
         _set_job(job_id, progress=total - len(pending) + 1,
                  message=f"{name}: {res['chunks']} chunks ({len(data.commits)} commits, {len(data.pulls)} PRs, "
-                         f"{len(data.issues)} issues, {len(data.files)} files), {res['redactions']} secrets removed")
+                         f"{len(data.issues)} issues, {len(data.files)} files), {res['new']} new, {res['removed']} removed, "
+                         f"{res['redactions']} secrets removed")
         return len(pending) == 1
     _set_job(job_id, progress=total, total=total, message=f"{total} sources ready")
     return True
@@ -277,20 +293,48 @@ class _UserError(Exception):
         return str(self)
 
 
+def _mode(db: Session, run_id) -> tuple[str, datetime | None]:
+    stats = db.get(Run, run_id).stats or {}
+    since = stats.get("since")
+    return stats.get("mode", "full"), (datetime.fromisoformat(since) if since else None)
+
+
 def step_checklist(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
-        # A new run replaces claims nobody has reviewed; reviewed claims are kept.
+        mode, _ = _mode(db, run_id)
+        if mode == "refresh":
+            return _checklist_refresh(db, run_id, job_id, workspace_id)
+        # A full run replaces claims nobody has reviewed; reviewed claims are kept.
         reviewed = select(ReviewEvent.claim_id)
         stale = select(Claim.id).where(Claim.workspace_id == workspace_id, Claim.review_state == "none",
                                        Claim.id.not_in(reviewed))
         db.execute(update(Claim).where(Claim.superseded_by.in_(stale)).values(superseded_by=None))
         db.execute(delete(Claim).where(Claim.id.in_(stale)))
-        db.execute(update(Claim).where(Claim.workspace_id == workspace_id).values(conflict_group_id=None, superseded_by=None))
+        db.execute(update(Claim).where(Claim.workspace_id == workspace_id, Claim.id.not_in(reviewed))
+                   .values(conflict_group_id=None, superseded_by=None))
+        unresolved = select(ConflictGroup.id).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False))
+        db.execute(update(Claim).where(Claim.conflict_group_id.in_(unresolved)).values(conflict_group_id=None))
         db.execute(delete(ConflictGroup).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False)))
+        existing_subjects = {k for (k,) in db.execute(select(Claim.subject_key).where(
+            Claim.workspace_id == workspace_id, Claim.origin == "checklist"))}
+        _add_checklist(db, run_id, job_id, workspace_id, existing_subjects)
+    return True
 
+
+def _checklist_refresh(db: Session, run_id, job_id, workspace_id) -> bool:
+    """Refresh: keep everything; only add expected items for new repo signals (e.g. a newly opened PR)."""
+    existing_subjects = {k for (k,) in db.execute(select(Claim.subject_key).where(
+        Claim.workspace_id == workspace_id, Claim.origin == "checklist"))}
+    _add_checklist(db, run_id, job_id, workspace_id, existing_subjects)
+    return True
+
+
+def _add_checklist(db: Session, run_id, job_id, workspace_id, skip_subjects: set) -> None:
+    for _ in (0,):  # single pass; keeps the original block structure
         _, _, leaver, _ = _people(db, workspace_id)
         repo = db.scalar(select(Source).where(Source.workspace_id == workspace_id, Source.type.in_(["fixture", "github_repo"])))
         items = build_checklist((repo.meta or {}).get("signals", {}), leaver.handle, leaver.display_name) if repo and leaver else []
+        items = [it for it in items if it.subject_key not in skip_subjects]  # reviewed/kept items are not duplicated
         for it in items:
             c = Claim(workspace_id=workspace_id, run_id=run_id, type=it.type, text=it.text, subject_key=it.subject_key,
                       origin="checklist", about_member_id=leaver.id,
@@ -305,8 +349,7 @@ def step_checklist(run_id, job_id, workspace_id, deadline) -> bool:
                     c.occurred_at = ch.occurred_at
         job = db.get(Job, job_id)
         job.progress = job.total = len(items)
-        job.message = f"{len(items)} expected items from the repository"
-    return True
+        job.message = f"{len(items)} {'new ' if skip_subjects else ''}expected items from the repository"
 
 
 def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
@@ -315,8 +358,11 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal() as db:
         job = db.get(Job, job_id)
         state = dict(job.state or {})
-        rows = db.execute(select(Chunk, Source).join(Source, Source.id == Chunk.source_id)
-                          .where(Chunk.workspace_id == workspace_id)).all()
+        mode, since = _mode(db, run_id)
+        q = select(Chunk, Source).join(Source, Source.id == Chunk.source_id).where(Chunk.workspace_id == workspace_id)
+        if mode == "refresh" and since is not None:
+            q = q.where(Chunk.created_at > since)  # only new activity
+        rows = db.execute(q).all()
         refs = {str(ch.id): ChunkRef(str(ch.id), ch.acl_key, ch.kind, ch.text, ch.occurred_at, _chunk_label(ch, src))
                 for ch, src in rows}
         if "batches" not in state:
@@ -387,11 +433,45 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
         dup = [c.id for c in claims if c.id not in kept_ids]
         if dup:
             db.execute(delete(Claim).where(Claim.id.in_(dup)))
+        reattached = _reattach(db, run_id, workspace_id)
         j = db.get(Job, job_id)
-        j.message = (f"{len(kept)} claims from {len(state['batches'])} batches" + (f" ({len(dup)} duplicates merged)" if dup else "")
+        j.message = (f"{len(kept) - reattached} new claims from {len(state['batches'])} batches"
+                     + (f" ({len(dup)} duplicates merged)" if dup else "")
+                     + (f"; {reattached} matched claims you already have (evidence added to them)" if reattached else "")
                      + (f"; {state.get('skipped_chunks')} older low-priority chunks skipped to stay within the AI budget"
                         if state.get("skipped_chunks") else ""))
     return True
+
+
+def _reattach(db: Session, run_id, workspace_id) -> int:
+    """A re-run must not duplicate claims that already exist (especially reviewed ones): a new claim on the same subject
+    with similar wording is merged into the existing claim (its new evidence is added and verified as usual)."""
+    from rapidfuzz import fuzz
+
+    existing = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == workspace_id,
+                                                          (Claim.run_id.is_(None)) | (Claim.run_id != run_id),  # NULL-safe
+                                                          Claim.review_state != "rejected"))]
+    if not existing:
+        return 0
+    by_subject: dict = {}
+    for c in existing:
+        by_subject.setdefault(c.subject_key, []).append(c)
+    merged = 0
+    for new in list(db.scalars(select(Claim).where(Claim.run_id == run_id, Claim.origin == "extracted"))):
+        twin = next((c for c in by_subject.get(new.subject_key, []) if fuzz.token_set_ratio(c.text, new.text) >= 85), None)
+        if twin is None:
+            continue
+        cited = {e.chunk_id for e in db.scalars(select(Evidence).where(Evidence.claim_id == twin.id))}
+        for e in list(db.scalars(select(Evidence).where(Evidence.claim_id == new.id))):
+            if e.chunk_id in cited:
+                db.delete(e)
+            else:
+                e.claim_id = twin.id
+        db.flush()
+        db.delete(new)
+        merged += 1
+    db.flush()
+    return merged
 
 
 def _fts_query(terms: list[str]) -> str:
@@ -537,9 +617,10 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
 
 def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[int, int]:
     """Plan conflicts/supersession for claims not already in a (resolved) group. Deterministic, no LLM."""
-    if reset:  # used by `python -m baton.recompute`: forget unresolved groups and automatic supersessions
-        db.execute(update(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state == "none")
-                   .values(superseded_by=None))
+    if reset:  # forget unresolved groups and AUTOMATIC supersessions (never ones a reviewer chose)
+        decided = select(ReviewEvent.claim_id)
+        db.execute(update(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state == "none",
+                                       Claim.id.not_in(decided)).values(superseded_by=None))
         unresolved = select(ConflictGroup.id).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False))
         db.execute(update(Claim).where(Claim.conflict_group_id.in_(unresolved)).values(conflict_group_id=None))
         db.execute(delete(ConflictGroup).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False)))
@@ -564,7 +645,7 @@ def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[in
 
 def step_conflicts(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
-        n_groups, n_sup = replan_conflicts(db, workspace_id)
+        n_groups, n_sup = replan_conflicts(db, workspace_id, reset=True)
         j = db.get(Job, job_id)
         j.progress = j.total = n_groups
         j.message = f"{n_groups} conflicts, {n_sup} reversed decisions"

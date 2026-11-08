@@ -18,7 +18,7 @@ def test_demo_start_reuses_sandbox_and_limits_per_ip(monkeypatch):
     if first.status_code == 503:
         return  # template not seeded in this DB
     assert c.post("/api/demo/start").json()["workspace_id"] == first.json()["workspace_id"]  # same browser, same copy
-    import baton.limits as limits
+    from baton import limits
 
     monkeypatch.setattr(limits, "NEW_SANDBOXES_PER_IP_PER_HOUR", 1)
     stranger = TestClient(app, headers={"x-forwarded-for": ip})  # new browser on the same network

@@ -9,7 +9,7 @@ import { CoachBar } from "@/components/CoachBar";
 import { STATUS_HELP, STATUS_META, STATUS_ORDER, StatusChip } from "@/components/ledger/StatusChip";
 import { NotForPersona } from "@/components/workspace/NotForPersona";
 import { useWorkspace } from "@/components/workspace/WorkspaceShell";
-import { Alert, Button, ButtonLink, Card, PageHeader, Skeleton } from "@/components/ui";
+import { Alert, Button, ButtonLink, Card, Modal, PageHeader, Skeleton } from "@/components/ui";
 import { api, type ClaimSummary, type Ledger, type RunInfo } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
@@ -22,6 +22,7 @@ export default function LedgerPage() {
   const timeline = useApi<{ events: ClaimSummary[] }>(canSee ? `/workspaces/${ws.id}/timeline` : null);
   const [starting, setStarting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [runOpen, setRunOpen] = useState(false);
 
   if (!canSee) return <NotForPersona step="The reconstructed ledger" />;
 
@@ -30,12 +31,12 @@ export default function LedgerPage() {
   const isAdmin = ws.persona.roles.includes("admin");
   const leaver = ws.members.find((m) => m.roles.includes("leaver"))?.name ?? "the leaver";
 
-  async function rerun() {
-    if (!confirm("Re-run the AI pipeline? It takes a few minutes and replaces claims nobody has reviewed yet.")) return;
+  async function rerun(mode: "refresh" | "full") {
+    setRunOpen(false);
     setStarting(true);
     setErr(null);
     try {
-      const r = await api<{ run_id: string }>(`/workspaces/${ws.id}/runs`, { workspaceId: ws.id, method: "POST" });
+      const r = await api<{ run_id: string }>(`/workspaces/${ws.id}/runs`, { workspaceId: ws.id, method: "POST", body: { mode } });
       router.push(`/w/${ws.id}/runs/${r.run_id}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -53,10 +54,25 @@ export default function LedgerPage() {
       <PageHeader eyebrow="Reconstruct" title="The reconstructed ledger"
         description={<>{total} claims about {leaver}&apos;s work, each linked to evidence.</>}
         actions={<>
-          {isAdmin && !ws.read_only && <Button variant="secondary" onClick={rerun} loading={starting}><RefreshCw className="h-4 w-4" /> Re-run pipeline</Button>}
+          {isAdmin && !ws.read_only && <Button variant="secondary" onClick={() => setRunOpen(true)} loading={starting}><RefreshCw className="h-4 w-4" /> Re-run pipeline</Button>}
           <ButtonLink href={`/w/${ws.id}/review`}>Inspect the evidence <ArrowRight className="h-4 w-4" /></ButtonLink>
         </>} />
       {err && <Alert tone="error" className="mt-4">{err}</Alert>}
+      <Modal open={runOpen} onClose={() => setRunOpen(false)} label="Re-run the pipeline">
+        <h2 className="font-display text-xl font-semibold text-ink">Run the pipeline again</h2>
+        <p className="mt-1 text-sm text-muted">Both options keep every claim you&apos;ve reviewed. Takes a few minutes and uses the AI quota.</p>
+        <div className="mt-4 grid gap-2">
+          <button onClick={() => rerun("refresh")} className="lift rounded-xl border border-line bg-card p-4 text-left" data-testid="run-refresh">
+            <p className="font-semibold text-ink">Refresh from sources <span className="ml-1 rounded-full bg-verified-soft px-2 py-0.5 text-[11px] text-verified">recommended</span></p>
+            <p className="mt-1 text-sm text-muted">Re-fetches the repository, reads only new activity since the last run, and adds to the ledger. Existing claims stay.</p>
+          </button>
+          <button onClick={() => rerun("full")} className="lift rounded-xl border border-line bg-card p-4 text-left" data-testid="run-full">
+            <p className="font-semibold text-ink">Full re-run</p>
+            <p className="mt-1 text-sm text-muted">Re-reads everything and replaces claims nobody has reviewed yet. New claims that match reviewed ones are merged into them.</p>
+          </button>
+        </div>
+        <div className="mt-4 flex justify-end"><Button variant="ghost" onClick={() => setRunOpen(false)}>Cancel</Button></div>
+      </Modal>
       {ledger.error && <Alert tone="error" className="mt-4">{ledger.error}</Alert>}
 
       {/* Status overview */}

@@ -22,7 +22,8 @@ CHAT = json.dumps([
 
 
 def client(visitor):
-    c = TestClient(app)
+    # A unique fake network per test; clean-up deletes by that IP (the cookie id may be replaced by a new visitor).
+    c = TestClient(app, headers={"x-forwarded-for": f"198.51.100.{abs(hash(visitor)) % 250 + 1}"})
     c.cookies.set("baton_visitor", visitor)
     return c
 
@@ -35,8 +36,12 @@ def post(c, **over):
 
 
 def cleanup(visitor):
+    from baton.db.models import Visitor
+
+    ip = f"198.51.100.{abs(hash(visitor)) % 250 + 1}"
     with SessionLocal.begin() as db:
-        db.execute(delete(Workspace).where(Workspace.visitor_id == visitor))
+        ids = select(Visitor.id).where(Visitor.ip == ip)
+        db.execute(delete(Workspace).where((Workspace.visitor_id == visitor) | Workspace.visitor_id.in_(ids)))
 
 
 def test_create_with_notes_and_restricted_chat():
