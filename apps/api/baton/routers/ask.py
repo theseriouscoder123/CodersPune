@@ -35,7 +35,8 @@ Rules:
 - Cite every item you rely on by its id (I1, I2, ...). An answer without citations is not allowed.
 - Items marked MISSING or open questions are unknowns: say clearly that it is unresolved, and suggest asking the person
   named in the instructions.
-- If the items don't answer the question, set answered=false.
+- If the items answer only part of the question, give that part (with citations), say what is not covered, and set
+  answered=false. If they don't help at all, set answered=false with no citations.
 - Keep the answer short (at most 4 sentences or 5 bullet points), plain English. No personal contact details."""
 
 
@@ -99,15 +100,19 @@ def ask(handover_id: uuid.UUID, body: AskIn, request: Request, db: Session = Dep
     except LLMError as exc:
         raise HTTPException(503, exc.user_message) from exc
 
-    cited = [local[c.strip()] for c in res.cited if c.strip() in local]
+    norm = {c.strip().strip("[]").upper() for c in res.cited}
+    cited = [it for lid, it in local.items() if lid in norm]
     fallback = f"The approved handover doesn't cover this. Ask {reviewer} (reviewer) or the leaver."
-    if not res.answered or not res.answer or not cited:  # uncited answers are never shown as fact
-        return {"answered": False, "answer": None, "citations": [], "fallback": fallback}
+    if not res.answer or not cited:  # uncited answers are never shown as fact
+        return {"answered": False, "partial": False, "answer": None, "citations": [], "fallback": fallback}
     answer = res.answer.strip()
     if not ctx.is_reviewer:
         answer = mask_pii(answer)
+    partial = not res.answered  # cited, but the handover only covers part of the question
     return {
-        "answered": True, "answer": answer, "fallback": None,
+        "answered": res.answered, "partial": partial, "answer": answer,
+        "fallback": (f"The handover only partly answers this. For the rest, ask {reviewer} (reviewer) or the leaver."
+                     if partial else None),
         "citations": [{"claim_id": it["claim_id"], "text": it["text"], "status": it["status"], "type_label": it["type_label"],
                        "evidence": it["evidence"], "status_reason": it["status_reason"],
                        "flags": it.get("flags", {})} for it in cited],

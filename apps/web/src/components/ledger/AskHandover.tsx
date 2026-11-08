@@ -8,7 +8,7 @@ import { Alert, Card, Spinner } from "@/components/ui";
 import { api, type HandoverItem, type Status } from "@/lib/api";
 
 type Citation = { claim_id: string; text: string; status: Status; type_label: string; evidence: HandoverItem["evidence"]; status_reason: string; flags: HandoverItem["flags"] };
-type Answer = { answered: boolean; answer: string | null; citations: Citation[]; fallback: string | null };
+type Answer = { answered: boolean; partial?: boolean; answer: string | null; citations: Citation[]; fallback: string | null };
 
 const SUGGESTIONS = ["What should I do first?", "Who owns deployments?", "What's risky right now?", "What is still unknown?"];
 
@@ -63,10 +63,15 @@ export function AskHandover({ handoverId, workspaceId, onOpenEvidence }:
           <p className="text-sm text-ink">{res.question}</p>
           {busy && <p className="mt-3 flex items-center gap-2 text-sm text-muted"><Spinner /> Reading the approved handover…</p>}
           {res.error && <Alert tone="error" className="mt-3">{res.error}</Alert>}
-          {res.answer && (res.answer.answered ? (
+          {res.answer && (res.answer.answer ? (
             <div className="mt-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-supported"><Sparkles className="h-3 w-3" /> Answer from the handover</p>
+              <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${res.answer.partial ? "text-amber-ink" : "text-supported"}`}>
+                <Sparkles className="h-3 w-3" /> {res.answer.partial ? "Partial answer from the handover" : "Answer from the handover"}
+              </p>
               <p className="mt-1 whitespace-pre-line text-[14.5px] leading-relaxed text-ink">{res.answer.answer}</p>
+              {res.answer.partial && res.answer.fallback && (
+                <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-soft/70 px-3 py-2 text-xs text-amber-ink"><HelpCircle className="mt-px h-3.5 w-3.5 shrink-0" /> {res.answer.fallback}</p>
+              )}
               <p className="mt-3 text-xs font-semibold text-muted">Based on</p>
               <ul className="mt-1 space-y-1.5">
                 {res.answer.citations.map((c) => (

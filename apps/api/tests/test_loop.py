@@ -260,6 +260,10 @@ def test_ask_uses_only_projected_claims_and_validates_citations(world, monkeypat
     r = c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "What is the sponsor deal?"}).json()
     assert r["answered"] is False and "doesn't cover" in r["fallback"]
 
+    _ask_setup(monkeypatch, {"answered": False, "answer": "It moved to FCM; the reason isn't stated.", "cited": ["[I1]"]})
+    r = c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "Why FCM?"}).json()
+    assert r["partial"] is True and r["citations"] and "partly" in r["fallback"]
+
     _ask_setup(monkeypatch, {"answered": True, "answer": "Uncited", "cited": []})
     assert c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "anything?"}).json()["answered"] is False
     assert c.post(f"/api/handovers/{hid}/ask", headers=as_(p["kabir"]), json={"question": "anything?"}).status_code == 403
