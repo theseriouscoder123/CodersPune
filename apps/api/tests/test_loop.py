@@ -223,3 +223,43 @@ def test_scoped_second_handover_for_kabir(world):
     assert h not in [x["id"] for x in c.get(f"/api/workspaces/{ws}/handovers", headers=as_(p["neha"])).json()["handovers"]]
     assert c.post(f"/api/workspaces/{ws}/handovers", headers=as_(p["neha"]),
                   json={"leaver_member_id": p["rohan"], "successor_member_id": p["neha"]}).status_code == 403
+
+
+class _FakeLLM:
+    def __init__(self, result):
+        self.result, self.prompts = result, []
+
+    def structured(self, *, system, user, schema, model, purpose, **kw):
+        self.prompts.append(user)
+        return schema.model_validate(self.result)
+
+
+def _ask_setup(monkeypatch, result):
+    from types import SimpleNamespace
+
+    import baton.routers.ask as ask_mod
+
+    fake = _FakeLLM(result)
+    monkeypatch.setattr(ask_mod, "get_llm", lambda: fake)
+    monkeypatch.setattr(ask_mod, "get_settings", lambda: SimpleNamespace(llm_configured=True, llm_model_verify="fake"))
+    return fake
+
+
+def test_ask_uses_only_projected_claims_and_validates_citations(world, monkeypatch):
+    c = client("visitor-one")  # this sandbox has an approved v1 from the full-loop test
+    ws = world["s1"]
+    p = personas(c, ws)
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+
+    fake = _ask_setup(monkeypatch, {"answered": True, "answer": "Reminders moved to FCM.", "cited": ["I1"]})
+    r = c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "Why did push reminders change?"}).json()
+    assert r["answered"] is True and r["citations"]
+    assert "TechNova" not in fake.prompts[-1] and "40,000" not in fake.prompts[-1]  # restricted text never reaches the model
+
+    _ask_setup(monkeypatch, {"answered": True, "answer": "Made-up answer", "cited": ["I99"]})  # fabricated citation
+    r = c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "What is the sponsor deal?"}).json()
+    assert r["answered"] is False and "doesn't cover" in r["fallback"]
+
+    _ask_setup(monkeypatch, {"answered": True, "answer": "Uncited", "cited": []})
+    assert c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "anything?"}).json()["answered"] is False
+    assert c.post(f"/api/handovers/{hid}/ask", headers=as_(p["kabir"]), json={"question": "anything?"}).status_code == 403
