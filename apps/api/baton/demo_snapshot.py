@@ -15,7 +15,18 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from baton.db.models import Chunk, Claim, ConflictGroup, Evidence, Handover, Job, Member, Membership, Run, Source
+from baton.db.models import (
+    Chunk,
+    Claim,
+    ConflictGroup,
+    Evidence,
+    Handover,
+    Job,
+    Member,
+    Membership,
+    Run,
+    Source,
+)
 from baton.ingest.fixtures import DEMO_DIR
 from baton.ledger import recompute_statuses
 

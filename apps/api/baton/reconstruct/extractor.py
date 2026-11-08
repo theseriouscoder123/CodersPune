@@ -9,7 +9,25 @@ from rapidfuzz import fuzz
 
 from baton.llm.prompts import COMMON_SUBJECT_KEYS, EXTRACT_SYSTEM, ExtractionResult
 
-MAX_BATCH_CHARS = 7_000  # smaller batches -> better recall per call (spec allows <= ~12k)
+MAX_BATCH_CHARS = 7_000
+MAX_EXTRACT_CHARS = 90_000  # per run: keeps a custom repo inside the free LLM quota and the ~5 minute target
+
+# What a successor most needs first. Old commit logs are the least informative per character.
+_KIND_PRIORITY = {"file": 0, "note_para": 0, "chat_thread": 1, "pr": 1, "issue": 1, "pr_comment": 2,
+                  "issue_comment": 2, "commit_stats": 3, "commit": 4}
+
+
+def select_for_budget(chunks: list[ChunkRef], budget: int = MAX_EXTRACT_CHARS) -> tuple[list[ChunkRef], int]:
+    """Pick chunks by priority (then most recent first) until the character budget is spent. Returns (kept, dropped)."""
+    if sum(len(c.text) for c in chunks) <= budget:
+        return chunks, 0
+    order = sorted(chunks, key=lambda c: (_KIND_PRIORITY.get(c.kind, 5), -(c.occurred_at.timestamp() if c.occurred_at else 0)))
+    kept, used = [], 0
+    for c in order:
+        if used + len(c.text) <= budget:
+            kept.append(c)
+            used += len(c.text)
+    return kept, len(chunks) - len(kept)  # smaller batches -> better recall per call (spec allows <= ~12k)
 
 
 @dataclass

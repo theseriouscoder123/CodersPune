@@ -35,7 +35,7 @@ from baton.llm.base import LLMError, LLMNotConfigured, get_llm
 from baton.llm.prompts import COVER_SYSTEM, CoverResult
 from baton.reconstruct.checklist import build_checklist
 from baton.reconstruct.conflicts import ClaimLite, plan_conflicts
-from baton.reconstruct.extractor import ChunkRef, dedupe, extract_batch, make_batches
+from baton.reconstruct.extractor import ChunkRef, dedupe, extract_batch, make_batches, select_for_budget
 from baton.reconstruct.refs import source_ref
 from baton.verify.entailment import excerpt, verify
 from baton.verify.quote_match import match
@@ -46,7 +46,7 @@ STEP_LABELS = {"ingest": "Ingest sources", "checklist": "Build expected-knowledg
                "verify": "Verify evidence (separate model)", "conflicts": "Detect conflicts and reversals",
                "status": "Assign statuses (rules)", "handover": "Prepare handover"}
 PARALLEL = 4
-VERIFY_PARALLEL = 3  # the verify model has the tightest free-tier rate limit
+VERIFY_PARALLEL = 4  # the verify model has the tightest free-tier rate limit
 LEASE = timedelta(seconds=330)
 
 
@@ -113,7 +113,9 @@ def advance(run_id, budget_s: float | None = None) -> dict:
                 _fail(run_id, job_id, exc.user_message)
                 break
             except Exception as exc:  # noqa: BLE001 - a step failure must surface as a clear run error, not a crash
-                _fail(run_id, job_id, f"{STEP_LABELS[step]} failed: {getattr(exc, 'user_message', None) or type(exc).__name__}: {str(exc)[:200]}")
+                um = getattr(exc, "user_message", None)
+                _fail(run_id, job_id, f"{STEP_LABELS[step]} failed: {um}" if um else
+                      f"{STEP_LABELS[step]} failed: {type(exc).__name__}: {str(exc)[:200]}")
                 break
             if done:
                 with SessionLocal.begin() as db:
@@ -233,14 +235,46 @@ def _waves(units: list, deadline: float, fn, on_result, parallel: int = PARALLEL
 # ------------------------------------------------------------------------------------------------ steps
 
 def step_ingest(run_id, job_id, workspace_id, deadline) -> bool:
+    """Uploads/chat are ingested at creation. GitHub repos are fetched here, one per slice (live REST, capped)."""
+    from baton.ingest.github import GitHubError, fetch_repo
+    from baton.ingest.github_normalise import normalise
+    from baton.ingest.service import store_chunks
+
     with SessionLocal() as db:
-        pending = list(db.scalars(select(Source).where(Source.workspace_id == workspace_id, Source.ingested_at.is_(None))))
+        pending = [(s.id, s.type, s.uri, s.name) for s in db.scalars(
+            select(Source).where(Source.workspace_id == workspace_id, Source.ingested_at.is_(None)))]
         total = db.scalar(select(func.count()).select_from(Source).where(Source.workspace_id == workspace_id))
     if pending:
-        # Custom-workspace sources are ingested when created (M5 adds live re-ingest here).
-        raise RuntimeError(f"{len(pending)} source(s) have not been ingested")
+        src_id, typ, uri, name = pending[0]
+        if typ != "github_repo":
+            raise RuntimeError(f"source {name} has not been ingested")
+        _set_job(job_id, total=total, progress=total - len(pending), message=f"Fetching {name} from GitHub…")
+        try:
+            data = fetch_repo(uri)
+        except GitHubError as exc:
+            raise _UserError(f"GitHub: {exc.args[0]}") from exc
+        drafts, meta = normalise(data)
+        if not drafts:
+            raise _UserError(f"GitHub: {name} has no readable files, commits, PRs or issues.")
+        with SessionLocal.begin() as db:
+            src = db.get(Source, src_id)
+            src.meta = {**meta, "repo": data.repo.get("full_name"), "capped": {
+                "commits": len(data.commits), "pulls": len(data.pulls), "issues": len(data.issues), "files": len(data.files)}}
+            res = store_chunks(db, src, drafts)
+        _set_job(job_id, progress=total - len(pending) + 1,
+                 message=f"{name}: {res['chunks']} chunks ({len(data.commits)} commits, {len(data.pulls)} PRs, "
+                         f"{len(data.issues)} issues, {len(data.files)} files), {res['redactions']} secrets removed")
+        return len(pending) == 1
     _set_job(job_id, progress=total, total=total, message=f"{total} sources ready")
     return True
+
+
+class _UserError(Exception):
+    """A failure whose message is safe and useful to show the user verbatim."""
+
+    @property
+    def user_message(self) -> str:
+        return str(self)
 
 
 def step_checklist(run_id, job_id, workspace_id, deadline) -> bool:
@@ -286,7 +320,9 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
         refs = {str(ch.id): ChunkRef(str(ch.id), ch.acl_key, ch.kind, ch.text, ch.occurred_at, _chunk_label(ch, src))
                 for ch, src in rows}
         if "batches" not in state:
-            state["batches"] = [{"acl_key": b.acl_key, "chunks": b.chunk_ids} for b in make_batches(list(refs.values()))]
+            kept, dropped = select_for_budget(list(refs.values()))
+            state["batches"] = [{"acl_key": b.acl_key, "chunks": b.chunk_ids} for b in make_batches(kept)]
+            state["skipped_chunks"] = dropped
             state["done"] = []
             state["keys"] = {}
             _set_job(job_id, state=state, total=len(state["batches"]), progress=0)
@@ -329,6 +365,11 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
     _waves(todo, deadline, run_batch, save)
     if len(state["done"]) < len(state["batches"]):
         return False
+    with SessionLocal() as db:
+        errors = (db.get(Job, job_id).state or {}).get("errors", [])
+        produced = db.scalar(select(func.count()).select_from(Claim).where(Claim.run_id == run_id, Claim.origin == "extracted"))
+    if not produced and errors and len(errors) >= len(state["batches"]):
+        raise _UserError(errors[-1].split(": ", 1)[-1])  # every batch failed (e.g. quota): say so, don't ship an empty ledger
     with SessionLocal.begin() as db:  # dedupe within the run, merging evidence
         claims = list(db.scalars(select(Claim).where(Claim.run_id == run_id, Claim.origin == "extracted")))
         ev = {}
@@ -347,7 +388,9 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
         if dup:
             db.execute(delete(Claim).where(Claim.id.in_(dup)))
         j = db.get(Job, job_id)
-        j.message = f"{len(kept)} claims from {len(state['batches'])} batches" + (f" ({len(dup)} duplicates merged)" if dup else "")
+        j.message = (f"{len(kept)} claims from {len(state['batches'])} batches" + (f" ({len(dup)} duplicates merged)" if dup else "")
+                     + (f"; {state.get('skipped_chunks')} older low-priority chunks skipped to stay within the AI budget"
+                        if state.get("skipped_chunks") else ""))
     return True
 
 
@@ -459,9 +502,12 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
 
     counter = {"n": base}
 
+    chain = [m.strip() for m in s.llm_model_verify.split(",") if m.strip()]
+
     def check(row):
         ev_id, claim_text, chunk_text, a, b, quote = row
-        return verify(llm, s.llm_model_verify, claim_text, excerpt(chunk_text, a, b, quote),
+        k = ev_id.int % len(chain)  # spread items across models: each has its own per-minute quota
+        return verify(llm, ",".join(chain[k:] + chain[:k]), claim_text, excerpt(chunk_text, a, b, quote),
                       workspace_id=workspace_id, run_id=run_id)
 
     def save(row, result):
@@ -476,7 +522,7 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
                 _job_error(job_id, f"verify: {getattr(result, 'user_message', None) or type(result).__name__}")
                 ev.verifier = "error"  # stays 'pending' -> status explains 'verification unavailable'
             else:
-                ev.verdict, ev.verdict_reason, ev.verifier = result.verdict, result.reason[:300], s.llm_model_verify
+                ev.verdict, ev.verdict_reason, ev.verifier = result.verdict, result.reason[:300], "llm-verifier"
             j.progress = min(counter["n"], j.total or counter["n"])
             j.message = f"{j.progress}/{j.total} evidence items checked"
 

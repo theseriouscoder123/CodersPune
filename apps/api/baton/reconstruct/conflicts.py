@@ -19,11 +19,11 @@ from baton.reconstruct.values import normalise_value
 REVERSAL = re.compile(
     r"\b(replac(?:e|ed|es|ing)|switch(?:ed|es|ing)?|mov(?:ed|es|ing) (?:from|away)|migrat(?:ed|es|ing)|instead of|"
     r"revert(?:ed|s|ing)?|revers(?:ed|es|ing)|dropp(?:ed|ing)|no longer|tak(?:es|ing) over|took over|handed over)\b",
-    re.I,
+    re.IGNORECASE,
 )
 # A claim that describes a PAST state of affairs is itself the old side of a reversal.
 HISTORICAL = re.compile(r"\b(previously|initially|originally|formerly|used to|at first|was replaced|were replaced|"
-                        r"before (?:switching|moving|migrating))\b", re.I)
+                        r"before (?:switching|moving|migrating))\b", re.IGNORECASE)
 _SIZE = re.compile(r"^\d+(?:\.\d+)?(?:b|kb|mb|gb)$")
 
 

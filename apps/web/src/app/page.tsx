@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ApiStatus } from "@/components/ApiStatus";
 import { Logo } from "@/components/Logo";
 import { TryDemoButton } from "@/components/TryDemoButton";
@@ -40,16 +42,11 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <TryDemoButton />
-            <button
-              type="button"
-              disabled
-              className="rounded-lg border border-line px-5 py-3 text-sm font-semibold text-navy opacity-60"
-              title="Coming soon"
-            >
+            <Link href="/new" className="rounded-lg border border-line px-5 py-3 text-center text-sm font-semibold text-navy hover:bg-panel" data-testid="start-repo">
               Start with a public GitHub repo
-            </button>
+            </Link>
           </div>
-          <p className="mt-3 text-xs text-muted">Opens a fictional student-club project. Build in progress: Connect works today; the ledger and handover arrive next.</p>
+          <p className="mt-3 text-xs text-muted">The demo is a fictional student-club project, opened in your own copy so nothing you do affects other visitors.</p>
         </section>
 
         <section aria-labelledby="how" className="pb-16">

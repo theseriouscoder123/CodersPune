@@ -131,3 +131,16 @@ def test_same_value_token_subset():
     assert same_value("FCM", "Firebase Cloud Messaging")
     assert not same_value("Supabase", "Firebase")
     assert not same_value("5 MB", "2 MB")
+
+
+def test_extraction_budget_prefers_docs_and_recent_items():
+    from baton.reconstruct.extractor import ChunkRef, select_for_budget
+
+    old_commit = ChunkRef("c", "k", "commit", "x" * 600, d(1), "")
+    readme = ChunkRef("f", "k", "file", "y" * 500, None, "")
+    pr_new = ChunkRef("p2", "k", "pr", "z" * 400, d(9), "")
+    pr_old = ChunkRef("p1", "k", "pr", "w" * 400, d(2), "")
+    kept, dropped = select_for_budget([old_commit, readme, pr_new, pr_old], budget=1000)
+    assert [c.id for c in kept] == ["f", "p2"] and dropped == 2
+    kept, dropped = select_for_budget([readme], budget=1000)
+    assert dropped == 0

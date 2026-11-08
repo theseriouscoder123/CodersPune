@@ -7,7 +7,7 @@ from sqlalchemy import text
 from baton import __version__
 from baton.config import get_settings
 from baton.db.session import engine
-from baton.routers import claims, handovers, runs, workspaces
+from baton.routers import claims, custom, handovers, runs, workspaces
 
 settings = get_settings()
 
@@ -51,5 +51,5 @@ def health() -> dict:
 
 
 app.include_router(api)
-for r in (workspaces.router, runs.router, claims.router, handovers.router):
+for r in (workspaces.router, custom.router, runs.router, claims.router, handovers.router):
     app.include_router(r)

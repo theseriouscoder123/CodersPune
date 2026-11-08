@@ -41,5 +41,5 @@ packages = ["baton"]
 
 [tool.ruff.lint]
 # B008: FastAPI's Depends() in defaults is the framework's idiom. S110: llm_calls logging must never raise.
-ignore = ["B008", "S110", "RUF059", "E501"]
-extend-exclude = ["alembic/versions"]
+ignore = ["B008", "S110", "RUF059", "E501", "SIM103", "RUF046", "SIM115"]
+exclude = ["alembic/versions/*"]
