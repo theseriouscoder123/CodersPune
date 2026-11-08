@@ -1,0 +1,20 @@
+# Local development only. Production uses Neon (see docs/DECISIONS.md D8).
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: baton
+      POSTGRES_PASSWORD: baton
+      POSTGRES_DB: baton
+    ports:
+      - "5432:5432"
+    volumes:
+      - baton_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U baton -d baton"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  baton_pg:
