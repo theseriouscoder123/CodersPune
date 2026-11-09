@@ -372,6 +372,13 @@ def handover_evidence(handover_id: uuid.UUID, evidence_id: uuid.UUID, request: R
                      .join(Source, Source.id == Chunk.source_id).where(Evidence.id == evidence_id)).first()
     if row is None or row[2].workspace_id != h.workspace_id or not can_view_acl(ctx.viewer, row[2].acl):
         raise HTTPException(404, "Not found")
+    if not ctx.is_reviewer:
+        # Trust rule 8: the successor/leaver only ever see evidence that is part of an APPROVED version of this
+        # handover, never evidence behind draft, rejected or unapproved claims (even from a source they can open).
+        approved = {e["evidence_id"] for (snap,) in db.execute(select(HandoverVersion.snapshot).where(HandoverVersion.handover_id == h.id))
+                    for it in (snap or {}).get("items", []) for e in it.get("evidence", [])}
+        if str(evidence_id) not in approved:
+            raise HTTPException(404, "Not found")
     names = {str(m.id): m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == h.workspace_id))}
     return evidence_payload(*row, names, mask=not ctx.is_reviewer)
 
