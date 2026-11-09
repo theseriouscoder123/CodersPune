@@ -1,11 +1,12 @@
 "use client";
 
-import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, History, Lock, RotateCcw, Scale, UserCheck, UsersRound } from "lucide-react";
+import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, History, Lock, RotateCcw, Scale, Search, UserCheck, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { Logo } from "@/components/Logo";
+import { canSearch, SearchPalette } from "@/components/workspace/SearchPalette";
 import { TourChecklist } from "@/components/workspace/TourChecklist";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
@@ -258,6 +259,12 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
                   {resetting ? <Spinner className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />} Reset demo
                 </button>
               )}
+              {canSearch(ws) && (
+                <button type="button" onClick={() => window.dispatchEvent(new Event("baton:search"))} aria-label="Search (Ctrl+K)" title="Search claims and sources (Ctrl+K)"
+                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="search-open">
+                  <Search className="h-4 w-4" />
+                </button>
+              )}
               {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
                 <Link href={`/w/${ws.id}/activity`} title="Activity log: who did what, when" aria-label="Activity log"
                   className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="activity-link">
@@ -280,6 +287,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
         </header>
         <main id="main" tabIndex={-1} key={personaVersion} className="animate-fade outline-none mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-6">{children}</main>
         {ws.synthetic && <TourChecklist ws={ws} onSwitchPersona={switchPersona} />}
+        {canSearch(ws) && <SearchPalette ws={ws} />}
       </WorkspaceContext.Provider>
     </ToastProvider>
   );

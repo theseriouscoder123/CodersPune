@@ -40,6 +40,13 @@ function Review() {
   const type = params.get("type");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(params.get("claim"));
+  // Follow ?claim= when it changes while this page is open (e.g. picked from search): adjust state during render.
+  const urlClaim = params.get("claim");
+  const [seenUrlClaim, setSeenUrlClaim] = useState(urlClaim);
+  if (urlClaim !== seenUrlClaim) {
+    setSeenUrlClaim(urlClaim);
+    setSelected(urlClaim);
+  }
 
   const canSee = ws.persona.roles.some((r) => ["reviewer", "admin", "leaver"].includes(r));
   const qs = new URLSearchParams({ tab, ...(status ? { status } : {}), ...(type ? { type } : {}) }).toString();

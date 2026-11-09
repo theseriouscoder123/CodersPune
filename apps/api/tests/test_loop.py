@@ -299,3 +299,17 @@ def test_activity_log_is_reviewer_only_and_csv_is_safe(world):
     assert csv_r.text.splitlines()[0].startswith("when (UTC),who,role,action")
     from baton.routers.activity import _safe
     assert _safe("=HYPERLINK(1)") == "'=HYPERLINK(1)" and _safe("fine") == "fine"
+
+
+def test_search_is_permission_filtered(world):
+    c = client("visitor-one")
+    ws = world["s1"]
+    p = personas(c, ws)
+    r = c.get(f"/api/workspaces/{ws}/search", params={"q": "push reminders"}, headers=as_(p["meera"])).json()
+    assert r["claims"] or r["passages"]
+    sponsor_reviewer = c.get(f"/api/workspaces/{ws}/search", params={"q": "TechNova"}, headers=as_(p["meera"])).json()
+    assert sponsor_reviewer["passages"]  # the reviewer can see #core-team
+    assert c.get(f"/api/workspaces/{ws}/search", params={"q": "TechNova"}, headers=as_(p["neha"])).status_code == 403
+    kabir = c.get(f"/api/workspaces/{ws}/search", params={"q": "TechNova"}, headers=as_(p["kabir"]))
+    assert kabir.status_code == 403  # members without a ledger role can't search the draft
+    assert c.get(f"/api/workspaces/{ws}/search", params={"q": "x"}, headers=as_(p["meera"])).status_code == 422
