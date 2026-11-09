@@ -200,6 +200,16 @@ body {
 
 /* ---------------------------------------------------------------- motion */
 
+/* Hidden at first, shown after 8 s without any JavaScript (used by loading fallbacks). */
+.reveal-late {
+  opacity: 0;
+  pointer-events: none;
+  animation: reveal-late 0.3s ease 8s forwards;
+}
+@keyframes reveal-late {
+  to { opacity: 1; pointer-events: auto; }
+}
+
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
