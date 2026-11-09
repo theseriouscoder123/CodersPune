@@ -235,6 +235,9 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
   return (
     <ToastProvider>
       <WorkspaceContext.Provider value={{ ws, personaVersion }}>
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-strong focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-on-strong">
+          Skip to content
+        </a>
         <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 pt-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
@@ -275,7 +278,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
             <Stepper ws={ws} />
           </div>
         </header>
-        <main key={personaVersion} className="animate-fade mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-6">{children}</main>
+        <main id="main" tabIndex={-1} key={personaVersion} className="animate-fade outline-none mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-6">{children}</main>
         {ws.synthetic && <TourChecklist ws={ws} onSwitchPersona={switchPersona} />}
       </WorkspaceContext.Provider>
     </ToastProvider>

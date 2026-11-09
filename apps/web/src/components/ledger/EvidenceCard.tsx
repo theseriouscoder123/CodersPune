@@ -25,7 +25,7 @@ export function EvidenceCard({ e }: { e: EvidenceInfo }) {
         </span>
       </div>
 
-      <pre className="scroll-quiet max-h-72 overflow-auto whitespace-pre-wrap break-words px-4 py-3.5 font-mono text-[12.5px] leading-[1.65] text-ink-2">
+      <pre tabIndex={0} aria-label="Source excerpt" className="scroll-quiet max-h-72 overflow-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-amber/40 whitespace-pre-wrap break-words px-4 py-3.5 font-mono text-[12.5px] leading-[1.65] text-ink-2">
         {e.excerpt.truncated_start && <span className="text-muted">… </span>}
         {e.excerpt.before}
         {e.excerpt.match && (

@@ -11,7 +11,7 @@
   --card: #fffdf9;
   --ink: #14213d;
   --ink-2: #2b3a5c;
-  --muted: #6b6f7b;
+  --muted: #5f636e; /* >= 4.5:1 on paper and paper-2 */
   --line: #e4ddd0;
   --line-2: #d6cdbd;
   --amber: #d9961b;
@@ -24,7 +24,7 @@
   --supported-soft: #e3edf6;
   --inferred: #6d6a63;
   --inferred-soft: #eeebe5;
-  --conflicting: #b5531a;
+  --conflicting: #a2470f; /* 5.1:1 on conflicting-soft (WCAG AA) */
   --conflicting-soft: #fbe9dc;
   --missing: #a8323b;
   --missing-soft: #f8e4e5;

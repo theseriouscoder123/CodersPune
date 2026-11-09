@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 /* ------------------------------------------------------------------ Button */
@@ -122,28 +122,77 @@ export function Pill({ children, className = "" }: { children: React.ReactNode; 
 
 // Overlays render into <body> so animated/transformed ancestors (which create stacking contexts) can't trap them
 // beneath the sticky header.
-export function Modal({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
-  if (!open || typeof document === "undefined") return null;
-  return createPortal(
-    <div className="animate-fade fixed inset-0 z-40 grid place-items-center bg-[var(--overlay)] p-4 backdrop-blur-[2px]" role="dialog" aria-modal aria-label={label}
-      onClick={onClose} onKeyDown={(e) => e.key === "Escape" && onClose()}>
-      <div className="animate-pop w-full max-w-md rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-lg)]" onClick={(e) => e.stopPropagation()}>
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Focus management for dialogs: focus moves in on open, Tab stays inside, Escape closes, focus returns on close. */
+function useDialogFocus(panel: React.RefObject<HTMLElement | null>, onClose: () => void) {
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  });
+  useEffect(() => {
+    const previously = document.activeElement as HTMLElement | null;
+    const el = panel.current;
+    const first = el?.querySelector<HTMLElement>(FOCUSABLE);
+    (first ?? el)?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        close.current();
+        return;
+      }
+      if (e.key !== "Tab" || !el) return;
+      const items = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.offsetParent !== null);
+      if (!items.length) return;
+      const [a, z] = [items[0], items[items.length - 1]];
+      if (e.shiftKey && document.activeElement === a) {
+        e.preventDefault();
+        z.focus();
+      } else if (!e.shiftKey && document.activeElement === z) {
+        e.preventDefault();
+        a.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      previously?.focus?.();
+    };
+  }, [panel]);
+}
+
+function ModalPanel({ onClose, children, label }: { onClose: () => void; children: React.ReactNode; label: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useDialogFocus(ref, onClose);
+  return (
+    <div className="animate-fade fixed inset-0 z-40 grid place-items-center bg-[var(--overlay)] p-4 backdrop-blur-[2px]" onClick={onClose}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
+        className="animate-pop w-full max-w-md rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-lg)] outline-none" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
-    </div>,
-    document.body,
+    </div>
+  );
+}
+
+export function Modal({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
+  if (!open || typeof document === "undefined") return null;
+  return createPortal(<ModalPanel onClose={onClose} label={label}>{children}</ModalPanel>, document.body);
+}
+
+function DrawerPanel({ onClose, children, label }: { onClose: () => void; children: React.ReactNode; label: string }) {
+  const ref = useRef<HTMLElement>(null);
+  useDialogFocus(ref, onClose);
+  return (
+    <div className="animate-fade fixed inset-0 z-40 flex justify-end bg-[var(--overlay)] backdrop-blur-[1px]" onClick={onClose}>
+      <aside ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
+        className="animate-drawer scroll-quiet h-full w-full max-w-xl overflow-auto border-l border-line bg-paper shadow-[var(--shadow-lg)] outline-none" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </aside>
+    </div>
   );
 }
 
 export function Drawer({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
   if (!open || typeof document === "undefined") return null;
-  return createPortal(
-    <div className="animate-fade fixed inset-0 z-40 flex justify-end bg-[var(--overlay)] backdrop-blur-[1px]" onClick={onClose} role="dialog" aria-modal aria-label={label}
-      onKeyDown={(e) => e.key === "Escape" && onClose()}>
-      <aside className="animate-drawer scroll-quiet h-full w-full max-w-xl overflow-auto border-l border-line bg-paper shadow-[var(--shadow-lg)]" onClick={(e) => e.stopPropagation()}>
-        {children}
-      </aside>
-    </div>,
-    document.body,
-  );
+  return createPortal(<DrawerPanel onClose={onClose} label={label}>{children}</DrawerPanel>, document.body);
 }
