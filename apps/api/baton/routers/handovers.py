@@ -169,6 +169,7 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
         "unresolved_conflicts": sum(1 for c in all_live if c.status == "conflicting"),
         "unreviewed": sum(1 for c in all_live if c.review_state == "none"),
         "missing": sum(1 for c in all_live if c.status == "missing"),
+        "source_changed": sum(1 for c in all_live if (c.meta or {}).get("source_changed")),
     }
     return {"member": {"id": str(target.id), "name": target.display_name}, "scope": kws, "visible": shown, "withheld": withheld,
             "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings}

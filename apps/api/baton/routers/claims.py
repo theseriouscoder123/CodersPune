@@ -18,6 +18,7 @@ from baton.db.models import Chunk, Claim, ConflictGroup, Evidence, Member, Revie
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii
 from baton.ledger import evidence_rows, recompute_statuses, ref_for
+from baton.limits import check_review_rate
 from baton.projection import claim_sources, visible
 
 router = APIRouter(prefix="/api")
@@ -47,7 +48,14 @@ def claim_summary(c: Claim, refs: list[str]) -> dict:
         "conflict_group_id": str(c.conflict_group_id) if c.conflict_group_id else None,
         "reviewer_note": c.reviewer_note, "source_refs": refs,
         "flags": (c.meta or {}).get("flags", {}), "question": (c.meta or {}).get("question"),
+        "source_changed": (c.meta or {}).get("source_changed"), "needs_rereview": bool((c.meta or {}).get("needs_rereview")),
     }
+
+
+def _acknowledge_source_change(c: Claim) -> None:
+    """A reviewer acting on a claim has seen the "source changed" flag; clear it (the status rules still apply)."""
+    if c.meta and ("source_changed" in c.meta or "needs_rereview" in c.meta):
+        c.meta = {k: v for k, v in c.meta.items() if k not in ("source_changed", "needs_rereview")}
 
 
 @router.get("/workspaces/{workspace_id}/claims")
@@ -90,7 +98,8 @@ def list_claims(tab: str = "all", status: str | None = None, type: str | None = 
     return {"claims": [claim_summary(c, refs.get(c.id, [])) for c in rows], "status_counts": counts,
             "type_counts": type_counts, "tab_counts": tab_counts,
             "progress": {"reviewed": reviewed, "total": len(live),
-                         "supported_unconfirmed": sum(1 for c in live if c.status == "supported" and c.review_state == "none")}}
+                         "supported_unconfirmed": sum(1 for c in live if c.status == "supported" and c.review_state == "none"),
+                         "source_changed": sum(1 for c in live if (c.meta or {}).get("source_changed"))}}
 
 
 def _load_claim(db: Session, request: Request, claim_id: uuid.UUID) -> tuple[Claim, Ctx]:
@@ -193,8 +202,11 @@ def review_claim(claim_id: uuid.UUID, body: ReviewIn, request: Request, db: Sess
     if body.action == "comment" and not (ctx.is_reviewer or "leaver" in ctx.roles):
         raise HTTPException(403, "Only the reviewer or the leaver can comment.")
 
+    check_review_rate(db, c.workspace_id)
     before = _snap(c)
     reverify = None
+    if body.action != "comment":
+        _acknowledge_source_change(c)
     if body.action == "confirm":
         c.review_state = "confirmed"
     elif body.action == "reject":
@@ -340,6 +352,7 @@ def bulk_review(body: BulkIn, ctx: Ctx = Depends(workspace_ctx), db: Session = D
         raise HTTPException(403, "Only the reviewer can review claims")
     if not ctx.can_write:
         raise HTTPException(403, "This is the shared read-only template. Click 'Try the demo' to get your own copy.")
+    check_review_rate(db, ctx.workspace.id)
     claims = list(db.scalars(select(Claim).where(Claim.workspace_id == ctx.workspace.id, Claim.id.in_(body.claim_ids))))
     passing = {cid for (cid,) in db.execute(select(Evidence.claim_id).where(
         Evidence.claim_id.in_([c.id for c in claims]), Evidence.quote_found.is_(True), Evidence.verdict == "supports"))}
@@ -349,6 +362,7 @@ def bulk_review(body: BulkIn, ctx: Ctx = Depends(workspace_ctx), db: Session = D
             skipped.append(str(c.id))
             continue
         before = _snap(c)
+        _acknowledge_source_change(c)
         if body.action == "confirm":
             c.review_state = "confirmed"
         else:

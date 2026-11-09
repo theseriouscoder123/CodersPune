@@ -71,6 +71,7 @@ def recompute_statuses(db: Session, workspace_id, claim_ids: list | None = None)
             origin=c.origin, review_state=c.review_state, evidence=states, in_unresolved_conflict=unresolved,
             conflict_with=conflict_with, reviewer_name=rname, reviewer_note=c.reviewer_note,
             checklist_signal=(c.meta or {}).get("signal"),
+            source_changed=((c.meta or {}).get("source_changed") or {}).get("note"),
         ))
         c.status, c.status_reason = result.status, result.reason
         c.meta = {**(c.meta or {}), "flags": result.flags} if result.flags or (c.meta or {}).get("flags") else (c.meta or {})

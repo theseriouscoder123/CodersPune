@@ -136,6 +136,11 @@ function Review() {
               <div className="h-full rounded-full bg-verified-solid transition-all duration-700" style={{ width: `${(100 * progress.reviewed) / progress.total}%` }} />
             </div>
           </div>
+          {(progress.source_changed ?? 0) > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-conflicting-soft px-2 py-0.5 text-xs font-medium text-conflicting" data-testid="source-changed-count">
+              {progress.source_changed} with a changed source
+            </span>
+          )}
           {progress.supported_unconfirmed > 0 && isReviewer && !ws.read_only && (
             <span className="text-xs text-muted">{progress.supported_unconfirmed} supported claims await confirmation</span>
           )}
@@ -240,6 +245,7 @@ function ClaimRow({ c, active, onClick, selectable, checked, onToggle }:
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{c.type_label}</span>
           {c.review_state === "edited" && <span className="text-[11px] text-muted">· edited</span>}
           {c.origin === "checklist" && <span className="text-[11px] text-muted">· checklist</span>}
+          {c.source_changed && <span className="rounded-full bg-conflicting-soft px-1.5 py-px text-[10.5px] font-medium text-conflicting" title={c.source_changed.note}>source changed</span>}
         </div>
         <p className="mt-1.5 text-[14px] leading-snug text-ink">{c.text}</p>
         {c.source_refs.length > 0 && <p className="mt-1.5 truncate font-mono text-[11px] text-supported">{c.source_refs.join(" · ")}</p>}
@@ -374,6 +380,12 @@ function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
           <span className={`font-semibold ${m.text}`}>Why {m.label.toLowerCase()}: </span>
           <span className="text-ink-2">{c.status_reason}</span>
         </div>
+        {c.source_changed && (
+          <div className="mt-3 rounded-xl border border-conflicting/25 bg-conflicting-soft/50 px-4 py-3 text-sm" role="note" data-testid="source-changed">
+            <p className="font-semibold text-conflicting">The source changed after this claim was made</p>
+            <p className="mt-1 text-ink-2">{c.source_changed.note} (noticed {c.source_changed.at.slice(0, 10)}). Confirm, edit, promote with a note, or reject it; any of these clears this notice.</p>
+          </div>
+        )}
 
         {c.conflict && !c.conflict.resolved && (
           <div className="mt-4 rounded-xl border border-conflicting/25 bg-conflicting-soft/60 p-4">

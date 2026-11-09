@@ -9,7 +9,7 @@ from fastapi import HTTPException, Request
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from baton.db.models import Visitor, Workspace
+from baton.db.models import Claim, ReviewEvent, Visitor, Workspace
 
 NEW_SANDBOXES_PER_IP_PER_HOUR = int(os.environ.get("DEMO_SANDBOXES_PER_IP_HOUR", "60"))  # judges may share one office IP
 CUSTOM_PER_IP_PER_DAY = 6
@@ -38,6 +38,17 @@ def check_new_sandbox(db: Session, ip: str) -> None:
 def check_custom(db: Session, ip: str) -> None:
     if _count_for_ip(db, ip, datetime.now(UTC) - timedelta(days=1), sandbox=False) >= CUSTOM_PER_IP_PER_DAY:
         raise HTTPException(429, f"Limit reached: {CUSTOM_PER_IP_PER_DAY} custom workspaces per network per day.")
+
+
+REVIEW_ACTIONS_PER_MINUTE = 120  # a fast human with keyboard shortcuts does ~30; a script does thousands
+
+
+def check_review_rate(db: Session, workspace_id) -> None:
+    since = datetime.now(UTC) - timedelta(minutes=1)
+    n = db.scalar(select(func.count()).select_from(ReviewEvent).join(Claim, Claim.id == ReviewEvent.claim_id)
+                  .where(Claim.workspace_id == workspace_id, ReviewEvent.created_at > since)) or 0
+    if n >= REVIEW_ACTIONS_PER_MINUTE:
+        raise HTTPException(429, "That's a lot of review actions in one minute. Please slow down a little.")
 
 
 def check_reset(current: Workspace | None) -> None:

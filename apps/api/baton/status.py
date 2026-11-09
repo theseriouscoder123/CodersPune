@@ -45,6 +45,7 @@ class ClaimState:
     reviewer_name: str = "the reviewer"
     reviewer_note: str | None = None
     checklist_signal: str | None = None  # why the checklist expected this item
+    source_changed: str | None = None  # set when a refresh removed the text this claim's evidence quoted
 
 
 @dataclass(frozen=True)
@@ -99,5 +100,8 @@ def compute_status(c: ClaimState) -> StatusResult:
         return StatusResult("supported", f"Quote found in {best.source_ref} (match {best.match_score}) · "
                                          "verifier: supports · not yet confirmed by a person")
 
+    if c.source_changed:
+        return StatusResult("inferred", f"The source changed: {c.source_changed}. Check it again before relying on it.",
+                            {"source_changed": True})
     prefix = f"Confirmed by {c.reviewer_name}, but no quote passed: " if c.review_state == "confirmed" else "No quote passed: "
     return StatusResult("inferred", prefix + _first_failure(c.evidence))

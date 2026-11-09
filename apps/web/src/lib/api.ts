@@ -59,22 +59,34 @@ export async function api<T>(path: string, opts: { workspaceId?: string; method?
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   const persona = opts.workspaceId ? getStoredPersona(opts.workspaceId) : null;
   if (persona) headers["X-Baton-Persona"] = persona;
-  const res = await fetch(`/api${path}`, {
-    method: opts.method ?? "GET",
-    headers,
-    credentials: "same-origin",
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`/api${path}`, {
+      method: opts.method ?? "GET",
+      headers,
+      credentials: "same-origin",
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError(0, "Can't reach Baton right now. Check your connection and try again.");
+  }
   if (!res.ok) {
-    let detail = res.statusText;
+    let detail = "";
     try {
       const j = await res.json();
-      detail = typeof j.detail === "string" ? j.detail : detail;
+      if (typeof j.detail === "string") detail = j.detail;
+      else if (Array.isArray(j.detail) && j.detail[0]?.msg) detail = `Please check the form: ${j.detail[0].msg}`;
     } catch {
-      /* non-JSON error */
+      /* non-JSON error (e.g. a gateway timeout page) */
     }
-    throw new ApiError(res.status, detail || `Request failed (${res.status})`);
+    if (!detail) {
+      const ref = res.headers.get("x-request-id");
+      detail = res.status >= 500
+        ? `The server had a problem (${res.status}). Please try again in a moment${ref ? ` · reference ${ref}` : ""}.`
+        : `Request failed (${res.status}).`;
+    }
+    throw new ApiError(res.status, detail);
   }
   return res.json() as Promise<T>;
 }
@@ -99,8 +111,10 @@ export type ClaimSummary = {
   conflict_group_id: string | null;
   reviewer_note: string | null;
   source_refs: string[];
-  flags: { reviewer_confirmed_without_evidence?: boolean };
+  flags: { reviewer_confirmed_without_evidence?: boolean; source_changed?: boolean };
   question: string | null;
+  source_changed?: { at: string; source: string; where: string; note: string } | null;
+  needs_rereview?: boolean;
 };
 
 export type EvidenceInfo = {
@@ -131,7 +145,7 @@ export type Ledger = {
   status_counts: Partial<Record<Status, number>>;
   type_counts: Record<string, number>;
   tab_counts: { all: number; conflicts: number; missing: number; rejected: number; superseded: number };
-  progress?: { reviewed: number; total: number; supported_unconfirmed: number };
+  progress?: { reviewed: number; total: number; supported_unconfirmed: number; source_changed?: number };
 };
 
 export type RunStep = { step: string; label: string; status: string; progress: number; total: number; message: string | null; errors: string[] };

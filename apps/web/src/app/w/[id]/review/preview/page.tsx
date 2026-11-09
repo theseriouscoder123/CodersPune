@@ -15,7 +15,7 @@ import { useApi } from "@/lib/useApi";
 
 type Item = { id: string; type_label: string; text: string; status: Status; section: string; source_refs: string[]; reason?: string };
 type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean;
-  warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number } };
+  warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
 
 const SECTION_NAMES: Record<string, string> = {
   start_here: "Start here", owners: "Who owns what", decisions: "Key decisions", risks: "Risks and conflicts",
@@ -109,11 +109,12 @@ function PreviewInner() {
           <div className="rounded-xl bg-verified-soft p-3"><p className="font-display text-2xl font-semibold text-verified">{pv.data?.visible.length ?? 0}</p><p className="text-xs text-verified">items shared</p></div>
           <div className="rounded-xl bg-missing-soft p-3"><p className="font-display text-2xl font-semibold text-missing">{pv.data?.withheld.length ?? 0}</p><p className="text-xs text-missing">withheld (restricted)</p></div>
         </div>
-        {pv.data?.warnings && (pv.data.warnings.unresolved_conflicts > 0 || pv.data.warnings.unreviewed > 0) && (
+        {pv.data?.warnings && (pv.data.warnings.unresolved_conflicts > 0 || pv.data.warnings.unreviewed > 0 || (pv.data.warnings.source_changed ?? 0) > 0) && (
           <div className="mt-4 space-y-1 rounded-xl border border-amber/30 bg-amber-soft/70 p-3 text-xs text-amber-ink" data-testid="approve-warnings">
             <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-3.5 w-3.5" /> Before you approve</p>
             {pv.data.warnings.unresolved_conflicts > 0 && <p>· {pv.data.warnings.unresolved_conflicts} claims are still in an unresolved conflict. They&apos;ll be shared under &quot;Risks and conflicts&quot;.</p>}
             {pv.data.warnings.unreviewed > 0 && <p>· {pv.data.warnings.unreviewed} claims haven&apos;t been reviewed by a person yet.</p>}
+            {(pv.data.warnings.source_changed ?? 0) > 0 && <p>· {pv.data.warnings.source_changed} claims lost their quote when a source changed. Re-check them first.</p>}
             {pv.data.warnings.missing > 0 && <p>· {pv.data.warnings.missing} expected items are missing and will appear as Unresolved.</p>}
           </div>
         )}

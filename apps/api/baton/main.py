@@ -9,6 +9,7 @@ from baton.config import get_settings
 from baton.db.session import engine
 from baton.routers import ask, claims, custom, handovers, runs, team, workspaces
 from baton.routers import health as pipeline_health_routes
+from baton.security import install as install_hardening
 
 settings = get_settings()
 
@@ -21,6 +22,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+install_hardening(app)
 
 api = APIRouter(prefix="/api")
 
