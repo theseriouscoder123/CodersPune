@@ -8,7 +8,7 @@ import { Alert, ButtonLink, Card, PageHeader, Pill, SkeletonList } from "@/compo
 import { useApi } from "@/lib/useApi";
 
 type Health = {
-  config: { provider: string; configured: boolean; verifier: string; extract_models: string[]; verify_models: string[] };
+  config: { provider: string; configured: boolean; verifier: string; extract_models: string[]; verify_models: string[]; keys?: Record<string, number> };
   totals: { calls: number; failed: number; failure_rate: number; daily_quota_hits: number; tokens: number };
   by_model: { purpose: string; model: string; calls: number; ok: number; failed: number; errors: Record<string, number>; tokens_in: number; tokens_out: number; p50_ms: number | null; p95_ms: number | null }[];
   runs: { id: string; status: string; mode: string; frozen: boolean; started_at: string | null; duration_s: number | null; error: string | null; inherited: boolean;
@@ -54,11 +54,14 @@ export default function HealthPage() {
           <Card className="mt-5 p-5">
             <p className="font-semibold text-ink">Configuration</p>
             <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-2">
-              <span>Provider: <b className="text-ink">{data.config.provider}</b> {data.config.configured ? <Pill className="ml-1 text-verified">configured</Pill> : <Pill className="ml-1 text-missing">not configured</Pill>}</span>
+              <span>Providers: {data.config.configured ? <Pill className="ml-1 text-verified">configured</Pill> : <Pill className="ml-1 text-missing">not configured</Pill>}
+                {Object.entries(data.config.keys ?? {}).filter(([, n]) => n > 0).map(([p, n]) => (
+                  <Pill key={p} className="ml-1">{p} · {n} key{n === 1 ? "" : "s"}</Pill>
+                ))}</span>
               <span>Extraction chain: {data.config.extract_models.map((m) => <Pill key={m} className="ml-1 font-mono">{m}</Pill>)}</span>
               <span>Verifier chain: {data.config.verify_models.map((m) => <Pill key={m} className="ml-1 font-mono">{m}</Pill>)}</span>
             </div>
-            <p className="mt-2 text-xs text-muted">A model whose daily free quota runs out is skipped for the next one in its chain. Failed calls are retried with backoff; a batch that still fails is reported, never silently dropped.</p>
+            <p className="mt-2 text-xs text-muted">Calls rotate across each provider&apos;s keys; a rate-limited key hands over to the next one, and when every key for a model is out the next model in the chain takes over. Failed calls are retried with backoff; a batch that still fails is reported, never silently dropped.</p>
           </Card>
 
           <h2 className="font-display mt-8 text-xl font-semibold text-ink">Calls by purpose and model</h2>

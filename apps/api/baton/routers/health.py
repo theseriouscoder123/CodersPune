@@ -33,13 +33,14 @@ def pipeline_health(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get
 
     groups: dict = defaultdict(list)
     for c in calls:
-        groups[(c.purpose, c.model)].append(c)
+        groups[(c.purpose, f"{(c.provider or '').split('#')[0] or 'llm'}:{c.model}")].append(c)
     rows = []
     for (purpose, model), cs in sorted(groups.items()):
         lat = [c.latency_ms for c in cs if c.latency_ms is not None and c.ok]
         errs = Counter((c.error or "error").split(":")[0] for c in cs if not c.ok)
         rows.append({
             "purpose": purpose, "model": model, "calls": len(cs), "ok": sum(c.ok for c in cs), "failed": sum(not c.ok for c in cs),
+            "keys_used": len({c.provider for c in cs if c.provider}),
             "errors": dict(errs.most_common(4)), "tokens_in": sum(c.tokens_in or 0 for c in cs),
             "tokens_out": sum(c.tokens_out or 0 for c in cs), "p50_ms": _pct(lat, 0.5), "p95_ms": _pct(lat, 0.95),
         })
@@ -61,6 +62,7 @@ def pipeline_health(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get
     failed = sum(not c.ok for c in calls)
     return {
         "config": {"provider": s.llm_provider, "configured": s.llm_configured, "verifier": s.verifier,
+                   "keys": {p: len(s.key_pool(p)) for p in ("gemini", "groq")},  # counts only, never key material
                    "extract_models": [m.strip() for m in s.llm_model_extract.split(",") if m.strip()],
                    "verify_models": [m.strip() for m in s.llm_model_verify.split(",") if m.strip()]},
         "totals": {"calls": total, "failed": failed, "failure_rate": round(failed / total, 3) if total else 0,

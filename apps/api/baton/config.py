@@ -14,8 +14,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://baton:baton@localhost:5433/baton"
     github_token: str = ""
 
-    llm_provider: str = "anthropic"
-    llm_api_key: str = ""
+    llm_provider: str = "gemini"  # provider for bare model names in the chains below
+    llm_api_key: str = ""  # single key for llm_provider (kept for compatibility; joins that provider's pool)
+    gemini_api_keys: str = ""  # comma-separated key pool
+    groq_api_keys: str = ""  # comma-separated key pool
     llm_model_extract: str = ""
     llm_model_verify: str = ""
     verifier: str = "llm"
@@ -30,9 +32,17 @@ class Settings(BaseSettings):
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
+    def key_pool(self, provider: str) -> list[str]:
+        raw = {"gemini": self.gemini_api_keys, "groq": self.groq_api_keys}.get(provider, "")
+        keys = [k.strip() for k in raw.split(",") if k.strip()]
+        if provider == self.llm_provider.lower() and self.llm_api_key.strip() and self.llm_api_key.strip() not in keys:
+            keys.insert(0, self.llm_api_key.strip())
+        return keys
+
     @property
     def llm_configured(self) -> bool:
-        return bool(self.llm_api_key and self.llm_model_extract and self.llm_model_verify)
+        has_key = bool(self.llm_api_key or self.gemini_api_keys or self.groq_api_keys)
+        return bool(has_key and self.llm_model_extract and self.llm_model_verify)
 
 
 @lru_cache

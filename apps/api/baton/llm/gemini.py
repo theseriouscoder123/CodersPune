@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import httpx
 
-from baton.llm.base import LLMError, TransientError
+from baton.llm.base import KeyRejected, LLMError, TransientError
 
 BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
@@ -42,8 +42,8 @@ class GeminiTransport:
                 msg = r.json().get("error", {}).get("message", "")[:160]
             except ValueError:
                 pass
-            if r.status_code in (401, 403):
-                raise LLMError(f"gemini auth {r.status_code}", "The LLM key was rejected by the provider.")
+            if r.status_code in (401, 403) or "api key" in msg.lower():
+                raise KeyRejected(f"gemini auth {r.status_code}", "The LLM key was rejected by the provider.")
             raise LLMError(f"gemini {r.status_code}: {msg}", f"The AI provider rejected the request ({r.status_code}).")
 
         data = r.json()
