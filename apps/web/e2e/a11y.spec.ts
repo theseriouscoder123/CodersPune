@@ -34,3 +34,17 @@ test("a11y: workspace screens @desktop", async ({ page }) => {
   }
   expect(failures).toEqual([]);
 });
+
+test("a11y: workspace screens in dark mode @desktop", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Try the demo" }).click();
+  await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
+  const ws = page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
+  const failures: string[] = [];
+  for (const p of ["sources", "ledger", "review", "handover"]) {
+    await page.goto(`/w/${ws}/${p}`);
+    failures.push(...(await audit(page, `dark ${p}`)).map((v) => `${p}: ${v.id} (${v.nodes.length})`));
+  }
+  expect(failures).toEqual([]);
+});
