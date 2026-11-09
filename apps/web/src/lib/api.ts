@@ -59,18 +59,31 @@ export async function api<T>(path: string, opts: { workspaceId?: string; method?
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   const persona = opts.workspaceId ? getStoredPersona(opts.workspaceId) : null;
   if (persona) headers["X-Baton-Persona"] = persona;
-  let res: Response;
-  try {
-    res = await fetch(`/api${path}`, {
-      method: opts.method ?? "GET",
-      headers,
-      credentials: "same-origin",
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-      cache: "no-store",
-    });
-  } catch {
-    throw new ApiError(0, "Can't reach Baton right now. Check your connection and try again.");
+  const method = opts.method ?? "GET";
+  const isRead = method === "GET";
+  let res: Response | null = null;
+  // Reads are abandoned after 20 s and retried once: a single stalled serverless instance then costs seconds, not a
+  // minute. Writes are never retried automatically (they might have been applied).
+  for (let attempt = 0; attempt < (isRead ? 2 : 1); attempt++) {
+    const ctrl = new AbortController();
+    const timer = isRead ? setTimeout(() => ctrl.abort(), 20_000) : undefined;
+    try {
+      res = await fetch(`/api${path}`, {
+        method,
+        headers,
+        credentials: "same-origin",
+        body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+        cache: "no-store",
+        signal: ctrl.signal,
+      });
+      if (!(isRead && res.status >= 502 && res.status <= 504 && attempt === 0)) break;
+    } catch {
+      if (attempt === (isRead ? 1 : 0)) throw new ApiError(0, "Can't reach Baton right now. Check your connection and try again.");
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
+  if (!res) throw new ApiError(0, "Can't reach Baton right now. Check your connection and try again.");
   if (!res.ok) {
     let detail = "";
     try {

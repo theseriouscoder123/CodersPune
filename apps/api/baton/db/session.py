@@ -6,7 +6,7 @@ the pooling. Locally the cost of a fresh connection per request is negligible.
 
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -28,6 +28,17 @@ engine = create_engine(
     connect_args={"prepare_threshold": None, "connect_timeout": 10},
 )
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
+# Bound every transaction so one stuck query or lock wait can't hang a request (or a serverless instance) for a
+# minute. SET LOCAL is transaction-scoped, so it is safe with PgBouncer's transaction pooling (Neon's pooled URL).
+STATEMENT_TIMEOUT = "25s"
+LOCK_TIMEOUT = "10s"
+
+
+@event.listens_for(Session, "after_begin")
+def _bound_transaction(session, transaction, connection) -> None:  # noqa: ARG001
+    if connection.dialect.name == "postgresql":
+        connection.execute(text(f"SET LOCAL statement_timeout = '{STATEMENT_TIMEOUT}'; SET LOCAL lock_timeout = '{LOCK_TIMEOUT}'"))
 
 
 def get_db() -> Iterator[Session]:
