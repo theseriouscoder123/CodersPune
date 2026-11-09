@@ -136,7 +136,51 @@ def advance(run_id, budget_s: float | None = None) -> dict:
                     j.status, j.updated_at = "done", datetime.now(UTC)
     finally:
         _release(run_id)
-    return run_progress(run_id)
+    progress = run_progress(run_id)
+    if progress.get("status") in ("done", "failed"):
+        _notify_run_once(run_id)
+    return progress
+
+
+def _notify_run_once(run_id) -> None:
+    """Optional, best-effort: post the run result to the workspace's Slack and email the reviewer, exactly once.
+    Never raises: a notification problem must not turn a finished run into an error."""
+    try:
+        from baton import notify
+        from baton.db.models import Member, Membership, Workspace
+
+        with SessionLocal.begin() as db:
+            run = db.get(Run, run_id)
+            stats = dict(run.stats or {})
+            if stats.get("notified") or run.status not in ("done", "failed"):
+                return
+            run.stats = {**stats, "notified": True}  # claim the send first, so concurrent polls can't double-post
+        with SessionLocal.begin() as db:
+            run = db.get(Run, run_id)
+            ws = db.get(Workspace, run.workspace_id)
+            if ws is None or ws.is_demo_template or (stats.get("frozen")):
+                return
+            link = f"/w/{ws.id}/ledger"
+            if run.status == "done":
+                c = (run.stats or {}).get("status_counts", {})
+                title = f"Ledger ready: {ws.name}"
+                summary = (f"{sum(c.values())} claims · {c.get('supported', 0)} supported · {c.get('missing', 0)} missing · "
+                           f"{c.get('conflicting', 0)} conflicting")
+                lines = [summary, "Next: review the claims and approve the handover."]
+            else:
+                title = f"Pipeline run failed: {ws.name}"
+                lines = [(run.error or "Unknown error")[:200], "Open the run page for details; you can re-run it."]
+            notify.send_slack(db, ws, event=f"run_{run.status}", title=title, lines=lines, link=link)
+            rid = db.scalar(select(Membership.member_id).where(Membership.workspace_id == ws.id,
+                                                               Membership.role == "reviewer").limit(1))
+            reviewer = db.get(Member, rid) if rid else None
+            if reviewer is not None and reviewer.email:
+                notify.send_email(db, ws, event=f"run_{run.status}", to=reviewer.email, subject=title, heading=title,
+                                  lines=lines, link=link, link_label="Open the ledger")
+            if run.status == "failed":
+                notify.operator_feed(f"Baton run failed in '{ws.name}': {(run.error or '')[:200]}")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def run_to_completion(run_id, slice_s: float = 120) -> dict:

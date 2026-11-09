@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Link2, Lock, RefreshCw, ShieldCheck, Unlock, UserX } from "lucide-react";
+import { Bell, Copy, Link2, Lock, Mail, RefreshCw, Send, ShieldCheck, Slack, Unlock, UserX } from "lucide-react";
 import { useState } from "react";
 
 import { useToast } from "@/components/Toast";
@@ -13,8 +13,15 @@ import { useApi } from "@/lib/useApi";
 type Team = {
   identity_mode: "switcher" | "invites";
   can_manage: boolean;
-  members: { id: string; name: string; handle: string; roles: string[]; has_invite: boolean; joined: number; is_you: boolean }[];
+  members: { id: string; name: string; handle: string; roles: string[]; has_invite: boolean; joined: number; is_you: boolean; email?: string | null }[];
+  notifications?: {
+    email: { configured: boolean; from: string | null };
+    slack: { set: boolean; hint: string };
+    recent: { channel: string; event: string; recipient: string | null; status: string; detail: string | null; at: string }[];
+  };
 };
+
+type SendResult = { channel: string; status: "sent" | "skipped" | "failed"; detail: string };
 
 export default function TeamPage() {
   const { ws } = useWorkspace();
@@ -26,14 +33,17 @@ export default function TeamPage() {
   if (!allowed) return <NotForPersona step="Team settings" />;
   const t = team.data;
 
-  async function invite(memberId: string) {
+  async function invite(memberId: string, sendEmail = false) {
     setBusy(memberId);
     try {
-      const r = await api<{ path: string; member: string }>(`/workspaces/${ws.id}/invites/${memberId}`, { workspaceId: ws.id, method: "POST" });
+      const r = await api<{ path: string; member: string; emailed: SendResult | null }>(
+        `/workspaces/${ws.id}/invites/${memberId}${sendEmail ? "?send_email=true" : ""}`, { workspaceId: ws.id, method: "POST" });
       const url = `${window.location.origin}${r.path}`;
       setLinks((l) => ({ ...l, [memberId]: url }));
       await navigator.clipboard.writeText(url).catch(() => undefined);
-      toast(`Private link for ${r.member} copied. Any older link for them stops working.`);
+      if (r.emailed?.status === "sent") toast(`Private link emailed to ${r.member} (and copied). Any older link stops working.`);
+      else if (r.emailed) toast(`Link copied, but not emailed: ${r.emailed.detail}`, "error");
+      else toast(`Private link for ${r.member} copied. Any older link for them stops working.`);
       team.reload();
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "error");
@@ -115,9 +125,15 @@ export default function TeamPage() {
                     <Button size="sm" variant="secondary" loading={busy === m.id} onClick={() => invite(m.id)}>
                       {m.has_invite ? <><RefreshCw className="h-3.5 w-3.5" /> New link</> : <><Link2 className="h-3.5 w-3.5" /> Create link</>}
                     </Button>
+                    {m.email && t.notifications?.email.configured && !m.is_you && (
+                      <Button size="sm" variant="ghost" disabled={busy === m.id} onClick={() => invite(m.id, true)} title={`Create a new link and email it to ${m.email}`}>
+                        <Mail className="h-3.5 w-3.5" /> Email link
+                      </Button>
+                    )}
                     {m.has_invite && !m.is_you && <Button size="sm" variant="danger" disabled={busy === m.id} onClick={() => revoke(m.id, m.name)}><UserX className="h-3.5 w-3.5" /> Revoke</Button>}
                   </div>
                 )}
+                {t.can_manage && <MemberEmail wsId={ws.id} member={m} onSaved={team.reload} />}
                 {links[m.id] && (
                   <div className="animate-fade flex w-full items-center gap-2 rounded-xl bg-paper px-3 py-2">
                     <code className="flex-1 truncate font-mono text-xs text-ink-2">{links[m.id]}</code>
@@ -129,8 +145,137 @@ export default function TeamPage() {
             ))}
           </div>
           <p className="mt-3 text-xs text-muted">Links are shown once and stored only as a hash. Making a new link or revoking one immediately invalidates the old one.</p>
+          {t.notifications && <NotificationsCard wsId={ws.id} n={t.notifications} canManage={t.can_manage} onChanged={team.reload} />}
         </>
       )}
     </div>
+  );
+}
+
+function MemberEmail({ wsId, member, onSaved }: { wsId: string; member: Team["members"][number]; onSaved: () => void }) {
+  const toast = useToast();
+  const [value, setValue] = useState(member.email ?? "");
+  const [saving, setSaving] = useState(false);
+  const dirty = value.trim() !== (member.email ?? "");
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api(`/workspaces/${wsId}/members/${member.id}/email`, { workspaceId: wsId, method: "PUT", body: { email: value.trim() || null } });
+      toast(value.trim() ? `Saved ${member.name}'s email` : `Removed ${member.name}'s email`);
+      onSaved();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form className="flex w-full items-center gap-2 sm:w-auto sm:basis-full sm:pl-12" onSubmit={(e) => { e.preventDefault(); if (dirty) void save(); }}>
+      <Mail className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+      <input type="email" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Email for notifications (optional)"
+        aria-label={`Email for ${member.name}`} maxLength={254}
+        className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 text-xs outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30 sm:max-w-xs" />
+      {dirty && <Button size="sm" variant="secondary" type="submit" loading={saving}>Save</Button>}
+    </form>
+  );
+}
+
+function NotificationsCard({ wsId, n, canManage, onChanged }:
+  { wsId: string; n: NonNullable<Team["notifications"]>; canManage: boolean; onChanged: () => void }) {
+  const toast = useToast();
+  const [hook, setHook] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function saveHook(value: string | null) {
+    setBusy("hook");
+    try {
+      await api(`/workspaces/${wsId}/notify`, { workspaceId: wsId, method: "PUT", body: { slack_webhook: value } });
+      toast(value ? "Slack webhook saved" : "Slack webhook removed");
+      setHook("");
+      onChanged();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function test(channel: "email" | "slack") {
+    setBusy(channel);
+    try {
+      const r = await api<SendResult>(`/workspaces/${wsId}/notify/test`, { workspaceId: wsId, method: "POST", body: { channel } });
+      toast(r.status === "sent" ? (channel === "email" ? "Test email sent to your address" : "Test message posted to Slack") : r.detail,
+        r.status === "sent" ? "success" : "error");
+      onChanged();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <Card className="mt-6 p-5" data-testid="notifications">
+      <div className="flex items-center gap-2">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-supported-soft text-supported"><Bell className="h-4 w-4" /></span>
+        <div>
+          <p className="font-semibold text-ink">Notifications <span className="font-normal text-muted">(optional)</span></p>
+          <p className="text-xs text-muted">Messages carry names and a link, never claim text, so they can&apos;t reveal anything a person isn&apos;t allowed to see.</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-line bg-paper/50 p-4">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink"><Mail className="h-4 w-4" /> Email</p>
+          {n.email.configured ? (
+            <p className="mt-1 text-xs text-muted">Sending from {n.email.from}. The successor and leaver get an email when a version is approved; you can email invite links and the leaver&apos;s questions. Add addresses next to each person above.</p>
+          ) : (
+            <p className="mt-1 text-xs text-muted">Not configured on this server. Everything else works; to turn it on, the operator sets <code className="font-mono">SMTP_USER</code> and <code className="font-mono">SMTP_PASSWORD</code> (a Gmail app password).</p>
+          )}
+          {canManage && n.email.configured && (
+            <Button size="sm" variant="secondary" className="mt-3" loading={busy === "email"} onClick={() => test("email")}><Send className="h-3.5 w-3.5" /> Send me a test</Button>
+          )}
+        </div>
+        <div className="rounded-xl border border-line bg-paper/50 p-4">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink"><Slack className="h-4 w-4" /> Slack</p>
+          <p className="mt-1 text-xs text-muted">
+            {n.slack.set ? <>Posting to <code className="font-mono">{n.slack.hint}</code> when a run finishes and when a handover is approved.</>
+              : <>Paste a Slack <a className="underline underline-offset-2" href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noreferrer">incoming webhook</a> to post run results and approvals to a channel.</>}
+          </p>
+          {canManage && (
+            <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (hook.trim()) void saveHook(hook.trim()); }}>
+              <input value={hook} onChange={(e) => setHook(e.target.value)} placeholder="https://hooks.slack.com/services/…" aria-label="Slack webhook URL"
+                className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2.5 font-mono text-xs outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
+              <Button size="sm" variant="secondary" type="submit" loading={busy === "hook"} disabled={!hook.trim()}>Save</Button>
+            </form>
+          )}
+          {canManage && n.slack.set && (
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" variant="secondary" loading={busy === "slack"} onClick={() => test("slack")}><Send className="h-3.5 w-3.5" /> Test</Button>
+              <Button size="sm" variant="ghost" disabled={busy === "hook"} onClick={() => saveHook(null)}>Remove</Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {n.recent.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Recent</p>
+          <ul className="mt-2 space-y-1 text-xs">
+            {n.recent.map((r, i) => (
+              <li key={i} className="flex flex-wrap items-center gap-2 text-ink-2">
+                <span className={`rounded-full px-1.5 py-px font-medium ${r.status === "sent" ? "bg-verified-soft text-verified" : r.status === "failed" ? "bg-missing-soft text-missing" : "bg-paper-2 text-muted"}`}>{r.status}</span>
+                <span>{r.channel} · {r.event.replaceAll("_", " ")}</span>
+                {r.recipient && <span className="font-mono text-muted">{r.recipient}</span>}
+                {r.detail && <span className="text-muted">· {r.detail}</span>}
+                <span className="ml-auto text-muted">{new Date(r.at).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Card>
   );
 }

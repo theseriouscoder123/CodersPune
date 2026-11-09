@@ -15,9 +15,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from baton import notify
 from baton.acl import Viewer, access_label, can_view_acl
 from baton.auth import Ctx, _roles, resolve_ctx, workspace_ctx
-from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Source
+from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Source, Workspace
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii
 from baton.ledger import evidence_rows, ref_for
@@ -211,7 +212,43 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
                         note=body.note, snapshot={"items": items})
     db.add(v)
     db.commit()
-    return {"version": n, "items": len(items)}
+    notified = _notify_approved(db, h, n, ctx.member.display_name)
+    return {"version": n, "items": len(items), "notified": notified}
+
+
+def _notify_approved(db: Session, h: Handover, version: int, approver: str) -> list[dict]:
+    """Optional, best-effort: tell the successor and leaver (email) and the team (Slack). Messages carry names and a
+    link only, never claim text, so the normal permission projection still decides what each person sees."""
+    try:
+        ws = db.get(Workspace, h.workspace_id)
+        succ = db.get(Member, h.successor_member_id) if h.successor_member_id else None
+        leaver = db.get(Member, h.leaver_member_id) if h.leaver_member_id else None
+        title = h.name or f"{leaver.display_name if leaver else 'Handover'} → {succ.display_name if succ else 'successor'}"
+        link = f"/w/{ws.id}/handover?h={h.id}"
+        out = []
+        if succ:
+            out.append({"to": succ.display_name, **notify.send_email(
+                db, ws, event="handover_approved", to=succ.email, subject=f"Your handover is ready · {title}",
+                heading=f"{approver} approved version {version} of your handover",
+                lines=[f"“{title}” in {ws.name} is ready for you.",
+                       "Start with “Start here”, and check “Unresolved” before relying on anything there.",
+                       "Every item links to the exact evidence it came from."],
+                link=link, link_label="Open my handover").as_dict()})
+        if leaver:
+            out.append({"to": leaver.display_name, **notify.send_email(
+                db, ws, event="handover_approved", to=leaver.email, subject=f"Your handover was approved · {title}",
+                heading=f"{approver} approved version {version} of the handover you're leaving",
+                lines=[f"“{title}” in {ws.name} is now visible to {succ.display_name if succ else 'your successor'}.",
+                       "If you can, answer the open questions so the unresolved list gets shorter."],
+                link=link, link_label="See the handover").as_dict()})
+        out.append({"to": "Slack", **notify.send_slack(
+            db, ws, event="handover_approved", title=f"Handover approved: {title} (v{version})",
+            lines=[f"Approved by {approver}", f"Workspace: {ws.name}"], link=link).as_dict()})
+        db.commit()
+        return [o for o in out if o["status"] != "skipped" or o["channel"] == "email"]
+    except Exception:  # noqa: BLE001 - approval already committed; a notification problem must not surface as an error
+        db.rollback()
+        return []
 
 
 def _ts(iso: str | None) -> float:

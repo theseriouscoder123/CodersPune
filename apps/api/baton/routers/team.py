@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
+from baton import notify
 from baton.auth import Ctx, get_or_create_visitor, workspace_ctx
 from baton.db.models import Member, MemberBinding, MemberInvite, Membership, Workspace
 from baton.db.session import get_db
@@ -48,13 +49,72 @@ def team(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> di
     joined = dict(db.execute(select(MemberBinding.member_id, func.count()).where(MemberBinding.workspace_id == ws.id)
                              .group_by(MemberBinding.member_id)).all())
     members = [{"id": str(m.id), "name": m.display_name, "handle": m.handle, "roles": sorted(roles.get(m.id, [])),
-                "has_invite": m.id in active, "joined": joined.get(m.id, 0), "is_you": m.id == ctx.member.id}
+                "has_invite": m.id in active, "joined": joined.get(m.id, 0), "is_you": m.id == ctx.member.id,
+                "email": m.email if ctx.is_admin else (notify.mask_email(m.email) if m.email else None)}
                for m in db.scalars(select(Member).where(Member.workspace_id == ws.id).order_by(Member.created_at))]
-    return {"identity_mode": ws.identity_mode, "members": members, "can_manage": ctx.is_admin and ctx.can_write}
+    hook = (ws.notify or {}).get("slack_webhook") or ""
+    return {"identity_mode": ws.identity_mode, "members": members, "can_manage": ctx.is_admin and ctx.can_write,
+            "notifications": {"email": notify.email_status(), "slack": {"set": bool(hook), "hint": notify.mask_webhook(hook)},
+                              "recent": notify.recent(db, ws.id)}}
+
+
+class EmailIn(BaseModel):
+    email: str | None = None
+
+
+@router.put("/workspaces/{workspace_id}/members/{member_id}/email")
+def set_member_email(member_id: uuid.UUID, body: EmailIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    """Optional address used only for notifications. Stored per workspace; demo copies start with none."""
+    _require_admin_writer(ctx)
+    m = db.get(Member, member_id)
+    if m is None or m.workspace_id != ctx.workspace.id:
+        raise HTTPException(404, "Member not found")
+    addr = (body.email or "").strip()
+    if addr and not notify.valid_email(addr):
+        raise HTTPException(422, "That doesn't look like an email address.")
+    m.email = addr or None
+    db.commit()
+    return {"email": m.email}
+
+
+class SlackIn(BaseModel):
+    slack_webhook: str | None = None
+
+
+@router.put("/workspaces/{workspace_id}/notify")
+def set_notify(body: SlackIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    _require_admin_writer(ctx)
+    url = (body.slack_webhook or "").strip()
+    if url and not notify.valid_slack_webhook(url):
+        raise HTTPException(422, "Paste a Slack incoming-webhook URL (it starts with https://hooks.slack.com/).")
+    ws = ctx.workspace
+    ws.notify = {**(ws.notify or {}), "slack_webhook": url or None}
+    db.commit()
+    return {"slack": {"set": bool(url), "hint": notify.mask_webhook(url)}}
+
+
+class TestIn(BaseModel):
+    channel: Literal["email", "slack"]
+
+
+@router.post("/workspaces/{workspace_id}/notify/test")
+def test_notify(body: TestIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    _require_admin_writer(ctx)
+    ws = ctx.workspace
+    if body.channel == "slack":
+        res = notify.send_slack(db, ws, event="test", title="Baton is connected",
+                                lines=[f"Handover notifications for “{ws.name}” will appear here."], link=f"/w/{ws.id}/ledger")
+    else:
+        res = notify.send_email(db, ws, event="test", to=ctx.member.email, subject=f"Baton test email · {ws.name}",
+                                heading="Email notifications work",
+                                lines=[f"This is a test from the workspace “{ws.name}”."], link=f"/w/{ws.id}/ledger")
+    db.commit()
+    return res.as_dict()
 
 
 @router.post("/workspaces/{workspace_id}/invites/{member_id}")
-def create_invite(member_id: uuid.UUID, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+def create_invite(member_id: uuid.UUID, send_email: bool = False, ctx: Ctx = Depends(workspace_ctx),
+                  db: Session = Depends(get_db)) -> dict:
     """Create (or rotate) a member's private link. The token is returned once and never stored."""
     _require_admin_writer(ctx)
     m = db.get(Member, member_id)
@@ -64,8 +124,17 @@ def create_invite(member_id: uuid.UUID, ctx: Ctx = Depends(workspace_ctx), db: S
                .values(revoked_at=datetime.now(UTC)))
     token = secrets.token_urlsafe(24)
     db.add(MemberInvite(workspace_id=ctx.workspace.id, member_id=m.id, token_hash=_hash(token)))
+    db.flush()
+    emailed = None
+    if send_email:  # optional: the link goes straight to their inbox (it is still shown once to the admin)
+        emailed = notify.send_email(
+            db, ctx.workspace, event="invite", to=m.email, subject=f"You're invited to “{ctx.workspace.name}” on Baton",
+            heading=f"{ctx.member.display_name} invited you to a project handover",
+            lines=[f"You've been added to “{ctx.workspace.name}” as {m.display_name}.",
+                   "This link is personal: anyone who opens it is signed in as you. Don't forward it."],
+            link=f"/join/{token}", link_label="Open my workspace").as_dict()
     db.commit()
-    return {"path": f"/join/{token}", "member": m.display_name}
+    return {"path": f"/join/{token}", "member": m.display_name, "emailed": emailed}
 
 
 @router.delete("/workspaces/{workspace_id}/invites/{member_id}")

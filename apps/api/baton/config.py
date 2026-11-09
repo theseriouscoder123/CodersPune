@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     verifier: str = "llm"
     embeddings: str = "off"
 
+    # Optional notifications. Everything works without these; features just report "not configured".
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 465  # 465 = implicit TLS (Gmail); 587 = STARTTLS
+    smtp_user: str = ""  # e.g. your Gmail address
+    smtp_password: str = ""  # a Gmail *app password* (needs 2-step verification), never the account password
+    mail_from: str = ""  # defaults to "Baton <smtp_user>"
+    app_url: str = "https://baton-lac.vercel.app"  # used to build links in messages
+    slack_webhook_url: str = ""  # optional operator feed (custom workspaces created, runs failed)
+
     session_secret: str = "change-me"
     custom_workspace_daily_limit: int = 3
     pipeline_slice_seconds: int = 45
@@ -38,6 +47,10 @@ class Settings(BaseSettings):
         if provider == self.llm_provider.lower() and self.llm_api_key.strip() and self.llm_api_key.strip() not in keys:
             keys.insert(0, self.llm_api_key.strip())
         return keys
+
+    @property
+    def email_configured(self) -> bool:
+        return bool(self.smtp_user.strip() and self.smtp_password.strip())
 
     @property
     def llm_configured(self) -> bool:

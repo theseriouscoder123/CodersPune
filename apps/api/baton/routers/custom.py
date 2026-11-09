@@ -192,4 +192,7 @@ async def create_workspace(
     db.flush()
     run = create_run(db, ws.id)
     db.commit()
+    from baton.notify import operator_feed  # optional server-wide Slack feed; no-op without SLACK_WEBHOOK_URL
+
+    operator_feed(f"New custom workspace on Baton: '{ws.name}' ({len(people)} members)")
     return {"workspace_id": str(ws.id), "run_id": str(run.id)}

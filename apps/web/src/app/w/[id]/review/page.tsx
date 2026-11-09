@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, ListChecks, RotateCcw, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, ListChecks, Mail, RotateCcw, Search, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -267,6 +267,14 @@ function QuestionsBar({ workspaceId }: { workspaceId: string }) {
     a.download = "questions-for-leaver.md";
     a.click();
   };
+  const emailLeaver = async () => {
+    try {
+      const r = await api<{ status: string; detail: string; count: number }>(`/workspaces/${workspaceId}/questions/email`, { workspaceId, method: "POST" });
+      toast(r.status === "sent" ? `Emailed ${r.count} questions to the leaver` : r.detail, r.status === "sent" ? "success" : "error");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    }
+  };
   const copyIssue = async () => {
     const r = await get();
     await navigator.clipboard.writeText(`# ${r.issue_title}\n\n${r.issue_body}`).catch(() => undefined);
@@ -293,6 +301,9 @@ function QuestionsBar({ workspaceId }: { workspaceId: string }) {
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" onClick={() => void copyIssue()}><Github className="h-4 w-4" /> Copy as GitHub issue</Button>
         <Button variant="ghost" size="sm" onClick={() => void download()}><Download className="h-4 w-4" /> Download .md</Button>
+        <Button variant="ghost" size="sm" onClick={() => void emailLeaver()} title="Email the questions the leaver is allowed to see (needs their address on the Team page)">
+          <Mail className="h-4 w-4" /> Email to leaver
+        </Button>
       </div>
     </div>
   );

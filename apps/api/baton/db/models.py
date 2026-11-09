@@ -61,6 +61,8 @@ class Workspace(Base):
     # "switcher": anyone with access can switch persona (demo). "invites": each person is bound to one member via an
     # invite link and cannot switch (real team use).
     identity_mode: Mapped[str] = mapped_column(Text, server_default=sql("'switcher'"), nullable=False)
+    # Optional notification settings: {"slack_webhook": "https://hooks.slack.com/...", "email": true}
+    notify: Mapped[dict] = mapped_column(JSONB, server_default=sql("'{}'::jsonb"), nullable=False)
     created_at: Mapped[datetime] = created()
 
 
@@ -71,6 +73,7 @@ class Member(Base):
     display_name: Mapped[str] = mapped_column(Text, nullable=False)
     handle: Mapped[str] = mapped_column(Text, nullable=False)
     avatar_color: Mapped[str | None] = mapped_column(Text)
+    email: Mapped[str | None] = mapped_column(Text)  # optional, set by the workspace admin, used only for notifications
     created_at: Mapped[datetime] = created()
 
 
@@ -311,3 +314,19 @@ class MemberBinding(Base):
                                                     primary_key=True)
     member_id: Mapped[uuid.UUID] = fk("members.id")
     created_at: Mapped[datetime] = created()
+
+
+class Notification(Base):
+    """Outbox log for optional email/Slack notifications: what was sent, skipped or failed (never message bodies)."""
+
+    __tablename__ = "notifications"
+    __table_args__ = (Index("notifications_ws_idx", "workspace_id", "created_at"),)
+    id: Mapped[uuid.UUID] = pk()
+    workspace_id: Mapped[uuid.UUID] = fk("workspaces.id")
+    channel: Mapped[str] = mapped_column(Text, nullable=False)  # email | slack
+    event: Mapped[str] = mapped_column(Text, nullable=False)
+    recipient: Mapped[str | None] = mapped_column(Text)  # masked (e.g. "ne***@gmail.com", "hooks.slack.com/…a1b2")
+    status: Mapped[str] = mapped_column(Text, nullable=False)  # sent | failed | skipped
+    detail: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = created()
+

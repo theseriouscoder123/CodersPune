@@ -56,12 +56,13 @@ function PreviewInner() {
     setBusy(true);
     setErr(null);
     try {
-      const r = await api<{ version: number }>(`/handovers/${handover!.id}/approve`, {
+      const r = await api<{ version: number; notified?: { to: string; channel: string; status: string }[] }>(`/handovers/${handover!.id}/approve`, {
         workspaceId: ws.id, method: "POST", body: { note: note || null, show_restricted_stubs: showStubs },
       });
       setDone(r.version);
       setOpen(false);
-      toast(`Version ${r.version} approved. ${name} can see it now`);
+      const sent = (r.notified ?? []).filter((x) => x.status === "sent").map((x) => (x.channel === "slack" ? "Slack" : x.to));
+      toast(`Version ${r.version} approved. ${name} can see it now${sent.length ? ` · notified ${sent.join(", ")}` : ""}`);
       sel.reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
