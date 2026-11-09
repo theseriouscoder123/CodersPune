@@ -313,6 +313,37 @@ def get_handover(handover_id: uuid.UUID, request: Request, db: Session = Depends
     return {**meta, "approved": True, **_project(db, h, v, ctx.viewer, mask=not ctx.is_reviewer)}
 
 
+@router.get("/handovers/{handover_id}/changes")
+def changes(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_db), version: int | None = None) -> dict:
+    """What changed between an approved version and the one before it, computed AFTER the permission projection for
+    this viewer on both sides, so the changelog can't reveal an item (or its removal) that the viewer may not see."""
+    h, ctx = _handover(db, request, handover_id)
+    if not (ctx.is_reviewer or ctx.member.id in (h.successor_member_id, h.leaver_member_id)):
+        raise HTTPException(403, "This handover is shared with the successor, the leaver and the reviewer only")
+    cur = _latest(db, h, version)
+    if cur is None or cur.version <= 1:
+        return {"version": cur.version if cur else None, "previous": None, "added": [], "removed": [], "changed": []}
+    prev = _latest(db, h, cur.version - 1)
+    mask = not ctx.is_reviewer
+
+    def items(v: HandoverVersion) -> dict:
+        p = _project(db, h, v, ctx.viewer, mask=mask)
+        return {it["claim_id"]: {**it, "section": sec["title"]} for sec in p["sections"] for it in sec["items"]
+                if not it.get("restricted") and it.get("claim_id")}
+
+    a, b = items(prev), items(cur)
+    pick = ("claim_id", "text", "status", "type_label", "section")
+    added = [{k: b[c].get(k) for k in pick} for c in b if c not in a]
+    removed = [{k: a[c].get(k) for k in pick} for c in a if c not in b]
+    changed = []
+    for c in b:
+        if c in a and (a[c]["text"] != b[c]["text"] or a[c]["status"] != b[c]["status"]):
+            changed.append({**{k: b[c].get(k) for k in pick}, "was_text": a[c]["text"] if a[c]["text"] != b[c]["text"] else None,
+                            "was_status": a[c]["status"] if a[c]["status"] != b[c]["status"] else None})
+    return {"version": cur.version, "previous": prev.version if prev else None,
+            "added": added, "removed": removed, "changed": changed}
+
+
 @router.get("/handovers/{handover_id}/versions")
 def versions(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
     h, ctx = _handover(db, request, handover_id)

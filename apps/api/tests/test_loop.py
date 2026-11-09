@@ -267,3 +267,20 @@ def test_ask_uses_only_projected_claims_and_validates_citations(world, monkeypat
     _ask_setup(monkeypatch, {"answered": True, "answer": "Uncited", "cited": []})
     assert c.post(f"/api/handovers/{hid}/ask", headers=as_(p["neha"]), json={"question": "anything?"}).json()["answered"] is False
     assert c.post(f"/api/handovers/{hid}/ask", headers=as_(p["kabir"]), json={"question": "anything?"}).status_code == 403
+
+
+def test_changelog_between_versions_is_projected_per_viewer(world):
+    c = client("visitor-one")  # sandbox with an approved v1 from the full-loop test
+    ws = world["s1"]
+    p = personas(c, ws)
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+    v1 = c.get(f"/api/handovers/{hid}", headers=as_(p["neha"])).json()
+    item = next(it for s in v1["sections"] for it in s["items"] if not it.get("restricted") and s["key"] != "unresolved")
+    assert c.post(f"/api/claims/{item['claim_id']}/review", headers=as_(p["meera"]),
+                  json={"action": "reject", "note": "outdated"}).status_code == 200
+    n = c.post(f"/api/handovers/{hid}/approve", headers=as_(p["meera"]), json={"note": "v2"}).json()["version"]
+    ch = c.get(f"/api/handovers/{hid}/changes", headers=as_(p["neha"])).json()
+    assert ch["version"] == n and ch["previous"] == n - 1
+    assert item["claim_id"] in {r["claim_id"] for r in ch["removed"]}
+    assert "TechNova" not in str(ch) and "40,000" not in str(ch)  # nothing Neha can't see, even as a removal
+    assert c.get(f"/api/handovers/{hid}/changes", headers=as_(p["kabir"])).status_code == 403

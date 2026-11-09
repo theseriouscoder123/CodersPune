@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowRight, Download, FileText, HelpCircle, History, Hou
 import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
+import { HandoverChanges } from "@/components/ledger/HandoverChanges";
 import { AskHandover } from "@/components/ledger/AskHandover";
 import { EvidenceCard } from "@/components/ledger/EvidenceCard";
 import { STATUS_META, StatusChip } from "@/components/ledger/StatusChip";
@@ -122,6 +123,7 @@ function HandoverInner() {
             </div>
           </Card>
 
+          {hid && <HandoverChanges handoverId={hid} version={v.version} />}
           {hid && <AskHandover handoverId={hid} workspaceId={ws.id} onOpenEvidence={openEvidence} />}
 
           <div className="stagger mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2 print:block print:space-y-4" data-testid="handover-sections">
