@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, Request
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from baton.db.models import Visitor, Workspace
 
-NEW_SANDBOXES_PER_IP_PER_HOUR = 15
+NEW_SANDBOXES_PER_IP_PER_HOUR = int(os.environ.get("DEMO_SANDBOXES_PER_IP_HOUR", "60"))  # judges may share one office IP
 CUSTOM_PER_IP_PER_DAY = 6
 RESET_COOLDOWN = timedelta(seconds=15)
 SANDBOX_TTL = timedelta(days=7)
