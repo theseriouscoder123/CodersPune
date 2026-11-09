@@ -7,8 +7,18 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
-from baton.db.models import (Chunk, Claim, ConflictGroup, Evidence, Handover, HandoverVersion, Member, Run, Visitor,
-                             Workspace)
+from baton.db.models import (
+    Chunk,
+    Claim,
+    ConflictGroup,
+    Evidence,
+    Handover,
+    HandoverVersion,
+    Member,
+    Run,
+    Visitor,
+    Workspace,
+)
 from baton.db.session import SessionLocal
 from baton.demo_loader import build_demo_workspace
 from baton.main import app
