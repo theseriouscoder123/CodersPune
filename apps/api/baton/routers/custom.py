@@ -35,7 +35,7 @@ MAX_MEMBERS = 12
 class MemberIn(BaseModel):
     name: str = Field(min_length=1, max_length=60)
     handle: str = Field(min_length=1, max_length=40, description="their GitHub username, used to match commits/PRs")
-    roles: list[str]
+    roles: list[str] = Field(max_length=4)
 
     @field_validator("handle")
     @classmethod
@@ -73,11 +73,11 @@ def _acl(spec: str | None, ids: dict[str, str]) -> dict:
 async def create_workspace(
     request: Request, response: Response, db: Session = Depends(get_db),
     name: str = Form(..., max_length=80),
-    members: str = Form(...),
-    repo_url: str | None = Form(None),
-    repo_access: str | None = Form("all"),
-    notes_access: str | None = Form("all"),
-    chat_access: str | None = Form("all"),
+    members: str = Form(..., max_length=6000),
+    repo_url: str | None = Form(None, max_length=300),
+    repo_access: str | None = Form("all", max_length=2000),
+    notes_access: str | None = Form("all", max_length=2000),
+    chat_access: str | None = Form("all", max_length=2000),
     notes: list[UploadFile] | None = File(None),
     chat: UploadFile | None = File(None),
     confirm_authorised: bool = Form(False),

@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -95,7 +95,7 @@ def export_workspace(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(ge
 
 
 class DeleteIn(BaseModel):
-    confirm_name: str
+    confirm_name: str = Field(max_length=120)
 
 
 @router.delete("/workspaces/{workspace_id}")

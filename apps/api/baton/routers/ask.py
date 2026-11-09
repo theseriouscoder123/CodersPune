@@ -13,7 +13,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from rapidfuzz import fuzz
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -68,6 +68,16 @@ class AskResult(BaseModel):
     answered: bool
     answer: str | None = None
     cited: list[str] = Field(default_factory=list)
+
+    @field_validator("answer")
+    @classmethod
+    def _cap_answer(cls, v: str | None) -> str | None:  # untrusted model output: bound what we store and show
+        return v[:2500] if v else v
+
+    @field_validator("cited")
+    @classmethod
+    def _cap_cited(cls, v: list[str]) -> list[str]:
+        return v[:20]
 
 
 PINNED_START = 6  # the first "Start here" items (next actions first) are always in context

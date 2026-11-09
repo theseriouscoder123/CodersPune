@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
@@ -59,7 +59,7 @@ def team(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> di
 
 
 class EmailIn(BaseModel):
-    email: str | None = None
+    email: str | None = Field(default=None, max_length=254)
 
 
 @router.put("/workspaces/{workspace_id}/members/{member_id}/email")
@@ -78,7 +78,7 @@ def set_member_email(member_id: uuid.UUID, body: EmailIn, ctx: Ctx = Depends(wor
 
 
 class SlackIn(BaseModel):
-    slack_webhook: str | None = None
+    slack_webhook: str | None = Field(default=None, max_length=300)
 
 
 @router.put("/workspaces/{workspace_id}/notify")
