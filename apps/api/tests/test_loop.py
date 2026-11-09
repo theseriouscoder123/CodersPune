@@ -284,3 +284,18 @@ def test_changelog_between_versions_is_projected_per_viewer(world):
     assert item["claim_id"] in {r["claim_id"] for r in ch["removed"]}
     assert "TechNova" not in str(ch) and "40,000" not in str(ch)  # nothing Neha can't see, even as a removal
     assert c.get(f"/api/handovers/{hid}/changes", headers=as_(p["kabir"])).status_code == 403
+
+
+def test_activity_log_is_reviewer_only_and_csv_is_safe(world):
+    c = client("visitor-one")
+    ws = world["s1"]
+    p = personas(c, ws)
+    r = c.get(f"/api/workspaces/{ws}/activity", headers=as_(p["meera"])).json()
+    labels = {e["label"] for e in r["entries"]}
+    assert "Confirmed" in labels and any(lb.startswith("Approved version") for lb in labels)
+    assert c.get(f"/api/workspaces/{ws}/activity", headers=as_(p["neha"])).status_code == 403
+    csv_r = c.get(f"/api/workspaces/{ws}/activity.csv", headers=as_(p["meera"]))
+    assert csv_r.status_code == 200 and csv_r.headers["content-type"].startswith("text/csv")
+    assert csv_r.text.splitlines()[0].startswith("when (UTC),who,role,action")
+    from baton.routers.activity import _safe
+    assert _safe("=HYPERLINK(1)") == "'=HYPERLINK(1)" and _safe("fine") == "fine"

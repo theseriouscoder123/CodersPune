@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, Lock, RotateCcw, Scale, UserCheck, UsersRound } from "lucide-react";
+import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, History, Lock, RotateCcw, Scale, UserCheck, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -256,7 +256,13 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
                 </button>
               )}
               {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
-                <Link href={`/w/${ws.id}/team`} title="People, invite links and access"
+                <Link href={`/w/${ws.id}/activity`} title="Activity log: who did what, when" aria-label="Activity log"
+                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="activity-link">
+                  <History className="h-4 w-4" />
+                </Link>
+              )}
+              {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
+                <Link href={`/w/${ws.id}/team`} title="People, invite links and access" aria-label="Team and access"
                   className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="team-link">
                   <UsersRound className="h-4 w-4" />
                 </Link>
