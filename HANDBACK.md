@@ -196,5 +196,5 @@ Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
 
 ## 11. Commit-history facts
 - First commit: **2026-11-08 16:40:42 +05:30** (`ea1e64d`, planning docs and repo basics), after the window opened (Sun 8 Nov 2026 10:00 IST).
-- Commits at freeze: about 55, never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
+- Commits at freeze: 54 (including this handback), never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
 - No code written before the build window was imported. The planning documents in `docs/` (written before the window) are not code.
