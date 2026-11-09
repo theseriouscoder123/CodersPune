@@ -59,6 +59,8 @@ class RunBusy(Exception):
 def create_run(db: Session, workspace_id, mode: str = "full") -> Run:
     """mode="full": replace unreviewed claims from scratch. mode="refresh": re-fetch live sources, keep existing claims
     and only extract what is new since the last completed run."""
+    # Lock the workspace row so two simultaneous "Re-run" clicks can't both pass the busy check.
+    db.execute(select(Workspace.id).where(Workspace.id == workspace_id).with_for_update())
     busy = db.scalar(select(Run).where(Run.workspace_id == workspace_id, Run.status.in_(["queued", "running"])))
     if busy:
         raise RunBusy(str(busy.id))

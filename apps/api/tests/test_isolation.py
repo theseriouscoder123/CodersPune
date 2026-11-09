@@ -131,3 +131,41 @@ def test_successor_cannot_open_evidence_outside_approved_versions(two):
     assert c.get(f"/api/handovers/{a['handover']}/evidence/{a['ev']}", headers=neha).status_code == 200  # approved: fine
     assert c.get(f"/api/handovers/{a['handover']}/evidence/{draft_ev}", headers=neha).status_code == 404  # draft: never
     assert c.get(f"/api/handovers/{a['handover']}/evidence/{draft_ev}", headers=meera).status_code == 200  # reviewer may
+
+
+def test_concurrent_approvals_get_distinct_versions(two):
+    from concurrent.futures import ThreadPoolExecutor
+
+    a, _ = two
+    h = {"X-Baton-Persona": a["members"]["meera"]}
+
+    def approve(_):
+        return _client("iso-a").post(f"/api/handovers/{a['handover']}/approve", headers=h, json={})
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(approve, range(4)))
+    assert all(r.status_code == 200 for r in results), [r.text for r in results]
+    versions = sorted(r.json()["version"] for r in results)
+    assert len(set(versions)) == 4 and versions == list(range(versions[0], versions[0] + 4))
+
+
+def test_double_click_demo_start_creates_one_sandbox():
+    from concurrent.futures import ThreadPoolExecutor
+
+    with SessionLocal() as db:
+        if db.scalar(select(Workspace).where(Workspace.is_demo_template.is_(True))) is None:
+            pytest.skip("no demo template in this database")
+    with SessionLocal.begin() as db:
+        db.merge(Visitor(id="iso-dbl"))
+
+    def start(_):
+        return _client("iso-dbl").post("/api/demo/start", headers={"X-Forwarded-For": "203.0.113.77"})
+
+    try:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            ids = {r.json()["workspace_id"] for r in pool.map(start, range(3))}
+        assert len(ids) == 1
+    finally:
+        with SessionLocal.begin() as db:
+            db.execute(delete(Workspace).where(Workspace.visitor_id == "iso-dbl"))
+            db.execute(delete(Visitor).where(Visitor.id == "iso-dbl"))

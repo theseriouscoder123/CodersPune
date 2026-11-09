@@ -243,6 +243,7 @@ class Handover(Base):
 
 class HandoverVersion(Base):
     __tablename__ = "handover_versions"
+    __table_args__ = (Index("handover_versions_unique_idx", "handover_id", "version", unique=True),)
     id: Mapped[uuid.UUID] = pk()
     handover_id: Mapped[uuid.UUID] = fk("handovers.id")
     version: Mapped[int] = mapped_column(Integer, nullable=False)

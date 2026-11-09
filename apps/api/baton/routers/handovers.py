@@ -188,6 +188,8 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
         raise HTTPException(403, "Only the reviewer can approve a handover")
     if not ctx.can_write:
         raise HTTPException(403, "This is the shared read-only template. Click 'Try the demo' to get your own copy.")
+    # Serialise approvals of the same handover (double-click, two tabs): the row lock makes version numbers N, N+1.
+    db.execute(select(Handover.id).where(Handover.id == h.id).with_for_update())
     if body.show_restricted_stubs is not None:
         h.show_restricted_stubs = body.show_restricted_stubs
     claims = list(db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id)))

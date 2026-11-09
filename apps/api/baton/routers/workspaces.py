@@ -30,10 +30,19 @@ def _template(db: Session) -> Workspace:
     return t
 
 
+def _lock_visitor(db: Session, visitor) -> None:
+    from baton.db.models import Visitor
+
+    db.execute(select(Visitor.id).where(Visitor.id == visitor.id).with_for_update())
+    db.refresh(visitor)  # re-read sandbox_workspace_id after any concurrent request committed
+
+
 @router.post("/demo/start")
 def demo_start(request: Request, response: Response, db: Session = Depends(get_db)) -> dict:
     """Return this visitor's own sandbox copy of the demo, cloning it on first visit (judges never collide)."""
     visitor = get_or_create_visitor(request, response, db)
+    db.flush()
+    _lock_visitor(db, visitor)  # a double-click must not clone two sandboxes
     template = _template(db)
     ws = db.get(Workspace, visitor.sandbox_workspace_id) if visitor.sandbox_workspace_id else None
     if ws is None or ws.sandbox_of != template.id or ws.visitor_id != visitor.id:
@@ -50,6 +59,8 @@ def demo_start(request: Request, response: Response, db: Session = Depends(get_d
 def demo_reset(request: Request, response: Response, db: Session = Depends(get_db)) -> dict:
     """Throw away this visitor's sandbox edits and re-clone the template."""
     visitor = get_or_create_visitor(request, response, db)
+    db.flush()
+    _lock_visitor(db, visitor)
     old = db.get(Workspace, visitor.sandbox_workspace_id) if visitor.sandbox_workspace_id else None
     check_reset(old)
     template = _template(db)
