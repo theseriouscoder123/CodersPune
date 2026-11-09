@@ -68,6 +68,16 @@ test.describe.serial("judge flow @desktop", () => {
     await expect(page.getByRole("heading", { name: "Decision timeline" })).toBeVisible();
   });
 
+  test("Search (Ctrl+K) finds claims and source passages", async () => {
+    await page.keyboard.press("Control+k");
+    const palette = page.getByTestId("search-palette");
+    await palette.getByRole("textbox", { name: "Search" }).fill("push reminders");
+    await expect(palette.getByText("Claims")).toBeVisible();
+    await expect(palette.getByText("In the sources")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(palette).toBeHidden();
+  });
+
   test("Verify: a claim shows why it got its status and its quoted evidence; the reviewer confirms it", async () => {
     await page.getByTestId("step-review").click();
     const list = page.getByTestId("claim-list");

@@ -1,12 +1,13 @@
 "use client";
 
-import { Bell, Copy, Link2, Lock, Mail, RefreshCw, Send, ShieldCheck, Slack, Unlock, UserX } from "lucide-react";
+import { Bell, Copy, Download, Link2, Lock, Mail, RefreshCw, Send, ShieldCheck, Slack, Trash2, Unlock, UserX } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import { NotForPersona } from "@/components/workspace/NotForPersona";
 import { Avatar, RoleBadge, useWorkspace } from "@/components/workspace/WorkspaceShell";
-import { Alert, Button, Card, PageHeader, SkeletonList } from "@/components/ui";
+import { Alert, Button, Card, Modal, PageHeader, SkeletonList } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
@@ -146,6 +147,7 @@ export default function TeamPage() {
           </div>
           <p className="mt-3 text-xs text-muted">Links are shown once and stored only as a hash. Making a new link or revoking one immediately invalidates the old one.</p>
           {t.notifications && <NotificationsCard wsId={ws.id} n={t.notifications} canManage={t.can_manage} onChanged={team.reload} />}
+          <DataCard />
         </>
       )}
     </div>
@@ -276,6 +278,59 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
           </ul>
         </div>
       )}
+    </Card>
+  );
+}
+
+function DataCard() {
+  const { ws } = useWorkspace();
+  const toast = useToast();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const canDelete = !!ws.is_owner && ws.persona.roles.includes("admin") && !ws.read_only;
+
+  async function exportJson() {
+    const r = await fetch(`/api/workspaces/${ws.id}/export.json`, { headers: { "X-Baton-Persona": ws.persona.id } });
+    if (!r.ok) return toast("Couldn't export this workspace", "error");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await r.blob());
+    a.download = (r.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1]) ?? "baton-export.json";
+    a.click();
+  }
+
+  async function remove() {
+    setBusy(true);
+    try {
+      await api(`/workspaces/${ws.id}`, { workspaceId: ws.id, method: "DELETE", body: { confirm_name: name } });
+      toast("Workspace deleted");
+      router.replace("/");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="mt-6 p-5" data-testid="data-card">
+      <p className="font-semibold text-ink">Your data</p>
+      <p className="mt-0.5 text-sm text-muted">Download everything in this workspace (sources, claims, evidence, reviews and approved versions) as JSON. Secrets were removed before storage, so they aren&apos;t in the export.</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="secondary" onClick={() => void exportJson()}><Download className="h-4 w-4" /> Export JSON</Button>
+        {canDelete && <Button variant="danger" onClick={() => setOpen(true)}><Trash2 className="h-4 w-4" /> Delete workspace</Button>}
+      </div>
+      <Modal open={open} onClose={() => setOpen(false)} label="Delete workspace">
+        <p className="font-display text-lg font-semibold text-ink">Delete “{ws.name}”?</p>
+        <p className="mt-2 text-sm text-muted">This permanently removes its sources, claims, evidence, reviews, handovers and invite links for everyone. It can&apos;t be undone. Export first if you might need it.</p>
+        <label className="mt-4 block text-xs font-medium text-ink-2" htmlFor="confirm-name">Type the workspace name to confirm</label>
+        <input id="confirm-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off"
+          className="mt-1 h-10 w-full rounded-xl border border-line bg-paper px-3 text-sm outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="danger" loading={busy} disabled={name.trim() !== ws.name} onClick={() => void remove()}>Delete permanently</Button>
+        </div>
+      </Modal>
     </Card>
   );
 }

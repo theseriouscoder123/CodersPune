@@ -210,8 +210,8 @@ export default function NewWorkspacePage() {
                 <span className="text-sm font-semibold text-ink">Meeting notes or docs</span>
                 <label className={FILE_ZONE}>
                   <Upload className="h-4 w-4 shrink-0 text-muted" />
-                  <span className="flex-1 truncate">{notes.length ? `${notes.length} file${notes.length > 1 ? "s" : ""}: ${notes.map((f) => f.name).join(", ")}` : "Choose .md, .txt or .pdf files (up to 10, 2 MB each)"}</span>
-                  <input id="notes" type="file" multiple accept=".md,.markdown,.txt,.pdf" onChange={(e) => setNotes(Array.from(e.target.files ?? []))} className="sr-only" />
+                  <span className="flex-1 truncate">{notes.length ? `${notes.length} file${notes.length > 1 ? "s" : ""}: ${notes.map((f) => f.name).join(", ")}` : "Choose .md, .txt, .pdf or Word .docx files (up to 10, 2 MB each)"}</span>
+                  <input id="notes" type="file" multiple accept=".md,.markdown,.txt,.pdf,.docx" onChange={(e) => setNotes(Array.from(e.target.files ?? []))} className="sr-only" />
                 </label>
                 {notes.length > 0 && <AccessPicker label="Notes access" value={notesAccess} onChange={setNotesAccess} people={people} />}
               </div>

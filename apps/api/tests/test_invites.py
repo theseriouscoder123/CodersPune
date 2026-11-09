@@ -68,3 +68,29 @@ def test_locked_workspace(ws):
     team = owner.get(f"/api/workspaces/{ws}/team").json()
     assert team["identity_mode"] == "invites" and team["can_manage"] is True
     owner.patch(f"/api/workspaces/{ws}/identity", json={"mode": "switcher"})
+
+
+def test_export_and_delete_workspace():
+    import json as _json
+
+    with SessionLocal.begin() as db:
+        db.merge(Visitor(id="del-owner"))
+        w = build_demo_workspace(db, template=False, name="pytest delete me")
+        w.synthetic = False
+        w.visitor_id = "del-owner"
+        wid = str(w.id)
+    owner = client("del-owner")
+    members = {m["handle"]: m["id"] for m in owner.get(f"/api/workspaces/{wid}").json()["members"]}
+    r = owner.get(f"/api/workspaces/{wid}/export.json")
+    assert r.status_code == 200 and "attachment" in r.headers["content-disposition"]
+    data = _json.loads(r.text)
+    assert data["format"] == "baton-workspace-export/1" and data["sources"] and data["chunks"]
+    assert "token_hash" not in r.text and "sk_live" not in r.text  # no invite hashes; secrets were scrubbed at ingest
+    # successor can't export; a stranger can't delete; the name must match
+    assert owner.get(f"/api/workspaces/{wid}/export.json", headers={"X-Baton-Persona": members["neha"]}).status_code == 403
+    assert client("someone-else").request("DELETE", f"/api/workspaces/{wid}", json={"confirm_name": "pytest delete me"}).status_code == 404
+    assert owner.request("DELETE", f"/api/workspaces/{wid}", json={"confirm_name": "wrong"}).status_code == 422
+    assert owner.request("DELETE", f"/api/workspaces/{wid}", json={"confirm_name": "pytest delete me"}).json()["deleted"] is True
+    assert owner.get(f"/api/workspaces/{wid}").status_code == 404
+    with SessionLocal.begin() as db:
+        db.execute(delete(Visitor).where(Visitor.id == "del-owner"))
