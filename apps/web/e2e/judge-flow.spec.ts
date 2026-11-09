@@ -30,6 +30,9 @@ test.describe.serial("judge flow @desktop", () => {
   test.beforeAll(async ({ browser }: { browser: Browser }) => {
     context = await browser.newContext();
     page = await context.newPage();
+    page.on("console", (m) => { if (m.type() === "error") console.log(`[browser error] ${m.text().slice(0, 300)}`); });
+    page.on("pageerror", (e) => console.log(`[page error] ${e.message.slice(0, 300)}`));
+    page.on("requestfailed", (r) => console.log(`[request failed] ${r.url()} ${r.failure()?.errorText}`));
     ws = await startDemo(page);
   });
 
@@ -99,6 +102,12 @@ test.describe.serial("judge flow @desktop", () => {
     expect(text).not.toContain("40,000");
     await sections.getByTestId("source-ref").first().click();
     await expect(page.getByTestId("evidence-drawer")).toBeVisible();
+  });
+
+  test("Getting-started checklist reflects real progress: 6/6 after the loop", async () => {
+    await page.keyboard.press("Escape");
+    await page.reload();
+    await expect(page.getByTestId("tour-open")).toContainText("Tour complete");
   });
 });
 

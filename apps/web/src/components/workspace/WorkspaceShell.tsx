@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { Logo } from "@/components/Logo";
+import { TourChecklist } from "@/components/workspace/TourChecklist";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import { ButtonLink, Spinner } from "@/components/ui";
@@ -269,6 +270,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
           </div>
         </header>
         <main key={personaVersion} className="animate-fade mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-6">{children}</main>
+        {ws.synthetic && <TourChecklist ws={ws} onSwitchPersona={switchPersona} />}
       </WorkspaceContext.Provider>
     </ToastProvider>
   );

@@ -94,6 +94,21 @@ def get_workspace(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_d
     }
 
 
+@router.get("/workspaces/{workspace_id}/tour")
+def tour(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
+    """Progress through the scored loop for the getting-started checklist: real server state, not browser flags.
+    Only counts and booleans, so it is safe for every persona."""
+    from baton.db.models import Claim, Handover, HandoverVersion, Membership
+
+    ws_id = ctx.workspace.id
+    reviewed = db.scalar(select(func.count()).select_from(Claim).where(Claim.workspace_id == ws_id,
+                                                                       Claim.review_state != "none")) or 0
+    approved = bool(db.scalar(select(func.count()).select_from(HandoverVersion).join(Handover, Handover.id == HandoverVersion.handover_id)
+                              .where(Handover.workspace_id == ws_id)))
+    succ = db.scalar(select(Membership.member_id).where(Membership.workspace_id == ws_id, Membership.role == "successor").limit(1))
+    return {"reviewed": reviewed, "approved": approved, "successor_id": str(succ) if succ else None}
+
+
 @router.get("/workspaces/{workspace_id}/sources")
 def list_sources(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
     names = {str(m.id): m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == ctx.workspace.id))}
