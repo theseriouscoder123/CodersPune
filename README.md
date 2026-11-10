@@ -107,7 +107,7 @@ time limit. Hosting is entirely free tier (DECISIONS D8). More detail: [`docs/02
   - fonts Fraunces, Geist and Geist Mono (SIL OFL) via `next/font/google`;
   - testing with Playwright (Apache-2.0) and axe-core (MPL-2.0).
   - Full list with versions in `HANDBACK.md` §5.
-- **AI models:** Google Gemini (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`) via the Gemini API; Groq-hosted models optional.
+- **AI models:** Google Gemini (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`) via the Gemini API, with Groq-hosted `openai/gpt-oss-120b` and `openai/gpt-oss-20b` as fallbacks.
 - **Services:** Vercel (hosting), Neon (Postgres), GitHub REST API; Gmail SMTP and Slack webhooks only if configured.
 - **Data:** all demo data is **synthetic**, written for this project. No real club or workplace data is used.
 - **Build window:** no code was written before the official build window (opened Sun 8 Nov 2026, 10:00 IST). Planning documents in `docs/` predate the code, which the rules permit.

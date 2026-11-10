@@ -112,9 +112,15 @@ Eval totals: claim recall 13/13, status accuracy 13/13, citation precision 9/10,
 | Google Gemini API | `gemini-3.5-flash` | Extraction (demo ledger) |
 | Google Gemini API | `gemini-3.5-flash-lite` | Isolated verification, checklist coverage, Ask |
 | Google Gemini API | `gemini-3.1-flash-lite` | Fallback |
-| Groq | configured via `GROQ_API_KEYS` | Optional fallback; not used for the demo ledger |
+| Groq | `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | Fallbacks for extraction (120b) and verification/Ask (20b); not used for the demo ledger |
 
-Calls are REST with JSON-schema output (no SDK).
+Calls are REST with JSON-schema output (no SDK). Production holds key pools of 3 Gemini and 2 Groq keys. Calls rotate across keys and fall back across providers (D26).
+
+Production chains:
+- Extraction: `gemini-3.5-flash` → `gpt-oss-120b` → `gemini-3.1-flash-lite` → `gemini-3.5-flash-lite`.
+- Verification/Ask: `gemini-3.5-flash-lite` → `gpt-oss-20b` → `gemini-3.1-flash-lite` → `gpt-oss-120b`.
+
+All five keys were checked live on 10 Nov, including structured extraction on both Groq models with verbatim quotes.
 
 **External services:**
 - Vercel: two projects, Hobby plan; Next.js + Python Functions, with a daily cron.
@@ -177,7 +183,7 @@ Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
 - **Added beyond the plan:** Ask, scoped handovers, re-run modes, stale-evidence handling, search, activity log, changelog, notifications, export/delete, accessibility and hardening (D19–D39).
 
 ## 9. Known issues and limitations (honest)
-- **Live AI depends on free quotas.** Custom repos, re-runs and Ask can hit the Gemini free limit (~20 requests/day on the main model). More keys and Groq are supported but were **not yet configured on production** at the time of writing. The precomputed demo never needs the AI.
+- **Live AI depends on free quotas.** These are now spread over 3 Gemini and 2 Groq keys with automatic fallback, which is much more headroom, but still finite. The precomputed demo never needs the AI.
 - **The eval covers one run**, not three (above).
 - **Ask quality varies with the model.** It sometimes calls a well-covered question "partial", for example "Why did we leave OneSignal?", because the ledger states the move but not every reason.
 - **Email and Slack are untested against real services.** They are built and tested with fake transports only. They stay off until SMTP settings or a webhook are added.

@@ -9,6 +9,7 @@ All numbers below were produced on **9–10 Nov 2026** by the commands shown. No
 | End-to-end, against production | `cd apps/web && pnpm exec playwright test` | **13 passed, 0 failed** (desktop Chrome + Pixel 7) |
 | Accessibility (axe-core, WCAG 2.1 A/AA) | part of the e2e suite | **0 violations** on the landing page and 8 workspace screens (light), 4 screens (dark) |
 | Dependency audit | `pnpm audit --prod`, `uvx pip-audit -r requirements.txt` | **No known vulnerabilities** in either |
+| Live AI keys (production) | model list + one structured call per model | **5/5 keys valid**. Verify works on `gemini-3.5-flash-lite`, `gpt-oss-20b` and `gpt-oss-120b`. Extraction on both Groq models gives verbatim quotes. Key rotation observed live on Ask. |
 | Production latency | 20 sequential requests to the ledger endpoint | p50 **0.64 s**, max **0.75 s**; new demo copy **≈1 s** |
 
 ## 1. API tests (164)
