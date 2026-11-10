@@ -6,8 +6,10 @@ from __future__ import annotations
 import logging
 import secrets
 import time
+from functools import lru_cache
+from urllib.parse import urlparse
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -48,6 +50,38 @@ class HardeningMiddleware(BaseHTTPMiddleware):
         return response
 
 
+@lru_cache
+def _configured_secrets() -> tuple[str, ...]:
+    """Every secret value this server holds (keys, tokens, passwords), longest first."""
+    import os
+
+    from baton.config import get_settings
+
+    s = get_settings()
+    vals: set[str] = set()
+    for raw in (s.llm_api_key, s.gemini_api_keys, s.groq_api_keys, s.github_token, s.smtp_password, s.session_secret,
+                s.slack_webhook_url, os.environ.get("CRON_SECRET", "")):
+        vals.update(v.strip() for v in (raw or "").split(",") if len(v.strip()) >= 8)
+    pw = urlparse(s.database_url.replace("postgresql+psycopg", "postgresql")).password
+    if pw and len(pw) >= 6:
+        vals.add(pw)
+    vals.discard("change-me")
+    return tuple(sorted(vals, key=len, reverse=True))
+
+
+def redact(text: str | None) -> str | None:
+    """Defence in depth for anything that came from outside (provider/GitHub errors, exception text) before it is
+    stored or returned: strip every configured secret value, then anything that looks like a credential."""
+    if not text:
+        return text
+    from baton.ingest.scrubber import scrub
+
+    for v in _configured_secrets():
+        if v in text:
+            text = text.replace(v, "[REDACTED]")
+    return scrub(text)[0]
+
+
 def _server_error(rid: str) -> JSONResponse:
     return JSONResponse(
         status_code=500,
@@ -58,6 +92,15 @@ def _server_error(rid: str) -> JSONResponse:
 
 def install(app: FastAPI) -> None:
     app.add_middleware(HardeningMiddleware)
+
+    @app.exception_handler(HTTPException)
+    async def _http_error(request: Request, exc: HTTPException):
+        detail = exc.detail
+        if isinstance(detail, str):
+            detail = redact(detail)
+        elif isinstance(detail, dict):
+            detail = {k: redact(v) if isinstance(v, str) else v for k, v in detail.items()}
+        return JSONResponse(status_code=exc.status_code, content={"detail": detail}, headers=getattr(exc, "headers", None))
 
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception):

@@ -13,7 +13,8 @@ from baton.ingest.types import ChunkDraft
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 ALLOWED_EXT = (".md", ".markdown", ".txt", ".pdf", ".docx")
-MAX_DOCX_XML_BYTES = 20 * 1024 * 1024  # uncompressed document.xml cap (zip-bomb guard)
+MAX_DOCX_XML_BYTES = 20 * 1024 * 1024
+MAX_PDF_PAGES = 300  # uncompressed document.xml cap (zip-bomb guard)
 _W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
 _DATE = re.compile(r"(20\d{2})-(\d{2})-(\d{2})")
@@ -69,6 +70,8 @@ def _parse_pdf(name: str, data: bytes) -> list[ChunkDraft]:
         reader = PdfReader(io.BytesIO(data))
     except Exception as exc:
         raise UploadRejected(f"{name}: could not read PDF ({type(exc).__name__})") from exc
+    if len(reader.pages) > MAX_PDF_PAGES:
+        raise UploadRejected(f"{name}: more than {MAX_PDF_PAGES} pages; split it or upload the relevant part")
     drafts: list[ChunkDraft] = []
     first_page = ""
     for page_no, page in enumerate(reader.pages, start=1):

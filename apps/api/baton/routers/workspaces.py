@@ -153,7 +153,9 @@ def maintenance_gc(request: Request, db: Session = Depends(get_db)) -> dict:
     import os
 
     secret = os.environ.get("CRON_SECRET", "")
-    if not secret or request.headers.get("authorization") != f"Bearer {secret}":
+    import hmac
+
+    if not secret or not hmac.compare_digest(request.headers.get("authorization", ""), f"Bearer {secret}"):
         raise HTTPException(401, "Unauthorized")
     result = collect_garbage(db)
     db.commit()

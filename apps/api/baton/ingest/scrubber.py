@@ -19,6 +19,13 @@ _SPECIFIC: list[tuple[str, re.Pattern[str]]] = [
     ("google_api_key", re.compile(r"AIza[0-9A-Za-z_\-]{35}(?![0-9A-Za-z_\-])")),
     ("slack_token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}")),
     ("jwt", re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}")),
+    ("google_api_key", re.compile(r"\bAQ\.Ab[0-9A-Za-z_\-]{30,}")),  # newer Gemini / Google AI Studio key format
+    ("groq_key", re.compile(r"\bgsk_[A-Za-z0-9]{40,}")),
+    ("anthropic_key", re.compile(r"\bsk-ant-[A-Za-z0-9_\-]{32,}")),
+    ("openai_key", re.compile(r"\bsk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_\-]{32,}")),
+    ("slack_webhook", re.compile(r"https://hooks\.slack\.com/(?:services|workflows|triggers)/[A-Za-z0-9_/\-]{16,}")),
+    ("connection_string_password",  # keep scheme and host so the claim still makes sense; drop the credentials
+     re.compile(r"(?<=://)([^\s:/@]+):[^\s@/]{3,}(?=@[^\s/]+)")),
 ]
 
 # `<identifier ending in key/secret/token/password> [:=] <value of 8+ chars>` -> redact the value, keep the name.

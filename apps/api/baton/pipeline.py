@@ -195,6 +195,9 @@ def run_to_completion(run_id, slice_s: float = 120) -> dict:
 
 
 def _fail(run_id, job_id, message: str) -> None:
+    from baton.security import redact
+
+    message = redact(message) or "The run failed."
     with SessionLocal.begin() as db:
         j = db.get(Job, job_id)
         j.status, j.message, j.updated_at = "failed", message, datetime.now(UTC)

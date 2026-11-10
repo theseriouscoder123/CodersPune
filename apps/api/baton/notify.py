@@ -76,6 +76,9 @@ def email_status() -> dict:
 # ---------- logging and limits ----------
 
 def _log(db: Session, ws_id, channel: str, event: str, recipient: str | None, res: Result) -> Result:
+    from baton.security import redact
+
+    res.detail = redact(res.detail) or ""
     db.add(Notification(workspace_id=ws_id, channel=channel, event=event, recipient=recipient, status=res.status,
                         detail=(res.detail or "")[:300] or None))
     db.flush()

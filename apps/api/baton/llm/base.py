@@ -110,6 +110,9 @@ def _log(*, purpose: str, provider: str, model: str, ok: bool, latency_ms: int, 
     try:
         from baton.db.models import LlmCall
         from baton.db.session import SessionLocal
+        from baton.security import redact
+
+        error = redact(error)
 
         with SessionLocal.begin() as db:
             db.add(LlmCall(workspace_id=workspace_id, run_id=run_id, purpose=purpose, provider=provider, model=model,

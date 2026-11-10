@@ -36,7 +36,7 @@ LOCK_TIMEOUT = "10s"
 
 
 @event.listens_for(Session, "after_begin")
-def _bound_transaction(session, transaction, connection) -> None:  # noqa: ARG001
+def _bound_transaction(session, transaction, connection) -> None:
     if connection.dialect.name == "postgresql":
         connection.execute(text(f"SET LOCAL statement_timeout = '{STATEMENT_TIMEOUT}'; SET LOCAL lock_timeout = '{LOCK_TIMEOUT}'"))
 
