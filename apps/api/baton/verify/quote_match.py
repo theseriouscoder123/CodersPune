@@ -33,8 +33,11 @@ def normalise_with_map(s: str) -> tuple[str, list[int]]:
             idx.append(i)
             prev_space = True
             continue
-        out.append(ch.lower())
-        idx.append(i)
+        # .lower() can return MORE than one character (e.g. "İ" -> "i̇"); every output char must map to its source
+        # index, or offsets drift and lookups run past the end of the map.
+        for lo in ch.lower():
+            out.append(lo)
+            idx.append(i)
         prev_space = False
     while out and out[-1] == " ":
         out.pop()

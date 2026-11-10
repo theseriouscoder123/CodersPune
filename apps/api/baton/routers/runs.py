@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from baton.auth import Ctx, resolve_ctx, workspace_ctx
 from baton.config import get_settings
-from baton.db.models import Run
+from baton.db.models import Job, Run
 from baton.db.session import get_db
 from baton.pipeline import RunBusy, advance, create_run, run_progress
 
@@ -70,3 +70,23 @@ def advance_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_d
         raise HTTPException(403, "This run belongs to a workspace you can only view.")
     db.close()  # the pipeline manages its own short transactions
     return advance(run_id)
+
+
+@router.post("/runs/{run_id}/retry")
+def retry_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
+    """Resume a failed run from the step that failed. Finished steps (and their AI work) are kept."""
+    ctx = _run_ctx(db, request, run_id)
+    if not (ctx.is_admin and ctx.can_write):
+        raise HTTPException(403, "Only the workspace admin can retry a run")
+    run = db.get(Run, run_id)
+    if run.status != "failed":
+        raise HTTPException(409, "Only a failed run can be retried")
+    busy = db.scalar(select(Run).where(Run.workspace_id == run.workspace_id, Run.status.in_(["queued", "running"])))
+    if busy:
+        raise HTTPException(409, {"message": "Another run is already in progress", "run_id": str(busy.id)})
+    for j in db.scalars(select(Job).where(Job.run_id == run_id, Job.status.in_(["failed", "running"]))):
+        j.status, j.message = "pending", None
+    run.status, run.error, run.finished_at = "running", None, None
+    run.stats = {k: v for k, v in (run.stats or {}).items() if k not in ("lease_until", "notified")}
+    db.commit()
+    return run_progress(run_id)

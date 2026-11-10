@@ -107,3 +107,15 @@ def test_code_line_quote():
     code = "// Max poster size accepted by the API route.\nexport const MAX_BYTES = 2 * 1024 * 1024;\n"
     m = match("export const MAX_BYTES = 2 * 1024 * 1024;", code)
     assert m.found and code[m.start : m.end] == "export const MAX_BYTES = 2 * 1024 * 1024;"
+
+
+def test_quote_match_survives_unicode_that_lowercases_to_several_chars():
+    from baton.verify.quote_match import match as _match, normalise_with_map
+
+    for text in ["Turkish İstanbul and İzmir", "Straße", "ǅemal", "ﬁle and ﬂow", "İİİİİİİİİİİİİİİİ end"]:
+        norm, idx = normalise_with_map(text)
+        assert len(norm) == len(idx)
+    m = _match("We love İstanbul in spring", "Notes: We love İstanbul in spring, said Ayşe.")
+    assert m.found and m.start is not None and m.end is not None
+    m = _match("transliterate İ to I correctly please", "slugify should transliterate İ to I correctly please, see #12")
+    assert m.found

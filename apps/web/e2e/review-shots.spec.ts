@@ -8,7 +8,7 @@ for (const vp of [{ name: "desk", width: 1440, height: 900 }, { name: "phone", w
   test(`review ${vp.name}`, async ({ page }) => {
     test.setTimeout(180_000);
     await page.setViewportSize({ width: vp.width, height: vp.height });
-    await page.emulateMedia({ colorScheme: "light" });
+    await page.emulateMedia({ colorScheme: (process.env.SCHEME as "light" | "dark") ?? "light" });
     await page.goto("/");
     await page.waitForTimeout(2500);
     await page.screenshot({ path: `${OUT}/${vp.name}-landing.png`, fullPage: true });

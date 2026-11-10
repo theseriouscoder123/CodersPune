@@ -179,3 +179,25 @@ def test_double_click_demo_start_creates_one_sandbox():
         with SessionLocal.begin() as db:
             db.execute(delete(Workspace).where(Workspace.visitor_id == "iso-dbl"))
             db.execute(delete(Visitor).where(Visitor.id == "iso-dbl"))
+
+
+def test_failed_run_can_be_retried_from_the_failed_step(two):
+    from baton.db.models import Job
+
+    a, _ = two
+    with SessionLocal.begin() as db:
+        r = Run(workspace_id=a["ws"], status="failed", error="Match quotes to sources failed: boom")
+        db.add(r)
+        db.flush()
+        db.add_all([Job(run_id=r.id, step="ingest", status="done"), Job(run_id=r.id, step="match", status="failed", message="boom")])
+        rid = str(r.id)
+    c = _client("iso-a")
+    admin = {"X-Baton-Persona": a["members"]["meera"]}
+    assert c.post(f"/api/runs/{rid}/retry", headers={"X-Baton-Persona": a["members"]["neha"]}).status_code == 403
+    p = c.post(f"/api/runs/{rid}/retry", headers=admin).json()
+    assert p["status"] == "running" and not p["error"]
+    steps = {s["step"]: s["status"] for s in p["steps"]}
+    assert steps == {"ingest": "done", "match": "pending"}  # finished work is kept
+    assert c.post(f"/api/runs/{rid}/retry", headers=admin).status_code == 409
+    with SessionLocal.begin() as db:
+        db.get(Run, rid).status = "failed"  # leave the fixture without a live run

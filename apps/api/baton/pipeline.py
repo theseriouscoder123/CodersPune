@@ -38,7 +38,7 @@ from baton.reconstruct.conflicts import ClaimLite, plan_conflicts
 from baton.reconstruct.extractor import ChunkRef, dedupe, extract_batch, make_batches, select_for_budget
 from baton.reconstruct.refs import source_ref
 from baton.verify.entailment import excerpt, verify
-from baton.verify.quote_match import match
+from baton.verify.quote_match import Match, match
 
 STEPS = ["ingest", "checklist", "extract", "cover", "match", "verify", "conflicts", "status", "handover"]
 STEP_LABELS = {"ingest": "Ingest sources", "checklist": "Build expected-knowledge checklist", "extract": "Extract claims",
@@ -600,7 +600,10 @@ def step_match(run_id, job_id, workspace_id, deadline) -> bool:
                           .where(Claim.workspace_id == workspace_id, Evidence.verifier.is_(None))).all()
         found = 0
         for ev, ch in rows:
-            m = match(ev.quote, ch.text)
+            try:
+                m = match(ev.quote, ch.text)
+            except Exception:  # noqa: BLE001 - one odd quote must never fail the run; it simply can't pass the gate
+                m = Match(False, 0)
             ev.quote_found, ev.match_score, ev.match_start, ev.match_end = m.found, m.score, m.start, m.end
             if m.found:
                 found += 1

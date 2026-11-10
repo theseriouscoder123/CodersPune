@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { useWorkspace } from "@/components/workspace/WorkspaceShell";
-import { Alert, ButtonLink, Card, PageHeader, Spinner } from "@/components/ui";
+import { Alert, Button, ButtonLink, Card, PageHeader, Spinner } from "@/components/ui";
 import { api, ApiError, type RunInfo } from "@/lib/api";
 
 /** Live run progress. This page also DRIVES the run: each /advance call does one bounded slice (DECISIONS D8). */
@@ -19,6 +19,18 @@ export default function RunPage() {
   const [now, setNow] = useState(() => Date.now());
   const active = useRef(true);
   const [live, setLive] = useState(false); // true once this page has watched the run in progress
+  const [retrying, setRetrying] = useState(false);
+
+  async function retry() {
+    setRetrying(true);
+    try {
+      await api(`/runs/${run}/retry`, { workspaceId: ws.id, method: "POST" });
+      window.location.reload(); // re-enter the live loop from the failed step
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+      setRetrying(false);
+    }
+  }
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -103,7 +115,13 @@ export default function RunPage() {
         <Alert tone="error" className="mt-4">
           <p className="font-semibold">The run stopped</p>
           <p className="mt-1">{info.error}</p>
-          <ButtonLink href={`/w/${ws.id}/ledger`} variant="secondary" size="sm" className="mt-3">Back to the ledger</ButtonLink>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {ws.persona.roles.includes("admin") && !ws.read_only && (
+              <Button size="sm" loading={retrying} onClick={() => void retry()} data-testid="retry-run">Retry from where it stopped</Button>
+            )}
+            <ButtonLink href={`/w/${ws.id}/ledger`} variant="secondary" size="sm">Back to the ledger</ButtonLink>
+          </div>
+          <p className="mt-2 text-xs opacity-80">Finished steps are kept, so a retry doesn&apos;t repeat work that already succeeded.</p>
         </Alert>
       )}
 
