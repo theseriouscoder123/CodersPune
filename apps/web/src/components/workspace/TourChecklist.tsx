@@ -94,9 +94,9 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
   const next = steps.find((s) => !s.done);
 
   return (
-    <div className="no-print fixed bottom-4 right-4 z-30 w-[min(360px,calc(100vw-2rem))]" data-testid="tour">
+    <div className="no-print pointer-events-none fixed bottom-4 right-4 z-30 w-[min(360px,calc(100vw-2rem))]" data-testid="tour">
       {open ? (
-        <div className="animate-pop rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)]">
+        <div className="animate-pop pointer-events-auto rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-semibold text-ink"><Compass className="h-4 w-4 text-amber-ink" /> Demo tour · {doneCount}/6</p>
             <div className="flex items-center gap-1">
@@ -128,10 +128,10 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
           )}
         </div>
       ) : (
-        <button onClick={() => setOpen(true)} data-testid="tour-open"
-          className="animate-rise ml-auto flex items-center gap-2 rounded-full border border-line bg-card py-2 pl-3 pr-4 text-sm font-medium text-ink shadow-[var(--shadow-md)] transition hover:shadow-[var(--shadow-lg)]">
+        <button onClick={() => setOpen(true)} data-testid="tour-open" aria-label={next ? `Demo tour, ${doneCount} of 6 steps done` : "Demo tour complete"}
+          className="animate-rise pointer-events-auto ml-auto flex items-center gap-2 rounded-full border border-line bg-card py-1.5 pl-1.5 pr-3 sm:py-2 sm:pl-3 sm:pr-4 text-sm font-medium text-ink shadow-[var(--shadow-md)] transition hover:shadow-[var(--shadow-lg)]">
           <span className="relative grid h-6 w-6 place-items-center rounded-full bg-amber-soft text-amber-ink"><Compass className="h-3.5 w-3.5" /></span>
-          {next ? <>Demo tour <span className="text-muted">{doneCount}/6</span></> : <>Tour complete <Check className="h-4 w-4 text-verified" /></>}
+          {next ? <><span className="hidden sm:inline">Demo tour</span> <span className="text-muted">{doneCount}/6</span></> : <><span className="hidden sm:inline">Tour complete</span> <Check className="h-4 w-4 text-verified" /></>}
         </button>
       )}
     </div>

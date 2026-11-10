@@ -398,7 +398,7 @@ def _add_checklist(db: Session, run_id, job_id, workspace_id, skip_subjects: set
                     c.occurred_at = ch.occurred_at
         job = db.get(Job, job_id)
         job.progress = job.total = len(items)
-        job.message = f"{len(items)} {'new ' if skip_subjects else ''}expected items from the repository"
+        job.message = f"{_n(len(items), ('new ' if skip_subjects else '') + 'expected item')} from the repository"
 
 
 def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
@@ -697,7 +697,7 @@ def step_conflicts(run_id, job_id, workspace_id, deadline) -> bool:
         n_groups, n_sup = replan_conflicts(db, workspace_id, reset=True)
         j = db.get(Job, job_id)
         j.progress = j.total = n_groups
-        j.message = f"{n_groups} conflicts, {n_sup} reversed decisions"
+        j.message = f"{_n(n_groups, 'conflict')}, {_n(n_sup, 'reversed decision')}"
     return True
 
 
@@ -706,7 +706,7 @@ def step_status(run_id, job_id, workspace_id, deadline) -> bool:
         n = recompute_statuses(db, workspace_id)
         j = db.get(Job, job_id)
         j.progress = j.total = n
-        j.message = f"{n} claims graded by deterministic rules"
+        j.message = f"{_n(n, 'claim')} graded by deterministic rules"
     return True
 
 
@@ -728,3 +728,8 @@ HANDLERS = {"ingest": step_ingest, "checklist": step_checklist, "extract": step_
 
 def describe_error(exc: Exception) -> str:
     return exc.user_message if isinstance(exc, LLMError) else str(exc)
+
+
+def _n(count: int, noun: str) -> str:
+    """'1 conflict', '2 conflicts', '0 conflicts' for run-log messages."""
+    return f"{count} {noun}{'' if count == 1 else 's'}"

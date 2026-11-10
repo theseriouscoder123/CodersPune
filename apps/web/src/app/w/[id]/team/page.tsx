@@ -123,8 +123,8 @@ export default function TeamPage() {
                   <div className="mt-0.5 flex flex-wrap gap-1">{m.roles.filter((r) => r !== "member" || m.roles.length === 1).map((r) => <RoleBadge key={r} role={r} />)}</div>
                 </div>
                 <span className="text-xs text-muted">
-                  {m.has_invite ? <span className="inline-flex items-center gap-1 text-verified"><Link2 className="h-3 w-3" /> link active</span> : "no link yet"}
-                  {m.joined ? ` · ${m.joined} device${m.joined > 1 ? "s" : ""} joined` : ""}
+                  {m.has_invite ? <span className="inline-flex items-center gap-1 text-verified"><Link2 className="h-3 w-3" /> Link active</span> : "No link yet"}
+                  {m.joined ? ` · joined on ${m.joined} device${m.joined > 1 ? "s" : ""}` : ""}
                 </span>
                 {t.can_manage && (
                   <div className="flex gap-1.5">
@@ -239,7 +239,7 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
           {n.email.configured ? (
             <p className="mt-1 text-xs text-muted">Sending from {n.email.from}. The successor and leaver get an email when a version is approved; you can email invite links and the leaver&apos;s questions. Add addresses next to each person above.</p>
           ) : (
-            <p className="mt-1 text-xs text-muted">Not configured on this server. Everything else works; to turn it on, the operator sets <code className="font-mono">SMTP_USER</code> and <code className="font-mono">SMTP_PASSWORD</code> (a Gmail app password).</p>
+            <p className="mt-1 text-xs text-muted">Email isn&apos;t enabled on this server yet. Everything else works without it, and invite links can still be copied and shared by hand.</p>
           )}
           {canManage && n.email.configured && (
             <Button size="sm" variant="secondary" className="mt-3" loading={busy === "email"} onClick={() => test("email")}><Send className="h-3.5 w-3.5" /> Send me a test</Button>

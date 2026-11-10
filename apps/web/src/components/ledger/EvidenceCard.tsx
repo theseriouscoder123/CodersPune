@@ -18,7 +18,11 @@ export function EvidenceCard({ e }: { e: EvidenceInfo }) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper/60 px-4 py-2.5">
         <span className="flex min-w-0 items-center gap-2 text-xs">
           <span className="font-mono font-semibold text-supported">{e.ref}</span>
-          <span className="truncate text-muted">· {e.source.name}{e.author ? ` · ${e.author}` : ""}{e.occurred_at ? ` · ${e.occurred_at.slice(0, 10)}` : ""}</span>
+          <span className="truncate text-muted">
+            {[e.ref.includes(e.source.name) ? null : e.source.name, e.author,
+              e.occurred_at && !e.ref.includes(new Date(e.occurred_at).getDate().toString()) ? e.occurred_at.slice(0, 10) : null]
+              .filter(Boolean).map((x) => ` · ${x}`).join("")}
+          </span>
         </span>
         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${restricted ? "bg-missing-soft text-missing ring-missing/20" : "bg-paper-2 text-ink-2 ring-line"}`}>
           {restricted ? <Lock className="h-3 w-3" /> : <Users className="h-3 w-3" />} {e.source.access}
