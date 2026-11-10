@@ -38,7 +38,7 @@ Differences from docs/04 §6:
 | Claim extraction | **done** | Typed claims with exact quotes, chunk ids and timestamps via JSON-schema structured output. Batches never mix access groups. One retry on invalid JSON, then the batch fails visibly. |
 | Expected-knowledge checklist | **done** | From open PRs/issues by the leaver, env keys, workflows, files mostly maintained by the leaver. Uncovered items become Missing. |
 | Verification and status rules | **done** | Quote match (≥ 90) as a hard gate, isolated LLM verifier, five statuses from the pure `status.py`. `VERIFIER=nli` option not used (no RAM on Vercel; D8). |
-| Review workspace | **done** | Evidence panel; edit (re-verifies), confirm, reject, promote-with-note; conflict resolution. Versions and approval. New: bulk actions, shortcuts, progress meter, pre-approval warnings, search, activity log. |
+| Review workspace | **done** | Evidence panel; edit (re-verifies), confirm, reject, promote-with-note; conflict resolution. Versions and approval. New: bulk actions, shortcuts, progress meter, pre-approval warnings, search, activity log, Undo on confirm/reject, auto-advance to the next unreviewed claim, copy-a-link to a claim (D45). |
 | Role-filtered handover | **done** | Successor view (Start here, owners, decisions, risks, dependencies, unresolved); Markdown export; print/PDF. New: scoped multiple handovers, version changelog, Ask the handover. |
 | Gap interview | **deferred-R3 (#1)** | R2 has the manual precursor: copyable / GitHub-issue / emailable "Questions for the leaver". `sources.type` already allows `testimony`. |
 | Conflict and supersession timeline | **partial (R2 basics) / deferred-R3 (#2)** | R2: deterministic conflict detection by value class, reversal language → superseded, read-only decision timeline. R3: interactive timeline and a richer reversal-vs-contradiction model. |
@@ -179,13 +179,13 @@ Differences from docs/02:
 Full details: `docs/TESTING.md`.
 
 ## 8. Changes from the Round 1 plan
-Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
+Full list in `docs/DECISIONS.md` (D1–D45). The main ones:
 - **Hosting:** free-tier Vercel + Neon with a resumable pipeline (D8).
 - **No login:** persona switcher, then invite links and locked identities (D1, D20).
 - **LLM:** Gemini with fallback chains, key pools and Groq (D11, D16, D26).
 - **Demo:** a frozen, precomputed demo ledger (D15).
 - **Earlier than planned:** the visibility preview, built in R2.
-- **Added beyond the plan:** Ask, scoped handovers, re-run modes, stale-evidence handling, search, activity log, changelog, notifications, export/delete, accessibility and hardening (D19–D39).
+- **Added beyond the plan:** Ask, scoped handovers, re-run modes, stale-evidence handling, search, activity log, changelog, notifications, export/delete, accessibility and hardening (D19–D45).
 
 ## 9. Known issues and limitations (honest)
 - **Live AI depends on free quotas.** These are now spread over 3 Gemini and 2 Groq keys with automatic fallback, which is much more headroom, but still finite. The precomputed demo never needs the AI.
@@ -197,7 +197,7 @@ Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
 - **One unexplained 58 s request** was seen on production. It wasn't reproducible, and the free plan kept no logs. Timeouts and a client retry now bound it.
 - **Private repos can't be refreshed automatically**, because their token is never stored.
 - **Large custom repos** read at most about 60k characters of history per run, prioritised (D17). Very old history may be skipped; the UI says so.
-- **Secrets pasted during development:** Arch should rotate the Neon password, Gemini key and GitHub token after the hackathon.
+- **Secrets pasted during development:** Arch should rotate the Neon password, all 3 Gemini keys, both Groq keys and the GitHub token after the hackathon.
 
 ## 10. Round 3 readiness
 | Improvement | Seams already in place | Rough effort |
@@ -208,5 +208,5 @@ Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
 
 ## 11. Commit-history facts
 - First commit: **2026-11-08 16:40:42 +05:30** (`ea1e64d`, planning docs and repo basics), after the window opened (Sun 8 Nov 2026 10:00 IST).
-- Commits at freeze: see `git log`. History is never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
+- Commits at freeze: 69 (including this handback refresh); see `git log`. History is never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
 - No code written before the build window was imported. The planning documents in `docs/` (written before the window) are not code.
