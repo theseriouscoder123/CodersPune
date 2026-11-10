@@ -158,16 +158,21 @@ Differences from docs/02:
 - Added row locks, per-transaction timeouts and hot-path indexes.
 
 ## 7. Testing
-- **Unit and integration:** 164 passed, 0 failed (`apps/api/tests`, real Postgres). They cover:
+- **Unit and integration:** 173 passed, 0 failed (`apps/api/tests`, real Postgres). They cover:
   - the trust core (status, quote match, scrubber, ACL, reconstruction rules);
   - end-to-end permissions, a 40-endpoint isolation sweep and concurrency;
   - the pipeline, re-runs and stale evidence;
   - LLM routing and prompt safety;
   - limits, security headers and notifications.
-- **Eval:**
-  - Results: claim recall 13/13, status accuracy 13/13, citation precision 9/10, permission leaks 0, secret leaks 0.
-  - Models: `gemini-3.5-flash` + `gemini-3.5-flash-lite`. Date: 9–10 Nov 2026.
-  - **Only one pipeline run was evaluated, not the planned three:** the free tier allows about 20 requests/day on the main model and a run needs about 100 (D15/D16).
+- **Eval, four runs:**
+  - Production demo ledger (Gemini 3.5 Flash): recall 13/13, status accuracy 13/13, citation precision 9/10.
+  - Three live runs on 10 Nov, with extraction on Groq `gpt-oss-120b` because Gemini was over quota or returning 503s: recall 9/13, 9/13 and 10/13. Status accuracy always equalled recall, so no produced claim was mis-graded.
+  - Misses trace to extraction batches that failed on Groq's per-minute limit. A retry added during testing raised recall from 9 to 10.
+  - **0 permission leaks and 0 secret leaks in all four runs.**
+  - Details: `docs/TESTING.md` §2.
+- **Custom repos on production:** `pallets/markupsafe` (75 claims) and `sindresorhus/slugify` with a Word note (85 claims) both completed. The slugify run first exposed a Unicode bug in the quote matcher, which was fixed, and the run was then resumed from the failed step.
+- **Security assessment:** every real secret value was searched in git history, the tree, the web bundle and 25 live production responses: 0 leaks. Planted-secret tests cover the error paths (D40).
+- **Cold start:** demo ready in 4.7 s on a fast network and 3.4 s on slow 3G; claims list in 3.0 s.
 - **E2E:** Playwright against production, **13/13 passed** on 10 Nov 2026: judge flow, search, checklist, phone layout, plus axe accessibility audits with 0 violations.
 - **Known failures:** none open. One e2e run right after a deploy stalled on a page whose scripts didn't load; a re-run passed (see §9).
 
@@ -184,7 +189,8 @@ Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
 
 ## 9. Known issues and limitations (honest)
 - **Live AI depends on free quotas.** These are now spread over 3 Gemini and 2 Groq keys with automatic fallback, which is much more headroom, but still finite. The precomputed demo never needs the AI.
-- **The eval covers one run**, not three (above).
+- **Extraction quality depends on the model.** With Gemini over quota or overloaded, Groq-based runs found 9–10 of 13 planted claims instead of 13. Safety held in every run. The demo ledger is precomputed with Gemini.
+- **A deploy drops in-flight requests**, for example a running pipeline slice. Runs resume on the next poll, but deploys should be avoided while judges are on the site.
 - **Ask quality varies with the model.** It sometimes calls a well-covered question "partial", for example "Why did we leave OneSignal?", because the ledger states the move but not every reason.
 - **Email and Slack are untested against real services.** They are built and tested with fake transports only. They stay off until SMTP settings or a webhook are added.
 - **Deploy-moment glitch:** a page loaded during a deploy can stall while old and new assets mix. Mitigations: a CSS-only "Reload" hint after 8 s, and no deploys while judges are on the site.
@@ -202,5 +208,5 @@ Full list in `docs/DECISIONS.md` (D1–D39). The main ones:
 
 ## 11. Commit-history facts
 - First commit: **2026-11-08 16:40:42 +05:30** (`ea1e64d`, planning docs and repo basics), after the window opened (Sun 8 Nov 2026 10:00 IST).
-- Commits at freeze: 54 (including this handback), never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
+- Commits at freeze: see `git log`. History is never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
 - No code written before the build window was imported. The planning documents in `docs/` (written before the window) are not code.

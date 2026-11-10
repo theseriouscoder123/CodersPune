@@ -65,8 +65,9 @@ see, with the unknowns clearly marked.
 
 ## Testing
 
-164 API tests, a citation eval against a labelled golden ledger (recall 13/13, status accuracy 13/13, citation
-precision 9/10, 0 permission leaks, 0 secret leaks), and 13 Playwright end-to-end and accessibility checks that run
+173 API tests; a citation eval against a labelled golden ledger (demo ledger: recall 13/13, status accuracy 13/13;
+0 permission and 0 secret leaks across four runs); a secret-leak assessment of git history, the bundle and live
+responses; real custom-repo runs on production; and 13 Playwright end-to-end and accessibility checks that run
 **against production**. Details and reproduction steps: [`docs/TESTING.md`](docs/TESTING.md).
 
 ## Local setup
