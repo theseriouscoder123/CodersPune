@@ -21,6 +21,16 @@ const CSP = [
   "object-src 'none'",
 ].join("; ");
 
+const DOCS_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+].join("; ");
+
 const SECURITY_HEADERS = [
   { key: "Content-Security-Policy", value: CSP },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -42,7 +52,12 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      // everything except the API reference gets the strict policy
+      { source: "/((?!api/docs).*)", headers: SECURITY_HEADERS },
+      // the API reference (FastAPI's Swagger UI) loads its assets from jsDelivr
+      { source: "/api/docs", headers: [...SECURITY_HEADERS.filter((h) => h.key !== "Content-Security-Policy"), { key: "Content-Security-Policy", value: DOCS_CSP }] },
+    ];
   },
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` }];
