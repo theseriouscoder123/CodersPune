@@ -22,7 +22,7 @@ from baton.auth import Ctx, get_or_create_visitor, workspace_ctx
 from baton.db.models import Member, MemberBinding, MemberInvite, Membership, Workspace
 from baton.db.session import get_db
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Team and access"])
 
 
 def _hash(token: str) -> str:

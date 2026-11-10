@@ -25,7 +25,7 @@ from baton.ledger import evidence_rows, ref_for
 from baton.projection import claim_sources, visible, withheld_reason
 from baton.routers.claims import TYPE_LABELS, evidence_payload
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Handovers"])
 
 SECTIONS = [
     ("start_here", "Start here", "Next actions and unfinished work, in the order to pick them up."),

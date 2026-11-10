@@ -25,7 +25,7 @@ from baton.ingest.service import store_chunks
 from baton.ingest.uploads import MAX_UPLOAD_BYTES, UploadRejected, parse_upload
 from baton.pipeline import create_run
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Workspaces"])
 
 COLORS = ["#14213d", "#2b5b88", "#1f6f4a", "#b5531a", "#8a5a06", "#0e7490", "#6d4c41", "#3f5f3a"]
 MAX_FILES = 10

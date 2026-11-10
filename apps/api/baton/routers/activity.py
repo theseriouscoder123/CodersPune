@@ -19,7 +19,7 @@ from baton.auth import Ctx, workspace_ctx
 from baton.db.models import Claim, Handover, HandoverVersion, Member, ReviewEvent
 from baton.db.session import get_db
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Ledger and review"])
 
 ACTION_LABELS = {
     "confirm": "Confirmed", "reject": "Rejected", "restore": "Restored", "promote": "Promoted without evidence",

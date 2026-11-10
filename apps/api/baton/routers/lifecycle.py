@@ -33,7 +33,7 @@ from baton.db.models import (
 )
 from baton.db.session import get_db
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Workspaces"])
 
 EXPORT_FORMAT = "baton-workspace-export/1"
 

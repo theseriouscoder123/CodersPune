@@ -25,7 +25,7 @@ from baton.ingest.scrubber import mask_pii
 from baton.llm.base import LLMError, get_llm
 from baton.routers.handovers import _handover, _latest, _project
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Handovers"])
 
 MAX_CONTEXT_ITEMS = 18
 ASKS_PER_HOUR = 40

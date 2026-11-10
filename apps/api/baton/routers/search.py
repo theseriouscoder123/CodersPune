@@ -21,7 +21,7 @@ from baton.ledger import evidence_rows, ref_for
 from baton.reconstruct.refs import source_ref
 from baton.routers.claims import TYPE_LABELS
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Ledger and review"])
 
 MAX_CLAIMS = 20
 MAX_PASSAGES = 12

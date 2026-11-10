@@ -13,7 +13,7 @@ from baton.db.session import get_db
 from baton.limits import check_new_sandbox, check_reset, client_ip, collect_garbage, touch
 from baton.sandbox import clone_workspace
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Workspaces"])
 
 SOURCE_KIND_LABELS = {
     "file": "files", "commit": "commit groups", "commit_stats": "ownership stats", "pr": "pull requests",

@@ -14,7 +14,7 @@ from baton.db.models import Job, LlmCall, Run
 from baton.db.session import get_db
 from baton.pipeline import STEP_LABELS, STEPS
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Pipeline"])
 
 
 def _pct(values: list[int], p: float) -> int | None:

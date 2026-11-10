@@ -21,7 +21,7 @@ from baton.ledger import evidence_rows, recompute_statuses, ref_for
 from baton.limits import check_review_rate
 from baton.projection import claim_sources, visible
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Ledger and review"])
 
 EXCERPT_CHARS = 300
 TYPE_LABELS = {"decision": "Decision", "ownership": "Ownership", "open_work": "Open work", "next_action": "Next action",

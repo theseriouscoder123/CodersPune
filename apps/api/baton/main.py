@@ -13,7 +13,17 @@ from baton.security import install as install_hardening
 
 settings = get_settings()
 
-app = FastAPI(title="Baton API", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json")
+app = FastAPI(
+    title="Baton API",
+    version=__version__,
+    description=(
+        "Evidence-graded knowledge handovers. Every route enforces access on the server: a claim is returned only if "
+        "every source it cites is visible to the acting member. Requests act as the visitor's member, chosen with the "
+        "`X-Baton-Persona` header in persona-switching workspaces or fixed by a private invite link in locked ones."
+    ),
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +35,7 @@ app.add_middleware(
 
 install_hardening(app)
 
-api = APIRouter(prefix="/api")
+api = APIRouter(prefix="/api", tags=["Service"])
 
 
 @api.get("/health")

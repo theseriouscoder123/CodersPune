@@ -16,7 +16,7 @@ from baton.db.models import Job, Run
 from baton.db.session import get_db
 from baton.pipeline import RunBusy, advance, create_run, run_progress
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["Pipeline"])
 
 
 class RunIn(BaseModel):
