@@ -192,7 +192,7 @@ export default function NewWorkspacePage() {
                   <GitBranch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
                   <input id="repo" value={repo} onChange={(e) => setRepo(e.target.value)} className={`${INPUT} pl-9`} placeholder="https://github.com/owner/repo" />
                 </div>
-                <p className="mt-1.5 text-xs text-muted">Reads the latest 300 commits, 60 PRs, 60 issues and up to 30 docs/config files. Very old history may be skipped to stay within the free AI budget.</p>
+                <p className="mt-1.5 text-xs text-muted">Reads the latest 300 commits, 60 PRs, 60 issues and up to 30 docs/config files. Each run reads the most useful recent history first; very old activity may be left out, and the run log says how much.</p>
                 {repo.trim() && (
                   <details className="group mt-3 rounded-xl border border-line bg-paper/60 px-3 py-2 text-sm">
                     <summary className="flex cursor-pointer list-none items-center gap-2 text-ink-2"><Lock className="h-3.5 w-3.5" /> Private repository? Add a read-only token</summary>
@@ -246,7 +246,7 @@ export default function NewWorkspacePage() {
             <Button type="submit" size="lg" loading={busy} data-testid="create-workspace">
               {busy ? "Creating…" : <>Create workspace and reconstruct <ArrowRight className="h-4 w-4" /></>}
             </Button>
-            <span className="text-xs text-muted">Takes about 3–6 minutes · 3 per visitor per day (free AI quota)</span>
+            <span className="text-xs text-muted">Usually 5–10 minutes for a small repository · up to 3 new workspaces per day</span>
           </div>
         </form>
       </main>

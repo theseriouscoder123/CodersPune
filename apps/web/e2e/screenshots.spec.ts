@@ -30,7 +30,7 @@ test("capture screenshots", async ({ page }) => {
   await page.goto("/");
   await shot(page, "01-landing");
 
-  await page.getByRole("button", { name: "Try the demo" }).click();
+  await page.getByRole("button", { name: "Try the demo" }).first().click();
   await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
   const ws = page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
   await expect(page.getByRole("heading", { name: "Connected sources" })).toBeVisible();

@@ -11,7 +11,7 @@ import { expect, test, type Browser, type BrowserContext, type Page } from "@pla
 
 async function startDemo(page: Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: "Try the demo" }).click();
+  await page.getByRole("button", { name: "Try the demo" }).first().click();
   await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
   return page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
 }

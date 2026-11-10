@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, ButtonLink, Card, PageHeader, Spinner } from "@/components/ui";
-import { api, type RunInfo } from "@/lib/api";
+import { api, ApiError, type RunInfo } from "@/lib/api";
 
 /** Live run progress. This page also DRIVES the run: each /advance call does one bounded slice (DECISIONS D8). */
 export default function RunPage() {
@@ -18,6 +18,7 @@ export default function RunPage() {
   const [started] = useState(() => Date.now());
   const [now, setNow] = useState(() => Date.now());
   const active = useRef(true);
+  const [live, setLive] = useState(false); // true once this page has watched the run in progress
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -27,18 +28,38 @@ export default function RunPage() {
   useEffect(() => {
     active.current = true;
     (async () => {
+      let watching = false;
+      let readOnly = false;
+      try {
+        const first = await api<RunInfo>(`/runs/${run}`, { workspaceId: ws.id });
+        if (!active.current) return;
+        setInfo(first);
+        if (first.status === "done" || first.status === "failed") return; // a finished run: just show how it went
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : String(e));
+      }
       while (active.current) {
         try {
-          const r = await api<RunInfo>(`/runs/${run}/advance`, { workspaceId: ws.id, method: "POST" });
+          const r = readOnly
+            ? await api<RunInfo>(`/runs/${run}`, { workspaceId: ws.id })
+            : await api<RunInfo>(`/runs/${run}/advance`, { workspaceId: ws.id, method: "POST" });
           if (!active.current) break;
           setInfo(r);
           setErr(null);
+          if (!watching) {
+            watching = true;
+            setLive(true);
+          }
           if (r.status === "done") {
             setTimeout(() => router.push(`/w/${ws.id}/ledger`), 1800);
             break;
           }
           if (r.status === "failed") break;
         } catch (e) {
+          if (e instanceof ApiError && e.status === 403) {
+            readOnly = true; // someone else's run: follow it without driving it
+            continue;
+          }
           setErr(e instanceof Error ? e.message : String(e));
           await new Promise((res) => setTimeout(res, 3000));
         }
@@ -53,16 +74,23 @@ export default function RunPage() {
   const steps = info?.steps ?? [];
   const doneCount = steps.filter((s) => s.status === "done").length;
   const pct = steps.length ? Math.round((100 * doneCount) / steps.length) : 0;
-  const secs = Math.floor((now - started) / 1000);
+  const finished = info?.status === "done" || info?.status === "failed";
+  const ranFor = info?.started_at && info?.finished_at ? (Date.parse(info.finished_at) - Date.parse(info.started_at)) / 1000 : null;
+  const secs = Math.max(0, Math.floor(finished && !live && ranFor !== null ? ranFor : (now - started) / 1000));
+  const history = finished && !live;
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader eyebrow="Reconstruct" title={info?.status === "done" ? "Ledger ready" : "Reconstructing the project"}
-        description="Keep this page open: the run moves forward while you watch, and resumes if you come back later." />
+      <PageHeader eyebrow="Reconstruct"
+        title={history ? "How this ledger was built" : info?.status === "done" ? "Ledger ready" : "Reconstructing the project"}
+        description={history
+          ? `Every step of the pipeline run${info?.finished_at ? ` that finished on ${new Date(info.finished_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}` : ""}, with what it found.`
+          : "Keep this page open: the run moves forward while you watch, and picks up where it left off if you come back later."}
+        actions={history ? <ButtonLink href={`/w/${ws.id}/ledger`} variant="secondary">Back to the ledger</ButtonLink> : undefined} />
 
       <Card className="mt-6 p-5">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-ink">{info?.status === "done" ? "Done. Opening the ledger…" : info?.status === "failed" ? "Stopped" : "Working…"}</span>
+          <span className="font-semibold text-ink">{history ? (info?.status === "done" ? "Completed" : "Stopped") : info?.status === "done" ? "Done. Opening the ledger…" : info?.status === "failed" ? "Stopped" : info ? "Working…" : "Loading…"}</span>
           <span className="font-mono text-xs text-muted">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper-2">
@@ -70,7 +98,7 @@ export default function RunPage() {
         </div>
       </Card>
 
-      {err && <Alert tone="warn" className="mt-4">Connection issue: {err}. Retrying…</Alert>}
+      {err && <Alert tone="warn" className="mt-4">Having trouble reaching the server ({err}). Retrying automatically…</Alert>}
       {info?.status === "failed" && (
         <Alert tone="error" className="mt-4">
           <p className="font-semibold">The run stopped</p>
@@ -103,7 +131,7 @@ export default function RunPage() {
             </li>
           );
         })}
-        {!info && <li className="flex items-center gap-2 text-sm text-muted"><Spinner /> Starting…</li>}
+        {!info && <li className="flex items-center gap-2 text-sm text-muted"><Spinner /> Loading the run…</li>}
       </ol>
     </div>
   );

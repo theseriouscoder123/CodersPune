@@ -63,7 +63,10 @@ def get_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) 
 @router.post("/runs/{run_id}/advance")
 def advance_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
     ctx = _run_ctx(db, request, run_id)
+    run = db.get(Run, run_id)
+    if run.status not in ("queued", "running"):
+        return run_progress(run_id)  # nothing to drive: anyone who can see the run gets its final state
     if not ctx.can_write:
-        raise HTTPException(403, "Read-only workspace")
+        raise HTTPException(403, "This run belongs to a workspace you can only view.")
     db.close()  # the pipeline manages its own short transactions
     return advance(run_id)

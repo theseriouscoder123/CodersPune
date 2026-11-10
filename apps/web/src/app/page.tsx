@@ -1,4 +1,7 @@
-import { ArrowRight, Eye, FileSearch, GitBranch, Handshake, Lock, Scale, ShieldCheck, UserCheck } from "lucide-react";
+import {
+  ArrowRight, BellRing, Download, Eye, FileSearch, GitBranch, Github, Handshake, KeyRound, Lock, MessageCircleQuestion,
+  RefreshCcw, Scale, ShieldCheck, UserCheck, UsersRound,
+} from "lucide-react";
 
 import { ApiStatus } from "@/components/ApiStatus";
 import { Logo } from "@/components/Logo";
@@ -23,6 +26,24 @@ const LEDGER: { type: string; text: string; ref: string; status: Status }[] = [
   { type: "Contact", text: "Who owns the Firebase project and its billing account?", ref: "FIREBASE_* in .env.example", status: "missing" },
 ];
 
+const FEATURES = [
+  { Icon: MessageCircleQuestion, title: "Ask the handover", text: "Successors ask in plain English and get answers built only from approved items they may see, with numbered citations." },
+  { Icon: UsersRound, title: "Private links per person", text: "Lock identities so everyone sees the project only as themselves. Revoking a link signs that person out." },
+  { Icon: RefreshCcw, title: "Re-runs keep your review work", text: "Refresh reads only what changed. If a source is edited, evidence follows its quote, or the claim is flagged for review." },
+  { Icon: BellRing, title: "Email and Slack, when you want them", text: "Tell the successor when a version is approved and send open questions to the leaver. Messages never include claim text." },
+  { Icon: Download, title: "Your data stays yours", text: "Export a whole workspace as JSON, print the handover, or delete everything with one confirmed action." },
+  { Icon: KeyRound, title: "Works with what you have", text: "Public or private GitHub repos, Markdown, PDF and Word notes, and Slack or Discord exports." },
+];
+
+const SECURITY = [
+  "Secrets and tokens are removed before anything is stored or sent to a model",
+  "Access is checked on the server at every read, never only in the browser",
+  "A claim is visible only if every source it cites is visible to you",
+  "Private-repo tokens are used once and never stored",
+  "Phone numbers and emails are masked for everyone but the reviewer",
+  "Every review decision is recorded in an append-only activity log",
+];
+
 const PRINCIPLES = [
   { Icon: ShieldCheck, title: "Assumptions never pass as fact", text: "A claim is Supported only if its quote is found verbatim in the source and an independent check agrees. Anything else is labelled Inferred and kept away from the successor." },
   { Icon: Lock, title: "Access is enforced on the server", text: "A claim is shown only if every source it cites is readable by that person. Restricted text is never mixed into what others see." },
@@ -37,6 +58,7 @@ export default function Home() {
         <nav className="flex items-center gap-1 text-sm">
           <a href="#how" className="rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2">How it works</a>
           <a href="#trust" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 sm:block">Trust</a>
+          <a href="#security" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 md:block">Security</a>
           <ThemeToggle />
           <ButtonLink href="/new" variant="secondary" size="sm" className="ml-1">Use your repo</ButtonLink>
         </nav>
@@ -48,8 +70,8 @@ export default function Home() {
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1 text-xs font-medium text-ink-2">
               <span className="animate-pulse-dot h-1.5 w-1.5 rounded-full bg-amber" /> Knowledge handover for small software teams
             </p>
-            <h1 className="font-display mt-5 text-[40px] font-semibold leading-[1.05] text-ink sm:text-[46px] lg:text-[56px]">
-              When someone leaves,<br className="hidden lg:block" /> keep the <em className="font-normal italic text-amber-ink">reasoning</em>,<br className="hidden lg:block" /> not just the files.
+            <h1 className="font-display mt-5 max-w-[15ch] text-[40px] font-semibold leading-[1.04] tracking-[-0.01em] text-ink [text-wrap:balance] sm:text-[48px] lg:text-[54px]">
+              When someone leaves, keep the <em className="font-normal italic text-amber-ink">reasoning</em>, not just the files.
             </h1>
             <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-ink-2">
               Baton rebuilds a project&apos;s decisions, owners, risks and open work from its repo, notes and chat. Every statement
@@ -138,12 +160,88 @@ export default function Home() {
             </div>
           </div>
         </section>
+        <section id="features" className="border-t border-line bg-card/70">
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Built for real teams</p>
+            <h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold text-ink">Everything around the handover, not just the handover</h2>
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {FEATURES.map((f) => (
+                <div key={f.title} className="lift rounded-2xl border border-line bg-card p-5">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-soft text-amber-ink"><f.Icon className="h-5 w-5" strokeWidth={1.8} /></span>
+                  <p className="mt-4 font-semibold text-ink">{f.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="security" className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_1.2fr]">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Security and privacy</p>
+              <h2 className="font-display mt-2 text-3xl font-semibold text-ink">Designed for the parts of a project people shouldn&apos;t see</h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-ink-2">
+                Handovers touch budgets, contracts and credentials. Baton treats every source as restricted until its access list
+                says otherwise, and every rule below is enforced on the server and covered by automated tests.
+              </p>
+            </div>
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {SECURITY.map((t) => (
+                <li key={t} className="flex items-start gap-3 rounded-xl border border-line bg-card px-4 py-3 text-sm text-ink-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-verified" /> {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="px-5 pb-20 sm:px-8">
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-strong px-6 py-12 text-center text-on-strong sm:px-12">
+            <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-amber/25 blur-3xl" aria-hidden />
+            <h2 className="font-display relative text-3xl font-semibold sm:text-4xl">See a full handover in two minutes</h2>
+            <p className="relative mx-auto mt-3 max-w-xl text-[15px] opacity-80">
+              Open your own copy of the demo project, review the evidence as the reviewer, then read the result as the successor.
+            </p>
+            <div className="relative mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <TryDemoButton inverted />
+              <ButtonLink href="/new" variant="secondary" size="lg">Use your own repo <ArrowRight className="h-4 w-4" /></ButtonLink>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-line bg-card/60">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <span>CodersInPune Hackathon · Round 2 · Team LoneWolf · Demo data is synthetic · Built with Claude Code</span>
-          <ApiStatus />
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-8 px-5 py-10 text-sm sm:grid-cols-4 sm:px-8">
+          <div className="col-span-2">
+            <Logo />
+            <p className="mt-3 max-w-xs text-xs leading-relaxed text-muted">
+              Evidence-graded knowledge handovers for small software teams. The demo project and its people are fictional.
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Product</p>
+            <ul className="mt-3 space-y-2 text-ink-2">
+              <li><a className="hover:text-ink" href="#how">How it works</a></li>
+              <li><a className="hover:text-ink" href="#features">Features</a></li>
+              <li><a className="hover:text-ink" href="#security">Security</a></li>
+              <li><a className="hover:text-ink" href="/new">Use your repo</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Resources</p>
+            <ul className="mt-3 space-y-2 text-ink-2">
+              <li><a className="inline-flex items-center gap-1.5 hover:text-ink" href="https://github.com/theseriouscoder123/CodersPune" target="_blank" rel="noreferrer"><Github className="h-3.5 w-3.5" /> Source code</a></li>
+              <li><a className="hover:text-ink" href="/api/docs" target="_blank" rel="noreferrer">API reference</a></li>
+              <li><a className="hover:text-ink" href="/api/health" target="_blank" rel="noreferrer">Service status</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-line">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <span>© 2026 Baton · Built by Archit Dandavate with AI assistance (Claude Code) · Demo data is synthetic</span>
+            <ApiStatus />
+          </div>
         </div>
       </footer>
     </div>

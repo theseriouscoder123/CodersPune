@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui";
 import { api } from "@/lib/api";
 
-export function TryDemoButton() {
+export function TryDemoButton({ inverted = false }: { inverted?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +17,7 @@ export function TryDemoButton() {
       <Button
         size="lg"
         loading={busy}
+        className={inverted ? "!bg-amber !text-on-amber hover:!bg-amber/90" : ""}
         onClick={async () => {
           setBusy(true);
           setError(null);
@@ -32,7 +33,7 @@ export function TryDemoButton() {
       >
         {busy ? "Preparing your copy…" : "Try the demo"} {!busy && <ArrowRight className="h-4 w-4" />}
       </Button>
-      {error && <p className="mt-2 text-sm text-missing">Couldn&apos;t open the demo: {error}</p>}
+      {error && <p className={`mt-2 text-sm ${inverted ? "text-amber" : "text-missing"}`}>Couldn&apos;t open the demo: {error}</p>}
     </div>
   );
 }

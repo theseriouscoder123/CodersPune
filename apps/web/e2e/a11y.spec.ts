@@ -23,7 +23,7 @@ test("a11y: landing page @desktop", async ({ page }) => {
 
 test("a11y: workspace screens @desktop", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Try the demo" }).click();
+  await page.getByRole("button", { name: "Try the demo" }).first().click();
   await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
   const ws = page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
   const failures: string[] = [];
@@ -38,7 +38,7 @@ test("a11y: workspace screens @desktop", async ({ page }) => {
 test("a11y: workspace screens in dark mode @desktop", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
-  await page.getByRole("button", { name: "Try the demo" }).click();
+  await page.getByRole("button", { name: "Try the demo" }).first().click();
   await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
   const ws = page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
   const failures: string[] = [];
