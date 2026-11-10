@@ -16,6 +16,7 @@ async function settle(page: Page) {
 
 async function shot(page: Page, name: string, fullPage = false) {
   await settle(page);
+  if (fullPage) await page.addStyleTag({ content: "[data-testid=tour]{display:none!important}" });
   await page.screenshot({ path: `${OUT}/${name}.png`, fullPage });
 }
 
@@ -29,6 +30,7 @@ test("capture screenshots", async ({ page }) => {
   test.setTimeout(300_000);
   await page.goto("/");
   await shot(page, "01-landing");
+  await shot(page, "01b-landing-full", true);
 
   await page.getByRole("button", { name: "Try the demo" }).first().click();
   await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);

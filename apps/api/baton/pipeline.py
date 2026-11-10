@@ -274,6 +274,9 @@ def _chunk_label(ch: Chunk, src: Source) -> str:
     return f"{ch.kind} · {source_ref(ch.kind, ch.location, ch.occurred_at, src.name)} · {when}{who}"
 
 
+EXTRACT_RETRY_DELAY_S = 20  # a failed extraction batch is retried once, after per-minute rate limits reset
+
+
 def _waves(units: list, deadline: float, fn, on_result, parallel: int = PARALLEL) -> int:
     """Run `fn(unit)` in parallel waves until the deadline; `on_result(unit, result|exception)` in the main thread."""
     done = 0
@@ -424,6 +427,12 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
         header, leaver_name = _context_header(db, workspace_id)
 
     todo = [i for i in range(len(state["batches"])) if i not in state["done"]]
+    wait = state.get("retry_at", 0) - time.time()
+    if wait > 0:  # batches waiting for their retry sit out until the rate window has passed
+        todo = [i for i in todo if i not in state.get("retried", [])]
+        if not todo:
+            time.sleep(min(wait, max(0.0, deadline - time.monotonic()), 5.0))
+            return False
     broad = [k for acl, ks in state["keys"].items() if "r:all_members" in acl.split("|") for k in ks]
 
     def run_batch(i):
@@ -435,6 +444,17 @@ def step_extract(run_id, job_id, workspace_id, deadline) -> bool:
 
     def save(i, result):
         if isinstance(result, Exception):
+            with SessionLocal.begin() as db:
+                j = db.get(Job, job_id)
+                st = dict(j.state)
+                if i not in st.get("retried", []):
+                    # First failure (usually a per-minute rate limit or an overloaded model): leave the batch
+                    # un-done and try it once more after the rate window has passed.
+                    st["retried"] = sorted(set(st.get("retried", [])) | {i})
+                    st["retry_at"] = time.time() + EXTRACT_RETRY_DELAY_S
+                    j.state = st
+                    state.update(st)
+                    return
             _job_error(job_id, f"batch {i + 1}: {getattr(result, 'user_message', None) or type(result).__name__}")
             claims = []
         else:
