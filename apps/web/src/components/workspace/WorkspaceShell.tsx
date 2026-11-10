@@ -8,6 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { Logo } from "@/components/Logo";
 import { canSearch, SearchPalette } from "@/components/workspace/SearchPalette";
 import { TourChecklist } from "@/components/workspace/TourChecklist";
+import { TryDemoButton } from "@/components/TryDemoButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import { ButtonLink, Spinner } from "@/components/ui";
@@ -198,7 +199,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
   const load = useCallback(() => {
     api<WorkspaceInfo>(`/workspaces/${workspaceId}`, { workspaceId })
       .then((ws) => setResult({ ws }))
-      .catch((e: unknown) => setResult({ error: e instanceof ApiError && e.status === 404 ? "This workspace doesn't exist or belongs to another visitor." : String(e) }));
+      .catch((e: unknown) => setResult(e instanceof ApiError && e.status === 404 ? { error: "private" } : { error: e instanceof Error ? e.message : String(e) }));
   }, [workspaceId]);
 
   useEffect(load, [load, personaVersion]);
@@ -224,9 +225,26 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
     return (
       <div className="paper-grain flex flex-1 items-center justify-center px-4">
         <div className="animate-pop max-w-md rounded-2xl border border-line bg-card p-8 text-center shadow-[var(--shadow-md)]">
-          <p className="font-display text-xl font-semibold text-ink">Couldn&apos;t open this workspace</p>
-          <p className="mt-2 text-sm text-muted">{result.error}</p>
-          <ButtonLink href="/" className="mt-6">Back to start</ButtonLink>
+          <div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-paper-2 text-ink-2"><Lock className="h-5 w-5" /></div>
+          {result.error === "private" ? (
+            <>
+              <p className="font-display text-xl font-semibold text-ink">This workspace is private</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                A workspace belongs to the browser that created it and to people invited with a private link. Ask its owner for an
+                invite link, or open your own copy of the demo.
+              </p>
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <TryDemoButton />
+                <ButtonLink href="/" variant="ghost" size="sm">Go to the start page</ButtonLink>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="font-display text-xl font-semibold text-ink">Couldn&apos;t open this workspace</p>
+              <p className="mt-2 text-sm text-muted">{result.error}</p>
+              <ButtonLink href="/" className="mt-6">Go to the start page</ButtonLink>
+            </>
+          )}
         </div>
       </div>
     );
