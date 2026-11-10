@@ -42,7 +42,7 @@ class MemberIn(BaseModel):
     def _handle(cls, v: str) -> str:
         v = v.strip().lstrip("@").lower()
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", v):
-            raise ValueError("handles may contain letters, numbers and dashes")
+            raise ValueError("may contain only letters, numbers and dashes (use their GitHub username)")
         return v
 
     @field_validator("roles")
@@ -51,8 +51,32 @@ class MemberIn(BaseModel):
         ok = {"reviewer", "leaver", "successor", "member"}
         bad = set(v) - ok
         if bad:
-            raise ValueError(f"unknown roles: {', '.join(sorted(bad))}")
+            raise ValueError(f"must be reviewer, leaver, successor or member (got {', '.join(sorted(bad))})")
         return sorted(set(v) | {"member"} if "reviewer" not in v else set(v))
+
+
+def _member_error(raw: str, exc: ValidationError) -> str:
+    """Turn a Pydantic error into one plain sentence: 'Member 2 (Rohan): handles may contain letters, numbers and dashes.'"""
+    try:
+        people = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        people = []
+    for err in exc.errors():
+        loc = [p for p in err.get("loc", ()) if isinstance(p, (str, int))]
+        field = next((p for p in loc if isinstance(p, str)), "details")
+        msg = str(err.get("msg", "is invalid")).removeprefix("Value error, ")
+        idx = next((i for i, p in enumerate(people) if isinstance(p, dict) and _bad(p, field)), None)
+        who = f"Member {idx + 1}" + (f" ({people[idx].get('name')})" if idx is not None and people[idx].get("name") else "") if idx is not None else "A member"
+        return f"{who}: {field} {msg[0].lower() + msg[1:] if msg else 'is invalid'}."
+    return "Please check the member list."
+
+
+def _bad(person: dict, field: str) -> bool:
+    try:
+        MemberIn(**person)
+        return False
+    except ValidationError as e:
+        return any(field in [p for p in er.get("loc", ()) if isinstance(p, str)] for er in e.errors())
 
 
 def _acl(spec: str | None, ids: dict[str, str]) -> dict:
@@ -101,8 +125,10 @@ async def create_workspace(
 
     try:
         people = [MemberIn(**m) for m in json.loads(members)]
-    except (json.JSONDecodeError, TypeError, ValidationError) as exc:
-        raise HTTPException(422, f"Members are invalid: {str(exc)[:200]}") from exc
+    except ValidationError as exc:
+        raise HTTPException(422, _member_error(members, exc)) from exc
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise HTTPException(422, "The member list couldn't be read. Add each person with a name, a handle and a role.") from exc
     if not 2 <= len(people) <= MAX_MEMBERS:
         raise HTTPException(422, f"Add between 2 and {MAX_MEMBERS} members.")
     for role in ("reviewer", "leaver", "successor"):

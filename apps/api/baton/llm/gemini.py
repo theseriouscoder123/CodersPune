@@ -12,7 +12,7 @@ BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 class GeminiTransport:
     provider = "gemini"
 
-    def __init__(self, api_key: str, timeout: float = 90.0):
+    def __init__(self, api_key: str, timeout: float = 35.0):
         self.api_key = api_key
         self.timeout = timeout
 
@@ -30,12 +30,13 @@ class GeminiTransport:
             r = httpx.post(f"{BASE}/{model}:generateContent", json=body, timeout=self.timeout,
                            headers={"x-goog-api-key": self.api_key})
         except httpx.TimeoutException as exc:
-            raise TransientError("gemini timeout") from exc
+            raise TransientError("gemini timeout", server_error=True) from exc
         except httpx.HTTPError as exc:
-            raise TransientError(f"gemini network error {type(exc).__name__}") from exc
+            raise TransientError(f"gemini network error {type(exc).__name__}", server_error=True) from exc
 
         if r.status_code in (429, 500, 502, 503, 504):
-            raise TransientError(f"gemini {r.status_code}", _retry_delay(r), daily_quota=_is_daily_quota(r))
+            raise TransientError(f"gemini {r.status_code}", _retry_delay(r), daily_quota=_is_daily_quota(r),
+                                 server_error=r.status_code >= 500)
         if r.status_code >= 400:
             msg = ""
             try:

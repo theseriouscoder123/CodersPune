@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import { ButtonLink, Spinner } from "@/components/ui";
 import { api, ApiError, storePersona, type WorkspaceInfo } from "@/lib/api";
+import { useConfirm } from "@/components/Confirm";
 
 type Ctx = { ws: WorkspaceInfo; personaVersion: number };
 const WorkspaceContext = createContext<Ctx | null>(null);
@@ -192,6 +193,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
   const [result, setResult] = useState<{ ws?: WorkspaceInfo; error?: string } | null>(null);
   const [personaVersion, setPersonaVersion] = useState(0);
   const [resetting, setResetting] = useState(false);
+  const confirmDialog = useConfirm();
 
   const load = useCallback(() => {
     api<WorkspaceInfo>(`/workspaces/${workspaceId}`, { workspaceId })
@@ -207,7 +209,8 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
   };
 
   async function resetDemo() {
-    if (!confirm("Reset the demo? Your reviews and approvals in this copy will be discarded.")) return;
+    if (!(await confirmDialog({ title: "Start the demo again?", body: "Your reviews, approvals and settings in this copy are discarded and you get a fresh copy of the demo project.",
+      confirmLabel: "Reset demo", tone: "danger" }))) return;
     setResetting(true);
     try {
       const r = await api<{ workspace_id: string }>("/demo/reset", { method: "POST" });

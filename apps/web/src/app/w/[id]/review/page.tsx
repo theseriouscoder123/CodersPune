@@ -14,6 +14,7 @@ import { useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, Button, ButtonLink, Card, EmptyState, PageHeader, SkeletonList, Spinner } from "@/components/ui";
 import { api, type ClaimDetail, type ClaimSummary, type Ledger, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { useConfirm } from "@/components/Confirm";
 
 const TABS = [
   { key: "all", label: "All claims" },
@@ -56,6 +57,7 @@ function Review() {
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [showKeys, setShowKeys] = useState(false);
+  const confirmDialog = useConfirm();
 
   const claimsAll = (ledger.data?.claims ?? []).filter((c) => !q || c.text.toLowerCase().includes(q.toLowerCase()));
   const currentId = selected && claimsAll.some((c) => c.id === selected) ? selected : claimsAll[0]?.id ?? null;
@@ -88,7 +90,8 @@ function Review() {
   if (!canSee) return <NotForPersona step="The draft ledger" />;
 
   async function bulk(action: "confirm" | "reject") {
-    if (action === "reject" && !confirm(`Reject ${picked.size} claims? They won't reach the successor.`)) return;
+    if (action === "reject" && !(await confirmDialog({ title: `Reject ${picked.size} claim${picked.size === 1 ? "" : "s"}?`,
+      body: "Rejected claims never reach the successor. You can restore any of them later from the Rejected tab.", confirmLabel: "Reject", tone: "danger" }))) return;
     setBulkBusy(true);
     try {
       const r = await api<{ updated: number; skipped: number }>(`/workspaces/${ws.id}/claims/bulk-review`, {

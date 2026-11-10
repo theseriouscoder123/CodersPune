@@ -10,6 +10,7 @@ import { Avatar, RoleBadge, useWorkspace } from "@/components/workspace/Workspac
 import { Alert, Button, Card, Modal, PageHeader, SkeletonList } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { useConfirm } from "@/components/Confirm";
 
 type Team = {
   identity_mode: "switcher" | "invites";
@@ -31,6 +32,7 @@ export default function TeamPage() {
   const team = useApi<Team>(allowed ? `/workspaces/${ws.id}/team` : null);
   const [links, setLinks] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const confirmDialog = useConfirm();
   if (!allowed) return <NotForPersona step="Team settings" />;
   const t = team.data;
 
@@ -54,7 +56,8 @@ export default function TeamPage() {
   }
 
   async function revoke(memberId: string, name: string) {
-    if (!confirm(`Revoke ${name}'s link? Anyone who joined as ${name} loses access.`)) return;
+    if (!(await confirmDialog({ title: `Revoke ${name}'s link?`, body: `Anyone who joined with it is signed out of this workspace immediately. You can create a new link afterwards.`,
+      confirmLabel: "Revoke link", tone: "danger" }))) return;
     setBusy(memberId);
     try {
       await api(`/workspaces/${ws.id}/invites/${memberId}`, { workspaceId: ws.id, method: "DELETE" });
@@ -67,7 +70,9 @@ export default function TeamPage() {
   }
 
   async function setMode(mode: "switcher" | "invites") {
-    if (mode === "invites" && !confirm("Lock identities? Persona switching turns off for everyone, including you. Each person must open their own private link.")) return;
+    if (mode === "invites" && !(await confirmDialog({ title: "Lock identities?",
+      body: "Persona switching turns off for everyone, including you. From then on each person sees the workspace only as themselves, through their own private link.",
+      confirmLabel: "Lock identities" }))) return;
     setBusy("mode");
     try {
       await api(`/workspaces/${ws.id}/identity`, { workspaceId: ws.id, method: "PATCH", body: { mode } });

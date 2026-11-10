@@ -29,7 +29,8 @@ from baton.config import get_settings
 T = TypeVar("T", bound=BaseModel)
 
 PROVIDERS = ("gemini", "groq")
-EXHAUSTED_TTL_S = 3600  # retry a "daily quota" key/model after an hour (cheap: one call), serverless resets anyway
+EXHAUSTED_TTL_S = 3600
+CALL_BUDGET_S = 40.0  # one structured() call, all retries included: fits inside a ~45 s pipeline slice  # retry a "daily quota" key/model after an hour (cheap: one call), serverless resets anyway
 
 
 class LLMError(RuntimeError):
@@ -58,8 +59,9 @@ class Transport(Protocol):
 
 class TransientError(Exception):
     def __init__(self, message: str, retry_after: float | None = None, daily_quota: bool = False,
-                 skip_target: bool = False):
+                 skip_target: bool = False, server_error: bool = False):
         super().__init__(message)
+        self.server_error = server_error  # 5xx / timeout from the provider: the model, not our key, is the problem
         self.retry_after = retry_after
         self.daily_quota = daily_quota  # this key+model is done for the day: switch keys instead of waiting
         self.skip_target = skip_target  # this request can't run on this model at all (e.g. too large): next chain entry
@@ -154,32 +156,43 @@ class LLM:
         self.default_provider = default_provider
 
     def structured(self, *, system: str, user: str, schema: type[T], model: str, purpose: str,
-                   temperature: float = 0.0, workspace_id=None, run_id=None, max_transient_retries: int = 6) -> T:
+                   temperature: float = 0.0, workspace_id=None, run_id=None, max_transient_retries: int = 6,
+                   budget_s: float = CALL_BUDGET_S) -> T:
+        """`budget_s` bounds the whole call (all keys, models and waits) so one call can never stall a pipeline slice
+        or a request: a model that is overloaded (5xx) or would make us wait too long hands over to the next one."""
         targets = parse_chain(model, self.default_provider)
+        deadline = time.monotonic() + budget_s
         last: LLMError | None = None
         for t in targets:
             pool = self.pools.get(t.provider)
             if not pool:
                 last = last or LLMError(f"no key for {t.provider}", "No API key is configured for the AI provider.")
                 continue
+            if time.monotonic() >= deadline:
+                break
             try:
                 return self._structured_target(t, pool, system=system, user=user, schema=schema, purpose=purpose,
                                                temperature=temperature, workspace_id=workspace_id, run_id=run_id,
-                                               max_transient_retries=max_transient_retries)
+                                               max_transient_retries=max_transient_retries, deadline=deadline)
             except _TargetDone as done:
                 last = done.error
         raise last or LLMError("all models exhausted", _QUOTA_MSG)
 
     def _structured_target(self, t: Target, pool: list[Transport], *, system: str, user: str, schema: type[T],
-                           purpose: str, temperature: float, workspace_id, run_id, max_transient_retries: int) -> T:
+                           purpose: str, temperature: float, workspace_id, run_id, max_transient_retries: int,
+                           deadline: float) -> T:
         json_schema = inline_refs(schema.model_json_schema())
         n = len(pool)
         start = next(_RR[t.provider]) % n
         order = [(start + i) % n for i in range(n)]
         invalid = 0
         rounds = 0
+        server_errors = 0
         last_err = "unknown"
+        busy = LLMError("busy", "The AI provider is busy or out of quota. Try again in a few minutes.")
         while True:
+            if time.monotonic() >= deadline:
+                raise _TargetDone(busy)
             live = [i for i in order if not _is_out(t.provider, i, t.model)]
             if not live:
                 raise _TargetDone(LLMError(f"{t.label}: all keys out", _QUOTA_MSG))
@@ -218,16 +231,23 @@ class LLM:
                         _EXHAUSTED[(t.provider, slot, t.model)] = time.monotonic()
                         continue  # this key is done for this model: next key
                     _log(**log, ok=False, usage=usage, latency_ms=int((time.monotonic() - t0) * 1000), error=last_err)
+                    if exc.server_error:
+                        server_errors += 1
+                        if server_errors >= 2:  # the model itself is overloaded/down (not our key): use the next model
+                            raise _TargetDone(LLMError(last_err, busy.user_message)) from exc
                     waits.append(exc.retry_after if exc.retry_after is not None else 2 ** (rounds + 1))
                     # rate-limited on this key: fall through to the next key right away
+                if time.monotonic() >= deadline:
+                    raise _TargetDone(busy)
             if not waits:
                 continue  # keys were marked out this round; the next loop re-checks (and may finish the target)
             if min(waits) == 0:
                 continue  # a malformed-output retry is pending: no need to sleep
             rounds += 1
-            if rounds > max_transient_retries:
-                raise LLMError(last_err, "The AI provider is busy or out of quota. Try again in a few minutes.")
-            time.sleep(min(min(waits), 60))
+            wait = min(min(waits), 60)
+            if rounds > max_transient_retries or time.monotonic() + wait >= deadline:
+                raise _TargetDone(LLMError(last_err, busy.user_message))  # don't wait it out: try the next model
+            time.sleep(wait)
 
 
 def key_pools(s=None) -> dict[str, list[str]]:

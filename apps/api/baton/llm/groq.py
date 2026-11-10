@@ -23,7 +23,7 @@ _RETRY_IN = re.compile(r"try again in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?", re.
 class GroqTransport:
     provider = "groq"
 
-    def __init__(self, api_key: str, timeout: float = 90.0):
+    def __init__(self, api_key: str, timeout: float = 35.0):
         self.api_key = api_key
         self.timeout = timeout
 
@@ -52,9 +52,9 @@ class GroqTransport:
         try:
             return httpx.post(URL, json=body, timeout=self.timeout, headers={"Authorization": f"Bearer {self.api_key}"})
         except httpx.TimeoutException as exc:
-            raise TransientError("groq timeout") from exc
+            raise TransientError("groq timeout", server_error=True) from exc
         except httpx.HTTPError as exc:
-            raise TransientError(f"groq network error {type(exc).__name__}") from exc
+            raise TransientError(f"groq network error {type(exc).__name__}", server_error=True) from exc
 
     @staticmethod
     def _parse(r: httpx.Response) -> tuple[str, dict]:
@@ -64,7 +64,7 @@ class GroqTransport:
             raise TransientError(f"groq request too large for model ({r.status_code})", skip_target=True)
         if r.status_code in (429, 500, 502, 503, 504):
             daily = "per day" in msg.lower() or "(rpd)" in msg.lower() or "(tpd)" in msg.lower()
-            raise TransientError(f"groq {r.status_code}", _retry_delay(r, msg), daily_quota=daily)
+            raise TransientError(f"groq {r.status_code}", _retry_delay(r, msg), daily_quota=daily, server_error=r.status_code >= 500)
         if r.status_code in (401, 403):
             raise KeyRejected(f"groq auth {r.status_code}", "The LLM key was rejected by the provider.")
         if r.status_code >= 400:

@@ -28,6 +28,10 @@ class Fake:
             raise TransientError("429", retry_after=5)
         if step == "daily":
             raise TransientError("429 daily", daily_quota=True)
+        if step == "5xx":
+            raise TransientError("503", retry_after=3, server_error=True)
+        if step == "slow429":
+            raise TransientError("429", retry_after=55)
         if step == "big":
             raise TransientError("too large", skip_target=True)
         if step == "auth":
@@ -127,3 +131,18 @@ def test_key_pool_merges_single_key_and_never_duplicates():
     assert s.key_pool("gemini") == ["k1", "k2", "k0"]
     assert s.key_pool("groq") == ["g1", "g2"]
     assert Settings(groq_api_keys="g1", llm_model_extract="", llm_model_verify="").llm_configured is False  # models required
+
+
+def test_overloaded_model_hands_over_to_next_provider(_clean):
+    g1, g2 = Fake("gemini", "g1", ["5xx"]), Fake("gemini", "g2", ["5xx"])
+    q = Fake("groq", "q", [])
+    assert call(LLM({"gemini": [g1, g2], "groq": [q]}), "gemini:m1,groq:oss") == "q:oss"
+    assert _clean == []  # no backoff sleeping on an overloaded model
+
+
+def test_long_wait_beyond_budget_moves_on_instead_of_sleeping(_clean):
+    g = Fake("gemini", "g", ["slow429"])
+    q = Fake("groq", "q", [])
+    llm = LLM({"gemini": [g], "groq": [q]})
+    out = llm.structured(system="s", user="u", schema=Out, model="gemini:m1,groq:oss", purpose="t", budget_s=20).answer
+    assert out == "q:oss" and _clean == []
