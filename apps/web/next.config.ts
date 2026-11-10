@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       // everything except the API reference gets the strict policy
-      { source: "/((?!api/docs).*)", headers: SECURITY_HEADERS },
+      { source: "/:path((?!api/docs).*)", headers: SECURITY_HEADERS },
       // the API reference (FastAPI's Swagger UI) loads its assets from jsDelivr
       { source: "/api/docs", headers: [...SECURITY_HEADERS.filter((h) => h.key !== "Content-Security-Policy"), { key: "Content-Security-Policy", value: DOCS_CSP }] },
     ];
