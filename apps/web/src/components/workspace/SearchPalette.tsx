@@ -10,7 +10,7 @@ import { api, type Status, type WorkspaceInfo } from "@/lib/api";
 
 type Results = {
   q: string;
-  claims: { id: string; text: string; status: Status; type_label: string; refs: string[] }[];
+  claims: { id: string; text: string; status: Status; type_label: string; refs: string[]; superseded?: boolean }[];
   passages: { chunk_id: string; source: string; source_type: string; snippet: string; ref: string }[];
 };
 
@@ -81,7 +81,7 @@ export function SearchPalette({ ws }: { ws: WorkspaceInfo }) {
                 {shown.claims.map((c) => (
                   <li key={c.id}>
                     <button className="flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left hover:bg-paper"
-                      onClick={() => { close(); router.push(`/w/${ws.id}/review?tab=all&claim=${c.id}`); }}>
+                      onClick={() => { close(); router.push(`/w/${ws.id}/review?tab=${c.status === "rejected" ? "rejected" : c.superseded ? "superseded" : "all"}&claim=${c.id}`); }}>
                       <StatusChip status={c.status} />
                       <span className="flex-1">
                         <span className="block text-sm text-ink">{c.text}</span>

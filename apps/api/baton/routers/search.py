@@ -52,7 +52,7 @@ def search(q: str = Query(min_length=2, max_length=120), ctx: Ctx = Depends(work
         if not can_view_claim(ctx.viewer, [src.acl for _, _, src in rows]):
             continue
         claims.append({"id": str(c.id), "text": mask_pii(c.text) if mask else c.text, "status": c.status,
-                       "type_label": TYPE_LABELS.get(c.type, c.type),
+                       "type_label": TYPE_LABELS.get(c.type, c.type), "superseded": bool(c.superseded_by),
                        "refs": list(dict.fromkeys(ref_for(*r) for r in rows))[:3]})
         if len(claims) >= MAX_CLAIMS:
             break

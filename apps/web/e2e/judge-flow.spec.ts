@@ -87,6 +87,7 @@ test.describe.serial("judge flow @desktop", () => {
     await expect(panel.getByTestId("status-reason")).toContainText("Why supported");
     await expect(panel.getByText(/Evidence/).first()).toBeVisible();
     await panel.getByTestId("confirm").click();
+    await expect(page.getByTestId("toast-action")).toHaveText("Undo"); // every confirm/reject can be undone
     await expect(page.getByTestId("review-progress")).toContainText(/[1-9]\d* of \d+ claims reviewed/);
   });
 

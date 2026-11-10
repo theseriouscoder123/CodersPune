@@ -111,7 +111,9 @@ export default function LedgerPage() {
           <ol className="stagger relative mt-5 space-y-1 pl-6" data-testid="timeline">
             <span className="absolute bottom-2 left-[7px] top-2 w-px bg-line-2" aria-hidden />
             {timeline.data?.events.map((e) => (
-              <li key={e.id} className="relative rounded-xl px-3 py-2.5 transition hover:bg-card">
+              <li key={e.id} className="relative">
+               <Link href={`/w/${ws.id}/review?tab=${e.superseded_by ? "superseded" : "all"}&claim=${e.id}`} title="Open this decision and its evidence"
+                className="block rounded-xl px-3 py-2.5 transition hover:bg-card focus-visible:bg-card">
                 <span className={`absolute -left-[22px] top-4 h-3 w-3 rounded-full ring-4 ring-paper ${e.superseded_by ? "bg-line-2" : STATUS_META[e.status]?.dot ?? "bg-amber"}`} />
                 <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
                   <span className="font-mono">{e.occurred_at?.slice(0, 10)}</span><span>·</span><span>{e.type_label}</span><span>·</span>
@@ -123,6 +125,7 @@ export default function LedgerPage() {
                     Superseded by: {e.superseded_by_text ?? "a later decision"}
                   </p>
                 )}
+               </Link>
               </li>
             ))}
             {timeline.data && timeline.data.events.length === 0 && <li className="text-sm text-muted">No dated decisions yet.</li>}

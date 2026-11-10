@@ -78,6 +78,8 @@ def list_claims(tab: str = "all", status: str | None = None, type: str | None = 
 
     if tab == "rejected":
         rows = [c for c in claims if c.status == "rejected"]
+    elif tab == "superseded":  # reversed decisions, kept for history
+        rows = [c for c in claims if c.superseded_by and c.status != "rejected"]
     elif tab == "conflicts":
         rows = [c for c in live if c.status == "conflicting"]
     elif tab == "missing":

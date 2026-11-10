@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, ListChecks, Mail, RotateCcw, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, Link2, ListChecks, Mail, RotateCcw, Search, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -21,6 +21,7 @@ const TABS = [
   { key: "conflicts", label: "Conflicts" },
   { key: "missing", label: "Missing" },
   { key: "rejected", label: "Rejected" },
+  { key: "superseded", label: "Superseded" },
 ] as const;
 
 export default function ReviewPage() {
@@ -107,6 +108,16 @@ function Review() {
       setBulkBusy(false);
     }
   }
+
+  // After confirming or rejecting, open the next claim nobody has reviewed yet (in list order, wrapping around).
+  const advanceFrom = (doneId: string) => {
+    const i = claimsAll.findIndex((c) => c.id === doneId);
+    const order = [...claimsAll.slice(i + 1), ...claimsAll.slice(0, Math.max(i, 0))];
+    const next = order.find((c) => c.review_state === "none" && c.id !== doneId);
+    if (!next) return;
+    setSelected(next.id);
+    requestAnimationFrame(() => document.getElementById(`claim-${next.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+  };
 
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params.toString());
@@ -232,7 +243,7 @@ function Review() {
           ))}
         </ul>
         <div className="scroll-quiet lg:sticky lg:top-40 lg:max-h-[calc(100vh-11rem)] lg:overflow-auto lg:rounded-2xl">
-          {current ? <ClaimPanel key={current} id={current} onChanged={ledger.reload} /> : !ledger.loading && <Card className="p-8 text-center text-sm text-muted">Select a claim to inspect its evidence.</Card>}
+          {current ? <ClaimPanel key={current} id={current} onChanged={ledger.reload} onReviewed={advanceFrom} /> : !ledger.loading && <Card className="p-8 text-center text-sm text-muted">Select a claim to inspect its evidence.</Card>}
         </div>
       </div>
     </div>
@@ -328,7 +339,7 @@ const ACTION_TOAST: Record<string, string> = {
   edit: "Saved and re-verified",
 };
 
-function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
+function ClaimPanel({ id, onChanged, onReviewed }: { id: string; onChanged: () => void; onReviewed?: (id: string) => void }) {
   const { ws } = useWorkspace();
   const toast = useToast();
   const detail = useApi<ClaimDetail>(`/claims/${id}`);
@@ -350,12 +361,27 @@ function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
     setBusy(true);
     setErr(null);
     try {
+      const wasUnreviewed = c.review_state === "none";
       await api(`/claims/${c.id}/review`, { workspaceId: ws.id, method: "POST", body: { action, ...body } });
       setMode("idle");
       setNote("");
-      toast(ACTION_TOAST[action] ?? "Saved");
+      const claimId = c.id;
+      const undoable = wasUnreviewed && (action === "confirm" || action === "reject");
+      toast(ACTION_TOAST[action] ?? "Saved", "success", undoable ? {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api(`/claims/${claimId}/review`, { workspaceId: ws.id, method: "POST", body: { action: "restore" } });
+            toast("Undone");
+            onChanged();
+          } catch (e) {
+            toast(e instanceof Error ? e.message : String(e), "error");
+          }
+        },
+      } : undefined);
       detail.reload();
       onChanged();
+      if (action === "confirm" || action === "reject") onReviewed?.(claimId); // move on to the next claim
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -395,6 +421,14 @@ function ClaimPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted">{c.type_label}</span>
           {c.origin === "checklist" && <span className="rounded-full bg-paper-2 px-2 py-0.5 text-[11px] text-ink-2 ring-1 ring-line">From the repo checklist</span>}
           {!c.stated && <span className="inline-flex items-center gap-1 rounded-full bg-paper-2 px-2 py-0.5 text-[11px] text-ink-2 ring-1 ring-line" title="The AI marked this as likely but not stated"><Sparkles className="h-3 w-3" /> Not explicitly stated</span>}
+          <button type="button" aria-label="Copy a link to this claim" title="Copy a link to this claim" data-testid="copy-claim-link"
+            onClick={() => {
+              const url = `${window.location.origin}/w/${ws.id}/review?tab=all&claim=${c.id}`;
+              void navigator.clipboard.writeText(url).then(() => toast("Link to this claim copied"), () => toast(url, "info"));
+            }}
+            className="ml-auto grid h-7 w-7 place-items-center rounded-lg text-muted transition hover:bg-paper-2 hover:text-ink">
+            <Link2 className="h-3.5 w-3.5" />
+          </button>
         </div>
         <p className="font-display mt-3 text-[21px] font-medium leading-snug text-ink">{c.text}</p>
         <div className={`mt-4 rounded-xl px-4 py-3 text-sm ${m.soft}`} data-testid="status-reason">

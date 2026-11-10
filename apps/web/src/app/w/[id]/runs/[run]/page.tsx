@@ -91,6 +91,17 @@ export default function RunPage() {
   const secs = Math.max(0, Math.floor(finished && !live && ranFor !== null ? ranFor : (now - started) / 1000));
   const history = finished && !live;
 
+  // Progress in the browser tab, so the run can be followed from another tab.
+  useEffect(() => {
+    if (!info) return;
+    const prev = document.title;
+    const done = (info.steps ?? []).filter((x) => x.status === "done").length;
+    const total = (info.steps ?? []).length;
+    document.title = info.status === "done" ? "✓ Ledger ready · Baton" : info.status === "failed" ? "Run stopped · Baton"
+      : `${done}/${total} · Reconstructing… · Baton`;
+    return () => { document.title = prev; };
+  }, [info]);
+
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader eyebrow="Reconstruct"
