@@ -15,6 +15,7 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from baton.ingest.scrubber import mask_pii
 from baton.auth import Ctx, workspace_ctx
 from baton.db.models import Claim, Handover, HandoverVersion, Member, ReviewEvent
 from baton.db.session import get_db
@@ -36,6 +37,7 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
     ws_id = ctx.workspace.id
     names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == ws_id))}
     out: list[dict] = []
+    pii = (lambda s: mask_pii(s) if s else s) if not ctx.is_reviewer else (lambda s: s)
     rows = db.execute(select(ReviewEvent, Claim.text, Claim.type).join(Claim, Claim.id == ReviewEvent.claim_id)
                       .where(Claim.workspace_id == ws_id).order_by(ReviewEvent.created_at.desc()).limit(MAX_ROWS))
     for ev, text, ctype in rows:
@@ -44,8 +46,8 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             "at": ev.created_at.isoformat(), "kind": "review", "action": ev.action,
             "label": ACTION_LABELS.get(ev.action, ev.action.replace("_", " ").capitalize()),
             "actor": names.get(ev.actor_member_id, "Someone"), "role": ev.actor_role,
-            "claim_id": str(ev.claim_id), "claim": text, "claim_type": ctype, "note": ev.note,
-            "before": before_text if ev.action == "edit" and before_text != text else None,
+            "claim_id": str(ev.claim_id), "claim": pii(text), "claim_type": ctype, "note": pii(ev.note),
+            "before": pii(before_text) if ev.action == "edit" and before_text != text else None,
         })
     for v, hname, succ in db.execute(
             select(HandoverVersion, Handover.name, Handover.successor_member_id).join(Handover, Handover.id == HandoverVersion.handover_id)
@@ -55,7 +57,7 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             "label": f"Approved version {v.version}" + (f" of “{hname}”" if hname else ""),
             "actor": names.get(v.approved_by, "Someone"), "role": "reviewer", "claim_id": None,
             "claim": f"Shared with {names.get(succ, 'the successor')} ({len(v.snapshot.get('items', []))} items)",
-            "claim_type": None, "note": v.note, "before": None,
+            "claim_type": None, "note": pii(v.note), "before": None,
         })
     out.sort(key=lambda e: e["at"], reverse=True)
     return out[:MAX_ROWS]

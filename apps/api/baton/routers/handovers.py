@@ -20,7 +20,7 @@ from baton.acl import Viewer, access_label, can_view_acl
 from baton.auth import Ctx, _roles, resolve_ctx, workspace_ctx
 from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Source, Workspace
 from baton.db.session import get_db
-from baton.ingest.scrubber import mask_pii
+from baton.ingest.scrubber import mask_pii, scrub
 from baton.ledger import evidence_rows, ref_for
 from baton.projection import claim_sources, visible, withheld_reason
 from baton.routers.claims import TYPE_LABELS, evidence_payload
@@ -211,7 +211,7 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
         })
     n = (db.scalar(select(func.max(HandoverVersion.version)).where(HandoverVersion.handover_id == h.id)) or 0) + 1
     v = HandoverVersion(handover_id=h.id, version=n, approved_by=ctx.member.id, approved_at=datetime.now(UTC),
-                        note=body.note, snapshot={"items": items})
+                        note=scrub(body.note)[0] if body.note else None, snapshot={"items": items})
     db.add(v)
     db.commit()
     notified = _notify_approved(db, h, n, ctx.member.display_name)
@@ -293,7 +293,8 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
     approver = db.get(Member, v.approved_by) if v.approved_by else None
     return {
         "handover_id": str(h.id), "version": v.version, "approved_at": v.approved_at.isoformat(),
-        "approved_by": approver.display_name if approver else None, "note": v.note,
+        "approved_by": approver.display_name if approver else None,
+        "note": (mask_pii(v.note) if mask and v.note else v.note),  # reviewer notes follow the same PII rule as claims
         "sections": [{"key": k, "title": t, "help": hp, "items": sections[k]} for k, t, hp in SECTIONS],
         "withheld_count": stubs if h.show_restricted_stubs else None,
     }

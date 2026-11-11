@@ -313,3 +313,19 @@ def test_search_is_permission_filtered(world):
     kabir = c.get(f"/api/workspaces/{ws}/search", params={"q": "TechNova"}, headers=as_(p["kabir"]))
     assert kabir.status_code == 403  # members without a ledger role can't search the draft
     assert c.get(f"/api/workspaces/{ws}/search", params={"q": "x"}, headers=as_(p["meera"])).status_code == 422
+
+
+def test_approval_note_pii_masked_for_successor_and_secrets_scrubbed(world):
+    """Blind-test finding: a reviewer's approval note reached the successor with a personal email and phone."""
+    c = client("visitor-one")
+    ws = world["s1"]
+    p = personas(c, ws)
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+    note = "Ping rohan.personal@gmail.com or +91 98765 43210. token ghp_abcdefghijklmnopqrstuvwxyz0123456789"
+    assert c.post(f"/api/handovers/{hid}/approve", headers=as_(p["meera"]), json={"note": note}).status_code == 200
+    neha = c.get(f"/api/handovers/{hid}", headers=as_(p["neha"])).json()["note"]
+    assert "rohan.personal@gmail.com" not in neha and "98765 43210" not in neha
+    assert "ghp_abcdefghijklmnopqrstuvwxyz0123456789" not in neha
+    meera = c.get(f"/api/handovers/{hid}", headers=as_(p["meera"])).json()["note"]
+    assert "rohan.personal@gmail.com" in meera  # the reviewer still sees PII
+    assert "ghp_abcdefghijklmnopqrstuvwxyz0123456789" not in meera  # but secrets are never stored

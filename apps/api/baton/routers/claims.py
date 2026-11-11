@@ -154,8 +154,11 @@ def get_claim(claim_id: uuid.UUID, request: Request, db: Session = Depends(get_d
         newer = db.get(Claim, c.superseded_by)
         detail["superseded_by_text"] = newer.text if newer else None
     history = db.scalars(select(ReviewEvent).where(ReviewEvent.claim_id == c.id).order_by(ReviewEvent.created_at))
-    detail["history"] = [{"action": h.action, "actor_role": h.actor_role, "note": h.note,
+    pii = (lambda s: mask_pii(s) if s else s) if not ctx.is_reviewer else (lambda s: s)
+    detail["history"] = [{"action": h.action, "actor_role": h.actor_role, "note": pii(h.note),
                           "at": h.created_at.isoformat()} for h in history]
+    if not ctx.is_reviewer:  # leaver/admin: personal emails and phones masked in text and notes too
+        detail["text"], detail["reviewer_note"] = pii(detail["text"]), pii(detail.get("reviewer_note"))
     return detail
 
 

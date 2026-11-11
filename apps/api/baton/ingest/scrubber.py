@@ -74,7 +74,7 @@ def merge_reports(*reports: dict[str, int] | Counter[str]) -> dict[str, int]:
 
 _EMAIL = re.compile(r"\b([A-Za-z0-9._%+\-])[A-Za-z0-9._%+\-]*@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b")
 # Phone-like: optional +CC, then 10+ digits allowing spaces/dashes. Dates (8 digits) and amounts don't qualify.
-_PHONE = re.compile(r"(?<![\w.])(\+\d{1,3}[\s\-]?)?(\d[\d\s\-]{8,}\d)(?![\w.])")
+_PHONE = re.compile(r"(?<![\w.])(\+\d{1,3}[\s\-]?)?(\d[\d\s\-]{8,}\d)(?!\w|\.\d)")
 
 
 _DATEISH = re.compile(r"\b(?:19|20)\d{2}-\d{2}-\d{2}\b")  # ISO date inside a digit run = timestamp, not phone

@@ -15,7 +15,7 @@ import { ButtonLink, Spinner } from "@/components/ui";
 import { api, ApiError, storePersona, type WorkspaceInfo } from "@/lib/api";
 import { useConfirm } from "@/components/Confirm";
 
-type Ctx = { ws: WorkspaceInfo; personaVersion: number };
+type Ctx = { ws: WorkspaceInfo; personaVersion: number; switchPersona?: (id: string) => void };
 const WorkspaceContext = createContext<Ctx | null>(null);
 
 export function useWorkspace(): Ctx {
@@ -199,7 +199,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
   const load = useCallback(() => {
     api<WorkspaceInfo>(`/workspaces/${workspaceId}`, { workspaceId })
       .then((ws) => setResult({ ws }))
-      .catch((e: unknown) => setResult(e instanceof ApiError && e.status === 404 ? { error: "private" } : { error: e instanceof Error ? e.message : String(e) }));
+      .catch((e: unknown) => setResult(e instanceof ApiError && (e.status === 404 || e.status === 422) ? { error: "private" } : { error: e instanceof Error ? e.message : String(e) }));
   }, [workspaceId]);
 
   useEffect(load, [load, personaVersion]);
@@ -256,7 +256,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
 
   return (
     <ToastProvider>
-      <WorkspaceContext.Provider value={{ ws, personaVersion }}>
+      <WorkspaceContext.Provider value={{ ws, personaVersion, switchPersona }}>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-strong focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-on-strong">
           Skip to content
         </a>
@@ -306,7 +306,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
             <Stepper ws={ws} />
           </div>
         </header>
-        <main id="main" tabIndex={-1} key={personaVersion} className="animate-fade outline-none mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-6">{children}</main>
+        <main id="main" tabIndex={-1} key={personaVersion} className="animate-fade outline-none mx-auto w-full max-w-7xl flex-1 px-4 pt-7 pb-24 sm:px-6">{children}</main>
         {ws.synthetic && <TourChecklist ws={ws} onSwitchPersona={switchPersona} />}
         {canSearch(ws) && <SearchPalette ws={ws} />}
       </WorkspaceContext.Provider>

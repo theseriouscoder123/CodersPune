@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, ArrowRight, Download, FileText, HelpCircle, History, Hourglass, Lock, Network, Printer, Rocket, Users, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
@@ -34,7 +35,8 @@ export default function HandoverPage() {
 }
 
 function HandoverInner() {
-  const { ws } = useWorkspace();
+  const { ws, switchPersona } = useWorkspace();
+  const router = useRouter();
   const sel = useHandoverSelection();
   const hid = sel.selected?.id;
   const view = useApi<HandoverView>(hid ? `/handovers/${hid}` : null);
@@ -73,6 +75,7 @@ function HandoverInner() {
   }
 
   const leaver = ws.members.find((m) => m.roles.includes("leaver"));
+  const reviewer = ws.members.find((m) => m.roles.includes("reviewer"));
   const successor = ws.members.find((m) => m.roles.includes("successor"));
 
   return (
@@ -85,9 +88,20 @@ function HandoverInner() {
 
       {!v.approved ? (
         <div className="mx-auto max-w-lg pt-6" data-testid="handover-pending">
-          <EmptyState icon={<Hourglass className="h-5 w-5" />} title={v.message}>
+          <EmptyState icon={<Hourglass className="h-5 w-5" />} title={isReviewer ? "Not approved yet" : v.message}>
             Nothing reaches the successor until a reviewer approves it.
-            {isReviewer ? " Review the claims, preview the successor's view, then approve." : " Check back soon."}
+            {isReviewer ? " Review the claims, preview the successor's view, then approve." : ws.synthetic ? "" : " Check back soon."}
+            {isReviewer && (
+              <div className="mt-4"><Button size="sm" onClick={() => router.push(`/w/${ws.id}/review/preview`)}>Preview and approve <ArrowRight className="h-4 w-4" /></Button></div>
+            )}
+            {!isReviewer && ws.synthetic && reviewer && switchPersona && (
+              <div className="mt-4" data-testid="demo-approve-hint">
+                <p className="text-sm text-muted">In this demo you can play the reviewer too.</p>
+                <Button size="sm" className="mt-2" onClick={() => { switchPersona(reviewer.id); router.push(`/w/${ws.id}/review/preview`); }}>
+                  Switch to {reviewer.name} and approve <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </EmptyState>
         </div>
       ) : (
