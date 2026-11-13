@@ -1,7 +1,7 @@
 """Per-visitor sandbox: deep-copy the precomputed demo template in ONE transaction with fresh UUIDs (docs/02 §4).
 
-Copied: workspace, members, memberships, sources, chunks, claims, evidence, conflict groups, handover (no versions,
-no review events). Uses INSERT ... SELECT through a temp id map, so it's a handful of statements regardless of size.
+Copied: workspace, members, memberships, sources, chunks, claims, evidence, conflict groups, claim relations, handover
+(no versions, review events, interviews or acknowledgements: a visitor starts the review from scratch). Uses INSERT ... SELECT through a temp id map, so it's a handful of statements regardless of size.
 """
 
 from __future__ import annotations
@@ -60,13 +60,18 @@ def clone_workspace(db: Session, template_id: uuid.UUID, visitor_id: str) -> uui
             SELECT {_m('id')}, {_m('workspace_id')}, subject_key, resolved, resolution FROM conflict_groups WHERE workspace_id = :t""",
         f"""INSERT INTO claims (id, workspace_id, run_id, type, text, subject_key, value, occurred_at, origin, stated,
                                supersedes_hint, superseded_by, conflict_group_id, review_state, reviewer_note, status,
-                               status_reason, about_member_id, meta)
+                               status_reason, about_member_id, meta, stale_reason)
             SELECT {_m('id')}, {_m('workspace_id')}, NULL, type, text, subject_key, value, occurred_at, origin, stated,
                    supersedes_hint, NULL, {_m('conflict_group_id')}, review_state, reviewer_note, status, status_reason,
-                   {_m('about_member_id')}, meta
+                   {_m('about_member_id')}, meta, stale_reason
             FROM claims WHERE workspace_id = :t""",
         f"""UPDATE claims n SET superseded_by = {_m('o.superseded_by')}
             FROM claims o WHERE o.workspace_id = :t AND o.superseded_by IS NOT NULL AND n.id = {_m('o.id')}""",
+        f"""UPDATE claims n SET derived_from = {_m('o.derived_from')}
+            FROM claims o WHERE o.workspace_id = :t AND o.derived_from IS NOT NULL AND n.id = {_m('o.id')}""",
+        f"""INSERT INTO claim_relations (workspace_id, from_claim_id, to_claim_id, relation, decided_by, signal, note)
+            SELECT {_m('workspace_id')}, {_m('from_claim_id')}, {_m('to_claim_id')}, relation, decided_by, signal, note
+            FROM claim_relations WHERE workspace_id = :t""",
         f"""INSERT INTO evidence (id, claim_id, chunk_id, quote, match_score, quote_found, match_start, match_end, verdict,
                                  verdict_reason, verifier)
             SELECT {_m('e.id')}, {_m('e.claim_id')}, {_m('e.chunk_id')}, e.quote, e.match_score, e.quote_found,

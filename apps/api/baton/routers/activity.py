@@ -17,7 +17,8 @@ from sqlalchemy.orm import Session
 
 from baton.ingest.scrubber import mask_pii
 from baton.auth import Ctx, workspace_ctx
-from baton.db.models import Claim, Handover, HandoverVersion, Member, ReviewEvent
+from baton.acl import access_label
+from baton.db.models import AuditEvent, Claim, Handover, HandoverVersion, Member, ReviewEvent, Source
 from baton.db.session import get_db
 
 router = APIRouter(prefix="/api", tags=["Ledger and review"])
@@ -59,6 +60,17 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             "claim": f"Shared with {names.get(succ, 'the successor')} ({len(v.snapshot.get('items', []))} items)",
             "claim_type": None, "note": pii(v.note), "before": None,
         })
+    src_names = {str(s.id): s.name for s in db.scalars(select(Source).where(Source.workspace_id == ws_id))}
+    for a in db.scalars(select(AuditEvent).where(AuditEvent.workspace_id == ws_id).order_by(AuditEvent.created_at.desc()).limit(MAX_ROWS)):
+        if a.action == "source_acl":
+            label, what = "Changed who can access a source", (
+                f"{src_names.get(a.target or '', 'A source')}: {access_label(a.before, {str(k): v for k, v in names.items()})}"
+                f" → {access_label(a.after, {str(k): v for k, v in names.items()})}")
+        else:
+            label, what = a.action.replace("_", " ").capitalize(), a.target
+        out.append({"at": a.created_at.isoformat(), "kind": "audit", "action": a.action, "label": label,
+                    "actor": names.get(a.actor_member_id, "Someone"), "role": a.actor_role, "claim_id": None,
+                    "claim": what, "claim_type": None, "note": pii(a.note), "before": None})
     out.sort(key=lambda e: e["at"], reverse=True)
     return out[:MAX_ROWS]
 

@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowRight, FileText, GitBranch, Hash, Lock, Mic, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, FileText, GitBranch, Hash, KeyRound, Lock, Mic, ShieldCheck, Users } from "lucide-react";
+import { useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
+import { AccessEditor } from "@/components/workspace/AccessEditor";
 import { useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, ButtonLink, Card, EmptyState, PageHeader, SkeletonList } from "@/components/ui";
 import type { SourceInfo } from "@/lib/api";
@@ -21,8 +23,9 @@ const SCRUB_LABELS: Record<string, string> = {
   slack_token: "Slack token", jwt: "JWT", private_key: "private key", generic_secret: "password/secret",
 };
 
-function SourceCard({ s }: { s: SourceInfo }) {
+function SourceCard({ s, canEdit, workspaceId, onSaved }: { s: SourceInfo; canEdit: boolean; workspaceId: string; onSaved: () => void }) {
   const { label, Icon } = TYPE_META[s.type];
+  const [editing, setEditing] = useState(false);
   return (
     <Card className="lift flex flex-col p-5" data-testid="source-card">
       <div className="flex items-start gap-3.5">
@@ -38,6 +41,13 @@ function SourceCard({ s }: { s: SourceInfo }) {
           s.restricted ? "bg-missing-soft text-missing ring-missing/25" : "bg-verified-soft text-verified ring-verified/25"}`}>
           {s.restricted ? <Lock className="h-3 w-3" /> : <Users className="h-3 w-3" />} Visible to: {s.access}
         </span>
+        {canEdit && (
+          <button type="button" onClick={() => setEditing(true)} data-testid="change-access"
+            className="ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-ink-2 transition hover:bg-paper-2 hover:text-ink">
+            <KeyRound className="h-3 w-3" /> Change access
+          </button>
+        )}
+        {canEdit && editing && <AccessEditor workspaceId={workspaceId} sourceId={s.id} open={editing} onClose={() => setEditing(false)} onSaved={onSaved} />}
       </div>
 
       <dl className="mt-4 grid grid-cols-3 gap-2">
@@ -66,7 +76,8 @@ function SourceCard({ s }: { s: SourceInfo }) {
 
 export default function SourcesPage() {
   const { ws } = useWorkspace();
-  const { data, error, loading } = useApi<{ sources: SourceInfo[] }>(`/workspaces/${ws.id}/sources`);
+  const { data, error, loading, reload } = useApi<{ sources: SourceInfo[] }>(`/workspaces/${ws.id}/sources`);
+  const canEdit = ws.persona.roles.includes("admin") && !ws.read_only;
   const sources = data?.sources;
   const total = sources?.reduce((n, s) => n + s.redactions, 0) ?? 0;
   const isReviewer = ws.persona.roles.includes("reviewer");
@@ -90,7 +101,7 @@ export default function SourcesPage() {
           <EmptyState icon={<GitBranch className="h-5 w-5" />} title="No sources yet">Connect a GitHub repository, upload notes or import a chat export to begin.</EmptyState>
         )}
         {sources && sources.length > 0 && (
-          <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-2">{sources.map((s) => <SourceCard key={s.id} s={s} />)}</div>
+          <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-2">{sources.map((s) => <SourceCard key={s.id} s={s} canEdit={canEdit} workspaceId={ws.id} onSaved={reload} />)}</div>
         )}
       </div>
 

@@ -191,6 +191,8 @@ class Claim(Base):
     status_reason: Mapped[str | None] = mapped_column(Text)
     about_member_id: Mapped[uuid.UUID | None] = fk("members.id", nullable=True, ondelete="SET NULL")
     meta: Mapped[dict] = mapped_column(JSONB, server_default=sql("'{}'::jsonb"), nullable=False)
+    stale_reason: Mapped[str | None] = mapped_column(Text)  # #2: open work overtaken by a later decision or a closed PR/issue
+    derived_from: Mapped[uuid.UUID | None] = fk("claims.id", nullable=True, ondelete="SET NULL")  # #3: re-rendered from accessible sources
     created_at: Mapped[datetime] = created()
 
 
@@ -254,15 +256,113 @@ class HandoverVersion(Base):
     created_at: Mapped[datetime] = created()
 
 
+ACK_STATES = ("acknowledged", "question", "not_mine")
+
+
 class Acknowledgement(Base):
-    """Round 3 seam (improvement #3). Unused in Round 2."""
+    """#3: the successor's response to one item of one approved version. A question is tracked to closure."""
 
     __tablename__ = "acknowledgements"
+    __table_args__ = (
+        CheckConstraint(_in("state", ACK_STATES), name="acknowledgements_state_check"),
+        Index("acknowledgements_unique_idx", "handover_version_id", "claim_id", "member_id", unique=True),
+    )
     id: Mapped[uuid.UUID] = pk()
     handover_version_id: Mapped[uuid.UUID] = fk("handover_versions.id")
     claim_id: Mapped[uuid.UUID] = fk("claims.id")
     member_id: Mapped[uuid.UUID] = fk("members.id")
     state: Mapped[str] = mapped_column(Text, nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)  # the successor's question, or why it isn't theirs
+    answer: Mapped[str | None] = mapped_column(Text)  # the reviewer's answer
+    answered_by: Mapped[uuid.UUID | None] = fk("members.id", nullable=True, ondelete="SET NULL")
+    answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = created()
+
+
+INTERVIEW_STATUSES = ("draft", "sent", "submitted", "closed")
+QUESTION_KINDS = ("missing", "conflict", "custom")
+ANSWER_KINDS = ("answered", "chose_option", "dont_know", "ask_other")
+
+
+class Interview(Base):
+    """#1: targeted questions for the leaver (or the reviewer on their behalf), built from Missing/Conflicting claims."""
+
+    __tablename__ = "interviews"
+    __table_args__ = (CheckConstraint(_in("status", INTERVIEW_STATUSES), name="interviews_status_check"),)
+    id: Mapped[uuid.UUID] = pk()
+    workspace_id: Mapped[uuid.UUID] = fk("workspaces.id")
+    handover_id: Mapped[uuid.UUID | None] = fk("handovers.id", nullable=True, ondelete="SET NULL")
+    respondent_member_id: Mapped[uuid.UUID | None] = fk("members.id", nullable=True, ondelete="SET NULL")
+    created_by: Mapped[uuid.UUID | None] = fk("members.id", nullable=True, ondelete="SET NULL")
+    on_behalf: Mapped[bool] = mapped_column(Boolean, server_default=sql("false"), nullable=False)
+    status: Mapped[str] = mapped_column(Text, server_default=sql("'draft'"), nullable=False)
+    source_id: Mapped[uuid.UUID | None] = fk("sources.id", nullable=True, ondelete="SET NULL")
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = created()
+
+
+class InterviewQuestion(Base):
+    __tablename__ = "interview_questions"
+    __table_args__ = (
+        CheckConstraint(_in("kind", QUESTION_KINDS), name="interview_questions_kind_check"),
+        CheckConstraint("answer_kind IS NULL OR " + _in("answer_kind", ANSWER_KINDS), name="interview_questions_answer_kind_check"),
+    )
+    id: Mapped[uuid.UUID] = pk()
+    interview_id: Mapped[uuid.UUID] = fk("interviews.id")
+    claim_id: Mapped[uuid.UUID | None] = fk("claims.id", nullable=True, ondelete="SET NULL")
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    options: Mapped[list] = mapped_column(JSONB, server_default=sql("'[]'::jsonb"), nullable=False)
+    answer: Mapped[str | None] = mapped_column(Text)
+    answer_kind: Mapped[str | None] = mapped_column(Text)
+    answer_meta: Mapped[dict] = mapped_column(JSONB, server_default=sql("'{}'::jsonb"), nullable=False)
+    answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    testimony_claim_id: Mapped[uuid.UUID | None] = fk("claims.id", nullable=True, ondelete="SET NULL")
+    created_at: Mapped[datetime] = created()
+
+
+RELATIONS = ("reversal", "contradiction", "historical", "unrelated")
+
+
+class ClaimRelation(Base):
+    """#2: how two claims about the same subject relate, and the signal (or reviewer) that decided it."""
+
+    __tablename__ = "claim_relations"
+    __table_args__ = (
+        CheckConstraint(_in("relation", RELATIONS), name="claim_relations_relation_check"),
+        CheckConstraint("decided_by IN ('rule','reviewer')", name="claim_relations_decided_by_check"),
+        Index("claim_relations_pair_idx", "from_claim_id", "to_claim_id", unique=True),
+    )
+    id: Mapped[uuid.UUID] = pk()
+    workspace_id: Mapped[uuid.UUID] = fk("workspaces.id")
+    from_claim_id: Mapped[uuid.UUID] = fk("claims.id")  # the earlier claim
+    to_claim_id: Mapped[uuid.UUID] = fk("claims.id")  # the later claim
+    relation: Mapped[str] = mapped_column(Text, nullable=False)
+    decided_by: Mapped[str] = mapped_column(Text, server_default=sql("'rule'"), nullable=False)
+    signal: Mapped[str | None] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(Text)
+    decided_by_member_id: Mapped[uuid.UUID | None] = fk("members.id", nullable=True, ondelete="SET NULL")
+    created_at: Mapped[datetime] = created()
+
+
+class AuditEvent(Base):
+    """Admin and reviewer changes that aren't claim reviews: source access lists, relation overrides."""
+
+    __tablename__ = "audit_events"
+    id: Mapped[uuid.UUID] = pk()
+    workspace_id: Mapped[uuid.UUID] = fk("workspaces.id")
+    actor_member_id: Mapped[uuid.UUID | None] = fk("members.id", nullable=True, ondelete="SET NULL")
+    actor_role: Mapped[str] = mapped_column(Text, nullable=False)
+    action: Mapped[str] = mapped_column(Text, nullable=False)
+    target: Mapped[str | None] = mapped_column(Text)
+    before: Mapped[dict | None] = mapped_column(JSONB)
+    after: Mapped[dict | None] = mapped_column(JSONB)
+    note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = created()
 
 
