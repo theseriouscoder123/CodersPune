@@ -53,6 +53,17 @@ def can_view_claim(viewer: Viewer, cited_source_acls: Iterable[Mapping | None]) 
     return all(can_view_acl(viewer, acl) for acl in cited_source_acls)
 
 
+def acl_intersection(a: Mapping | None, b: Mapping | None) -> dict[str, list[str]]:
+    """An ACL no wider than either input (used for testimony, which must never widen access). "all_members" is the
+    identity; otherwise roles and named members are intersected. Conservative: it may hide more, never less."""
+    na, nb = normalise_acl(a), normalise_acl(b)
+    if ALL_MEMBERS in na["roles"]:
+        return nb
+    if ALL_MEMBERS in nb["roles"]:
+        return na
+    return {"roles": sorted(set(na["roles"]) & set(nb["roles"])), "members": sorted(set(na["members"]) & set(nb["members"]))}
+
+
 def access_label(acl: Mapping | None, member_names: Mapping[str, str] | None = None) -> str:
     """Human label for UI chips, e.g. 'All members' or 'Reviewers, Kabir, Rohan'."""
     a = normalise_acl(acl)

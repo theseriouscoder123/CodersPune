@@ -3,10 +3,12 @@
 Rules, first match wins:
   1 review_state == rejected                        -> rejected
   2 in an unresolved conflict group                 -> conflicting
-  3 origin == checklist and no passing evidence     -> missing
+  3 origin == checklist and no passing evidence     -> missing  (flag answered=True once the leaver answered it in the
+                                                       gap interview; the testimony claim carries the answer)
   4 review_state == confirmed and >=1 passing       -> verified
   5 review_state == promoted (note required)        -> verified (+ reviewer_confirmed_without_evidence)
-  6 >=1 passing evidence                            -> supported
+  6 >=1 passing evidence                            -> supported  (origin == testimony: the reason names the leaver;
+                                                       testimony is evidence but never Verified without a reviewer, rule 4)
   7 otherwise                                       -> inferred
 where passing = quote_found AND verdict == "supports".
 """
@@ -46,6 +48,8 @@ class ClaimState:
     reviewer_note: str | None = None
     checklist_signal: str | None = None  # why the checklist expected this item
     source_changed: str | None = None  # set when a refresh removed the text this claim's evidence quoted
+    testimony_from: str | None = None  # origin == testimony: who answered (e.g. "Rohan, gap interview 14 Nov")
+    answered_by: str | None = None  # checklist claim answered in the gap interview (e.g. "Rohan")
 
 
 @dataclass(frozen=True)
@@ -82,6 +86,9 @@ def compute_status(c: ClaimState) -> StatusResult:
         return StatusResult("conflicting", f"Disagrees with another claim{other}. Pick one, or keep both as an open risk.")
 
     if c.origin == "checklist" and not passing:
+        if c.answered_by:
+            return StatusResult("missing", f"No project source covered this, so it was asked in the gap interview. "
+                                           f"{c.answered_by} answered it: see the leaver-testimony claim.", {"answered": True})
         signal = c.checklist_signal or "the repository structure"
         return StatusResult("missing", f"Expected because {signal}; no source covers it.")
 
@@ -95,6 +102,12 @@ def compute_status(c: ClaimState) -> StatusResult:
             return compute_status(ClaimState(**{**c.__dict__, "review_state": "none"}))
         return StatusResult("verified", f"Reviewer-confirmed without source evidence · note: '{c.reviewer_note}'",
                             {"reviewer_confirmed_without_evidence": True})
+
+    if best and c.origin == "testimony":
+        who = c.testimony_from or "the leaver"
+        return StatusResult("supported", f"Leaver testimony: {who} answered this in the gap interview ({best.source_ref}). "
+                                         "The claim restates their answer · not yet confirmed by a person",
+                            {"testimony": True})
 
     if best:
         return StatusResult("supported", f"Quote found in {best.source_ref} (match {best.match_score}) · "

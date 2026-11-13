@@ -68,6 +68,8 @@ def eligible_for_successor(c: Claim) -> bool:
         return False
     if c.status == "inferred":
         return False
+    if ((c.meta or {}).get("flags") or {}).get("answered"):
+        return False  # a Missing item the leaver answered: the testimony claim ships instead
     return True
 
 

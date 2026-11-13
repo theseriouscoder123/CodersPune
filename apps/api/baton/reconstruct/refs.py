@@ -42,4 +42,6 @@ def source_ref(kind: str, location: dict, occurred_at=None, source_name: str = "
         return f"Notes {_date(occurred_at)} ({f})".replace("  ", " ") if occurred_at else f"Notes ({f})"
     if kind == "chat_thread":
         return f"{loc.get('channel', source_name)} · {_date(occurred_at)}"
+    if kind == "testimony":  # gap interview answer (Round 3, improvement #1)
+        return f"Leaver testimony · {loc.get('respondent', 'leaver')} · {_date(occurred_at)} · Q{loc.get('question', '?')}"
     return source_name or kind

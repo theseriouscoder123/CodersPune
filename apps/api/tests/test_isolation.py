@@ -73,6 +73,9 @@ def test_foreign_ids_never_leak_or_change(two):
     a, b = two
     att = _client("iso-a")
     bw, bc, bh = b["ws"], b["claim"], b["handover"]
+    with SessionLocal() as db:
+        from baton.db.models import Source
+        bsrc = str(db.scalar(select(Source.id).where(Source.workspace_id == bw).limit(1)))
     for persona in (None, a["members"]["meera"], b["members"]["meera"]):  # own, foreign and no persona header
         h = {"X-Baton-Persona": persona} if persona else {}
         calls = [
@@ -101,6 +104,8 @@ def test_foreign_ids_never_leak_or_change(two):
             ("POST", f"/api/workspaces/{bw}/notify/test", {"channel": "slack"}),
             ("POST", f"/api/workspaces/{bw}/questions/email", None),
             ("POST", f"/api/workspaces/{bw}/claims/bulk-review", {"claim_ids": [bc], "action": "reject"}),
+            ("GET", f"/api/workspaces/{bw}/interviews", None), ("POST", f"/api/workspaces/{bw}/interviews", {}),
+            ("GET", f"/api/sources/{bsrc}/acl", None), ("PATCH", f"/api/sources/{bsrc}/acl", {"roles": ["all_members"]}),
             ("DELETE", f"/api/workspaces/{bw}", {"confirm_name": "iso-beta"}),
         ]
         for method, url, body in calls:

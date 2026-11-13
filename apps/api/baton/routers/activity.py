@@ -66,6 +66,12 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             label, what = "Changed who can access a source", (
                 f"{src_names.get(a.target or '', 'A source')}: {access_label(a.before, {str(k): v for k, v in names.items()})}"
                 f" → {access_label(a.after, {str(k): v for k, v in names.items()})}")
+        elif a.action == "interview_sent":
+            label, what = "Sent questions to the leaver", f"{(a.after or {}).get('questions', 0)} questions (gap interview)"
+        elif a.action == "interview_submitted":
+            aft = a.after or {}
+            label, what = "Answered the gap interview", (f"{aft.get('answered', 0)} answered · {aft.get('testimony_claims', 0)} "
+                                                         f"testimony claims · {aft.get('minutes', 0)} min")
         else:
             label, what = a.action.replace("_", " ").capitalize(), a.target
         out.append({"at": a.created_at.isoformat(), "kind": "audit", "action": a.action, "label": label,
