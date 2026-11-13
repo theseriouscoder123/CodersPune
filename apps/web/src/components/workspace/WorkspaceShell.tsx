@@ -9,6 +9,7 @@ import { Logo } from "@/components/Logo";
 import { canSearch, SearchPalette } from "@/components/workspace/SearchPalette";
 import { TourChecklist } from "@/components/workspace/TourChecklist";
 import { TryDemoButton } from "@/components/TryDemoButton";
+import { LeaverBanner } from "@/components/interview/LeaverBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import { ButtonLink, Spinner } from "@/components/ui";
@@ -306,6 +307,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
             <Stepper ws={ws} />
           </div>
         </header>
+        <LeaverBanner />
         <main id="main" tabIndex={-1} key={personaVersion} className="animate-fade outline-none mx-auto w-full max-w-7xl flex-1 px-4 pt-7 pb-24 sm:px-6">{children}</main>
         {ws.synthetic && <TourChecklist ws={ws} onSwitchPersona={switchPersona} />}
         {canSearch(ws) && <SearchPalette ws={ws} />}

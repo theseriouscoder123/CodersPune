@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, Link2, ListChecks, Mail, RotateCcw, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ClipboardCopy, Download, Edit3, Github, History, Inbox, Keyboard, Link2, ListChecks, Mic, RotateCcw, Search, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -15,6 +15,7 @@ import { Alert, Button, ButtonLink, Card, EmptyState, PageHeader, SkeletonList, 
 import { api, type ClaimDetail, type ClaimSummary, type Ledger, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { useConfirm } from "@/components/Confirm";
+import type { InterviewSummary, InterviewView } from "@/components/interview/types";
 
 const TABS = [
   { key: "all", label: "All claims" },
@@ -229,7 +230,7 @@ function Review() {
           {type && <button onClick={() => setParam("type", null)} className="inline-flex items-center gap-1 rounded-full bg-strong px-2.5 py-1 text-xs font-medium capitalize text-on-strong">{type.replace("_", " ")} <X className="h-3 w-3" /></button>}
         </div>
       )}
-      {tab === "missing" && isReviewer && <QuestionsBar workspaceId={ws.id} />}
+      {(tab === "missing" || tab === "conflicts") && isReviewer && <QuestionsBar workspaceId={ws.id} readOnly={ws.read_only} />}
 
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <ul className="stagger scroll-quiet space-y-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-auto lg:pr-1" data-testid="claim-list">
@@ -277,10 +278,28 @@ function ClaimRow({ c, active, onClick, selectable, checked, onToggle }:
 
 type QuestionsOut = { markdown: string; questions: unknown[]; leaver: string; issue_title: string; issue_body: string };
 
-function QuestionsBar({ workspaceId }: { workspaceId: string }) {
+/** Missing and conflicting items become a gap interview for the leaver (Round 3, improvement #1). The old export
+ * options stay as quiet secondary actions. */
+function QuestionsBar({ workspaceId, readOnly }: { workspaceId: string; readOnly: boolean }) {
   const toast = useToast();
-  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const list = useApi<{ interviews: InterviewSummary[] }>(`/workspaces/${workspaceId}/interviews`);
+  const [busy, setBusy] = useState<string | null>(null);
+  const latest = list.data?.interviews[0];
+  const open = latest && (latest.status === "draft" || latest.status === "sent") ? latest : null;
   const get = () => api<QuestionsOut>(`/workspaces/${workspaceId}/questions`, { workspaceId });
+  const copyMd = async () => {
+    const r = await get();
+    await navigator.clipboard.writeText(r.markdown).catch(() => undefined);
+    toast(`Copied ${r.questions.length} questions for ${r.leaver} as Markdown`);
+  };
+  const copyIssue = async () => {
+    const r = await get();
+    await navigator.clipboard.writeText(`# ${r.issue_title}
+
+${r.issue_body}`).catch(() => undefined);
+    toast("Copied as a GitHub issue (title + checklist). Paste it into a new issue.");
+  };
   const download = async () => {
     const r = await get();
     const a = document.createElement("a");
@@ -288,43 +307,48 @@ function QuestionsBar({ workspaceId }: { workspaceId: string }) {
     a.download = "questions-for-leaver.md";
     a.click();
   };
-  const emailLeaver = async () => {
+  const start = async (onBehalf: boolean) => {
+    setBusy(onBehalf ? "behalf" : "start");
     try {
-      const r = await api<{ status: string; detail: string; count: number }>(`/workspaces/${workspaceId}/questions/email`, { workspaceId, method: "POST" });
-      toast(r.status === "sent" ? `Emailed ${r.count} questions to the leaver` : r.detail, r.status === "sent" ? "success" : "error");
+      const iv = await api<InterviewView>(`/workspaces/${workspaceId}/interviews`, { workspaceId, method: "POST", body: { on_behalf: onBehalf } });
+      router.push(`/w/${workspaceId}/interview/${iv.id}`);
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "error");
+      setBusy(null);
     }
   };
-  const copyIssue = async () => {
-    const r = await get();
-    await navigator.clipboard.writeText(`# ${r.issue_title}\n\n${r.issue_body}`).catch(() => undefined);
-    toast("Copied as a GitHub issue (title + checklist). Paste it into a new issue.");
-  };
   return (
-    <div className="animate-rise mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-missing/20 bg-missing-soft/60 px-4 py-3 text-sm text-missing">
-      <span>Missing and conflicting items become targeted questions for the leaver.</span>
-      <Button variant="secondary" size="sm" loading={busy} data-testid="copy-questions"
-        onClick={async () => {
-          setBusy(true);
-          try {
-            const r = await api<{ markdown: string; questions: unknown[]; leaver: string }>(`/workspaces/${workspaceId}/questions`, { workspaceId });
-            await navigator.clipboard.writeText(r.markdown).catch(() => undefined);
-            toast(`Copied ${r.questions.length} questions for ${r.leaver} as Markdown`);
-          } catch (e) {
-            toast(e instanceof Error ? e.message : String(e), "error");
-          } finally {
-            setBusy(false);
-          }
-        }}>
-        <ClipboardCopy className="h-4 w-4" /> Copy questions for the leaver
-      </Button>
-      <div className="flex gap-2">
-        <Button variant="ghost" size="sm" onClick={() => void copyIssue()}><Github className="h-4 w-4" /> Copy as GitHub issue</Button>
-        <Button variant="ghost" size="sm" onClick={() => void download()}><Download className="h-4 w-4" /> Download .md</Button>
-        <Button variant="ghost" size="sm" onClick={() => void emailLeaver()} title="Email the questions the leaver is allowed to see (needs their address on the Team page)">
-          <Mail className="h-4 w-4" /> Email to leaver
-        </Button>
+    <div className="animate-rise mt-4 rounded-2xl border border-missing/20 bg-missing-soft/60 px-4 py-3" data-testid="questions-bar">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="flex items-center gap-2 text-sm text-missing">
+          <Mic className="h-4 w-4 shrink-0" />
+          {open ? <span><b>Gap interview {open.status === "draft" ? "drafted" : open.on_behalf ? "in progress" : `sent to ${open.respondent}`}</b> · {open.answered} of {open.total} answered</span>
+            : latest?.status === "submitted" ? <span><b>{latest.respondent} answered {latest.answered} of {latest.total}</b> in the gap interview. Their answers are cited leaver testimony.</span>
+            : <span>Missing and conflicting items can be sent to the leaver as a short <b>gap interview</b>. Answers come back as cited testimony.</span>}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {open || latest?.status === "submitted" ? (
+            <ButtonLink size="sm" href={`/w/${workspaceId}/interview/${(open ?? latest)!.id}`} data-testid="open-interview">Open interview <ArrowRight className="h-4 w-4" /></ButtonLink>
+          ) : null}
+          {!open && !readOnly && (
+            <>
+              <Button size="sm" variant={latest ? "secondary" : "primary"} loading={busy === "start"} onClick={() => void start(false)} data-testid="start-interview">
+                <Mic className="h-4 w-4" /> {latest ? "Ask follow-up questions" : "Prepare questions for the leaver"}
+              </Button>
+              {!latest && (
+                <Button size="sm" variant="ghost" loading={busy === "behalf"} onClick={() => void start(true)} title="If the leaver is unavailable, answer from what you know. It is labelled as answered on their behalf.">
+                  Answer for them
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-missing/15 pt-2 text-xs">
+        <span className="text-missing/80">Or export the list:</span>
+        <button className="inline-flex items-center gap-1 font-medium text-missing hover:underline" onClick={() => void copyMd()} data-testid="copy-questions"><ClipboardCopy className="h-3.5 w-3.5" /> Copy</button>
+        <button className="inline-flex items-center gap-1 font-medium text-missing hover:underline" onClick={() => void copyIssue()}><Github className="h-3.5 w-3.5" /> GitHub issue</button>
+        <button className="inline-flex items-center gap-1 font-medium text-missing hover:underline" onClick={() => void download()}><Download className="h-3.5 w-3.5" /> .md file</button>
       </div>
     </div>
   );
