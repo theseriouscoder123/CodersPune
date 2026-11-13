@@ -204,3 +204,22 @@ def test_on_behalf_and_permissions(world):
     other = TestClient(app)
     other.cookies.set("baton_visitor", "stranger")
     assert other.get(f"/api/interviews/{iv['id']}", headers=h(p["meera"])).status_code == 404
+
+
+def test_resolving_a_conflict_counts_as_a_review(world):
+    c, ws = _c(), world["ws"]
+    p = _p(c, ws)
+    db = SessionLocal()
+    try:
+        five = db.scalar(select(Claim).where(Claim.workspace_id == ws, Claim.text.contains("5 MB"), Claim.origin == "extracted"))
+        gid = str(five.conflict_group_id)
+    finally:
+        db.close()
+    r = c.post(f"/api/conflicts/{gid}/resolve", headers=h(p["meera"]), json={"winner_claim_id": str(five.id)})
+    assert r.status_code == 200, r.text
+    db = SessionLocal()
+    try:
+        won = db.get(Claim, five.id)
+        assert won.review_state == "confirmed" and won.status == "verified"
+    finally:
+        db.close()

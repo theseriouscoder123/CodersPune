@@ -52,7 +52,7 @@ export default function LedgerPage() {
       </CoachBar>
 
       <PageHeader eyebrow="Reconstruct" title="The reconstructed ledger"
-        description={<>{total} claims about {leaver}&apos;s work, each linked to evidence.</>}
+        description={ledger.data ? <>{total} claims about {leaver}&apos;s work, each linked to evidence.</> : <>Claims about {leaver}&apos;s work, each linked to evidence.</>}
         actions={<>
           {isAdmin && !ws.read_only && <Button variant="secondary" onClick={() => setRunOpen(true)} loading={starting}><RefreshCw className="h-4 w-4" /> Re-run pipeline</Button>}
           <ButtonLink href={`/w/${ws.id}/review`}>Inspect the evidence <ArrowRight className="h-4 w-4" /></ButtonLink>

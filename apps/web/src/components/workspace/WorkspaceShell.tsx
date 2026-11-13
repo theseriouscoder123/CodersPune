@@ -175,7 +175,8 @@ function Stepper({ ws }: { ws: WorkspaceInfo }) {
               {ok ? (
                 <Link href={`/w/${ws.id}/${s.href}`} aria-current={active ? "step" : undefined} data-testid={`step-${s.key}`}>{node}</Link>
               ) : (
-                <span className="cursor-not-allowed opacity-70" title={`Not shared with ${ws.persona.name}`}>{node}</span>
+                <span className="cursor-not-allowed opacity-70" tabIndex={0} aria-disabled="true"
+                  title={s.who === "reviewer" ? `Only the reviewer works in this step. ${ws.persona.name} sees the approved handover instead.` : `The ledger is for the reviewer and the leaver. ${ws.persona.name} sees the approved handover (step 5).`}>{node}</span>
               )}
               {i < STEPS.length - 1 && (
                 <span className="relative mx-1 h-px w-6 bg-line-2 sm:w-10" aria-hidden>
@@ -276,9 +277,9 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
             </div>
             <div className="flex items-center gap-2">
               {ws.synthetic && !ws.read_only && (
-                <button onClick={resetDemo} disabled={resetting} title="Discard your changes and start the demo again"
-                  className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-muted transition hover:bg-paper-2 hover:text-ink sm:inline-flex">
-                  {resetting ? <Spinner className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />} Reset demo
+                <button onClick={resetDemo} disabled={resetting} title="Discard your changes and start the demo again" aria-label="Reset demo"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-muted transition hover:bg-paper-2 hover:text-ink">
+                  {resetting ? <Spinner className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />}<span className="hidden sm:inline">Reset demo</span>
                 </button>
               )}
               {canSearch(ws) && (

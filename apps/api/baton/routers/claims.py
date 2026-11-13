@@ -90,9 +90,10 @@ def list_claims(tab: str = "all", status: str | None = None, type: str | None = 
         rows = [c for c in rows if c.status == status]
     if type:
         rows = [c for c in rows if c.type == type]
-    if q:
-        ql = q.lower()
-        rows = [c for c in rows if ql in c.text.lower() or ql in c.subject_key.lower()]
+    if q and q.strip():
+        import re
+        word = re.compile(r"(^|\W)" + re.escape(q.strip()), re.IGNORECASE)  # word-prefix: "MB" doesn't match "December"
+        rows = [c for c in rows if word.search(c.text) or word.search(c.subject_key)]
 
     order = {"conflicting": 0, "missing": 1, "inferred": 2, "supported": 3, "verified": 4, "rejected": 5}
     rows.sort(key=lambda c: (order.get(c.status or "", 9), c.type, c.text))
@@ -266,6 +267,8 @@ def resolve_conflict(group_id: uuid.UUID, body: ResolveIn, request: Request, db:
         winner = next((m for m in members if m.id == body.winner_claim_id), None)
         if winner is None:
             raise HTTPException(422, "Winner must be one of the conflicting claims")
+        if winner.review_state == "none":
+            winner.review_state = "confirmed"  # a person just decided this one is current: that is a review
         for m in members:
             if m.id != winner.id:
                 m.superseded_by = winner.id

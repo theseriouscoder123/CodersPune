@@ -52,15 +52,15 @@ const PRINCIPLES = [
 
 export default function Home() {
   return (
-    <div className="paper-grain flex flex-1 flex-col">
+    <div className="paper-grain flex flex-1 flex-col overflow-x-clip">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <Logo />
         <nav className="flex items-center gap-1 text-sm">
-          <a href="#how" className="rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2">How it works</a>
+          <a href="#how" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 sm:block">How it works</a>
           <a href="#trust" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 sm:block">Trust</a>
           <a href="#security" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 md:block">Security</a>
           <ThemeToggle />
-          <ButtonLink href="/new" variant="secondary" size="sm" className="ml-1">Use your repo</ButtonLink>
+          <ButtonLink href="/new" variant="secondary" size="sm" className="ml-1 whitespace-nowrap">Use your repo</ButtonLink>
         </nav>
       </header>
 

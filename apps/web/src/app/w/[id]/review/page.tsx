@@ -61,7 +61,11 @@ function Review() {
   const [showKeys, setShowKeys] = useState(false);
   const confirmDialog = useConfirm();
 
-  const claimsAll = (ledger.data?.claims ?? []).filter((c) => !q || c.text.toLowerCase().includes(q.toLowerCase()));
+  const needle = q.trim();
+  // Match from the start of a word: "MB" finds "2 MB", not "December"; "upl" still finds "upload".
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const wordRe = needle ? new RegExp("(^|[^\\p{L}\\p{N}])" + escaped, "iu") : null;
+  const claimsAll = (ledger.data?.claims ?? []).filter((c) => !wordRe || wordRe.test(c.text));
   const currentId = selected && claimsAll.some((c) => c.id === selected) ? selected : claimsAll[0]?.id ?? null;
 
   // Keyboard review: j/k move, c confirm, r reject, e edit, x select, ? help. Ignored while typing.
@@ -232,8 +236,9 @@ function Review() {
       )}
       {(tab === "missing" || tab === "conflicts") && isReviewer && <QuestionsBar workspaceId={ws.id} readOnly={ws.read_only} />}
 
-      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <ul className="stagger scroll-quiet space-y-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-auto lg:pr-1" data-testid="claim-list">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
+        {/* Both columns stick under the header and scroll on their own, so the list and the evidence are always in view. */}
+        <ul className="stagger scroll-quiet space-y-2 lg:sticky lg:top-[8.25rem] lg:max-h-[calc(100vh-9.75rem)] lg:overflow-auto lg:overscroll-contain lg:pb-2 lg:pr-1" data-testid="claim-list">
           {ledger.loading && <SkeletonList rows={6} />}
           {ledger.error && <Alert tone="error">{ledger.error}</Alert>}
           {ledger.data && claims.length === 0 && <EmptyState icon={<Inbox className="h-5 w-5" />} title="Nothing here">No claims match this view.</EmptyState>}
@@ -243,7 +248,7 @@ function Review() {
               onToggle={() => setPicked((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })} />
           ))}
         </ul>
-        <div className="scroll-quiet lg:sticky lg:top-40 lg:max-h-[calc(100vh-11rem)] lg:overflow-auto lg:rounded-2xl">
+        <div className="scroll-quiet lg:sticky lg:top-[8.25rem] lg:max-h-[calc(100vh-9.75rem)] lg:overflow-auto lg:overscroll-contain lg:rounded-2xl">
           {current ? <ClaimPanel key={current} id={current} onChanged={ledger.reload} onReviewed={advanceFrom} /> : !ledger.loading && <Card className="p-8 text-center text-sm text-muted">Select a claim to inspect its evidence.</Card>}
         </div>
       </div>

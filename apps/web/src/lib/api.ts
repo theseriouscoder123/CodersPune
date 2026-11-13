@@ -54,10 +54,12 @@ export function storePersona(workspaceId: string, memberId: string) {
   }
 }
 
-export async function api<T>(path: string, opts: { workspaceId?: string; method?: string; body?: unknown } = {}): Promise<T> {
+export async function api<T>(path: string, opts: { workspaceId?: string; method?: string; body?: unknown; persona?: string } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
-  const persona = opts.workspaceId ? getStoredPersona(opts.workspaceId) : null;
+  // Reads pass the persona the screen is rendered for, so a persona switch can't fire the old screen's requests as
+  // the new persona (which the server would rightly refuse with 403).
+  const persona = opts.persona ?? (opts.workspaceId ? getStoredPersona(opts.workspaceId) : null);
   if (persona) headers["X-Baton-Persona"] = persona;
   const method = opts.method ?? "GET";
   const isRead = method === "GET";

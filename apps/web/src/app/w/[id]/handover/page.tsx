@@ -24,6 +24,13 @@ const SECTION_META: Record<string, { Icon: typeof Rocket; tone: string; accent: 
   unresolved: { Icon: HelpCircle, tone: "bg-missing-soft text-missing", accent: "border-missing/25" },
 };
 
+function fmtDate(iso: string, withTime = false) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  return d.toLocaleString(undefined, withTime ? { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
+    : { day: "numeric", month: "short", year: "numeric" });
+}
+
 type Versions = { versions: { version: number; approved_by: string; approved_at: string; note: string | null; items: number; added: number; removed: number }[] };
 
 export default function HandoverPage() {
@@ -117,7 +124,7 @@ function HandoverInner() {
                   {leaver && <Avatar m={leaver} size={34} />} {v.leaver} <ArrowRight className="h-5 w-5 text-muted" /> {successor && <Avatar m={successor} size={34} />} {v.successor}
                 </h1>
                 <p className="mt-2 text-sm text-muted" data-testid="handover-meta">
-                  Approved by <b className="text-ink-2">{v.approved_by}</b> on {v.approved_at.slice(0, 10)}{v.note ? ` · “${v.note}”` : ""} · viewing as {ws.persona.name}
+                  Approved by <b className="text-ink-2">{v.approved_by}</b> on {fmtDate(v.approved_at)}{v.note ? ` · “${v.note}”` : ""} · viewing as {ws.persona.name}
                 </p>
               </div>
               <div className="no-print flex flex-wrap gap-2">
@@ -158,7 +165,8 @@ function HandoverInner() {
                     {s.items.map((it, i) => it.restricted ? (
                       <li key={`r${i}`} className="flex items-center gap-2 rounded-xl border border-dashed border-line-2 bg-paper/60 px-3 py-2.5 text-sm italic text-muted"><Lock className="h-3.5 w-3.5" /> {it.text}</li>
                     ) : (
-                      <li key={it.claim_id} className={`group rounded-xl border border-line bg-paper/40 px-3.5 py-3 transition hover:border-line-2 hover:bg-card ${it.history ? "opacity-70" : ""}`}>
+                      <li key={it.claim_id} onClick={it.evidence.length > 0 ? () => openEvidence(it) : undefined}
+                        className={`group rounded-xl border border-line bg-paper/40 px-3.5 py-3 transition hover:border-line-2 hover:bg-card ${it.evidence.length > 0 ? "cursor-pointer" : ""} ${it.history ? "opacity-70" : ""}`}>
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusChip status={it.status} promoted={!!it.flags?.reviewer_confirmed_without_evidence} />
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{it.type_label}</span>
@@ -167,11 +175,11 @@ function HandoverInner() {
                         <p className={`mt-1.5 text-[14.5px] leading-snug ${it.history ? "text-muted line-through decoration-line-2" : "text-ink"}`}>{it.text}</p>
                         {it.history && it.superseded_by_text && <p className="mt-1 text-xs text-muted">Replaced by: {it.superseded_by_text}</p>}
                         {it.flags?.reviewer_confirmed_without_evidence && <p className="mt-1 text-xs text-muted">Reviewer-confirmed (no source evidence)</p>}
-                        {it.status === "missing" && <p className="mt-1.5 text-xs font-medium text-missing">No source answers this. Ask {v.leaver} or the reviewer.</p>}
+                        {it.status === "missing" && <p className="mt-1.5 text-xs font-medium text-missing">No source answers this. Ask {v.leaver} or {reviewer?.name ?? "the reviewer"}.</p>}
                         {it.evidence.length > 0 && (
-                          <button onClick={() => openEvidence(it)} data-testid="source-ref"
+                          <button onClick={(e) => { e.stopPropagation(); openEvidence(it); }} data-testid="source-ref"
                             className="mt-2 inline-flex max-w-full items-center gap-1 text-left font-mono text-[11px] text-supported hover:underline">
-                            <span className="truncate">{it.evidence.map((e) => e.ref).join(" · ")}</span> <ArrowRight className="h-3 w-3 shrink-0 transition group-hover:translate-x-0.5" />
+                            <span className="truncate">{[...new Set(it.evidence.map((e) => e.ref))].join(" · ")}</span> <ArrowRight className="h-3 w-3 shrink-0 transition group-hover:translate-x-0.5" />
                           </button>
                         )}
                       </li>
@@ -194,7 +202,7 @@ function HandoverInner() {
                     {versions.data.versions.map((x) => (
                       <tr key={x.version}>
                         <td className="px-4 py-2.5 font-semibold text-ink">v{x.version}</td><td className="px-4">{x.approved_by}</td>
-                        <td className="px-4 font-mono text-xs">{x.approved_at.slice(0, 16).replace("T", " ")}</td><td className="px-4">{x.items}</td>
+                        <td className="px-4 whitespace-nowrap text-xs">{fmtDate(x.approved_at, true)}</td><td className="px-4">{x.items}</td>
                         <td className="px-4 text-xs"><span className="text-verified">+{x.added}</span> / <span className="text-missing">−{x.removed}</span></td>
                         <td className="px-4 text-muted">{x.note}</td>
                       </tr>

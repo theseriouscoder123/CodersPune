@@ -280,6 +280,9 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
             if h.show_restricted_stubs:
                 sections["unresolved"].append({"restricted": True, "text": "Restricted item. Ask the reviewer."})
             continue  # withheld: no text, type, quote or source name
+        if mask and it.get("status") == "conflicting":  # the reviewer's "pick one" advice isn't for the successor
+            it = {**it, "status_reason": "Two sources disagree on this and the reviewer kept it as an open risk. "
+                                         "Check which is current before relying on it."}
         out = {**it, "text": mask_pii(it["text"]) if mask else it["text"],
                "type_label": TYPE_LABELS.get(it["type"], it["type"]),
                "superseded_by_text": texts.get(it["superseded_by"]) if it.get("superseded_by") else None}

@@ -17,13 +17,13 @@ export function useApi<T>(path: string | null) {
   useEffect(() => {
     if (!path || !key || !base) return;
     let cancelled = false;
-    api<T>(path, { workspaceId: ws.id })
+    api<T>(path, { workspaceId: ws.id, persona: ws.persona.id })
       .then((data) => !cancelled && setResult({ key, base, data }))
       .catch((e: { message?: string; status?: number }) => !cancelled && setResult({ key, base, error: e.message ?? String(e), status: e.status }));
     return () => {
       cancelled = true;
     };
-  }, [path, key, base, ws.id]);
+  }, [path, key, base, ws.id, ws.persona.id]);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);
   const current = result && result.key === key ? result : null;
