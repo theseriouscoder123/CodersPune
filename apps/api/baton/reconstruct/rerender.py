@@ -97,3 +97,22 @@ def looks_like_theirs(text: str, name: str | None) -> str | None:
     if _DEADLINE.search(text or ""):
         return "It has a deadline"
     return None
+
+
+def same_topic(original: str, rewrite: str, names: set[str]) -> bool:
+    """Local check (the original text never goes to the model): the rewrite must share real content words with the
+    original, not just people's names. Guards against a true but different statement replacing the withheld one."""
+    names = {n.lower() for n in names}
+
+    def stem(w: str) -> str:  # light suffix stripping: "taking" / "takes" -> "tak"
+        for suf in ("ing", "es", "ed", "s"):
+            if w.endswith(suf) and len(w) - len(suf) >= 3:
+                return w[: -len(suf)]
+        return w
+
+    a = {stem(w) for w in search_terms(original, limit=20) if w not in names}
+    b = {stem(w) for w in search_terms(rewrite, limit=20) if w not in names}
+    if not a:
+        return False
+    shared = a & b
+    return len(shared) >= 1 and len(shared) / len(a) >= 0.3

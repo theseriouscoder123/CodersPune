@@ -12,7 +12,7 @@ from baton.demo_loader import build_demo_workspace
 from baton.ledger import recompute_statuses
 from baton.llm.prompts import Verdict
 from baton.main import app
-from baton.reconstruct.rerender import Rerendered, looks_like_theirs, search_terms
+from baton.reconstruct.rerender import Rerendered, looks_like_theirs, same_topic, search_terms
 from baton.routers.rerender import rerender_claim
 from baton.sandbox import clone_workspace
 from baton.verify.quote_match import match
@@ -68,6 +68,10 @@ def test_helpers():
     assert looks_like_theirs("TechNova pays only if the app is live by 20 Dec", "Neha") == "It has a deadline"
     assert looks_like_theirs("The stage quote is 28,000", "Neha") is None
     assert "technova" in search_terms(LOGO) and "logo" in search_terms(LOGO)
+    names = {"Neha", "Rohan", "Meera", "Kabir"}
+    assert same_topic(LOGO, "The sponsor logo has to be on the fest page before launch.", names)
+    assert same_topic("Neha is the successor taking over the app from Rohan.", "Neha takes over the app from Rohan.", names)
+    assert not same_topic("Neha is not currently in the core team.", "Rohan will transfer Vercel project ownership to Neha before 15 Nov.", names)
 
 
 def test_rerender_sends_only_visible_text_and_creates_a_checked_claim(world):

@@ -20,7 +20,7 @@ from baton.ledger import rebuild_relations, recompute_statuses
 from baton.llm.base import LLMError, get_llm
 from baton.projection import claim_sources, visible
 from baton.reconstruct.rerender import (
-    RERENDER_SYSTEM, Rerendered, assert_only_visible, build_prompt, candidate_chunks, search_terms,
+    RERENDER_SYSTEM, Rerendered, assert_only_visible, build_prompt, candidate_chunks, same_topic, search_terms,
 )
 from baton.routers.handovers import _handover
 from baton.verify.entailment import excerpt, verify
@@ -54,6 +54,10 @@ def rerender_claim(db: Session, workspace_id, original: Claim, successor: Member
     if not res.possible or not res.claim or not res.quote or res.passage not in labels:
         original.meta = {**(original.meta or {}), "rerender_none": "not_stated"}
         return {"status": "not_stated", "reason": res.reason or f"The sources {successor.display_name} can read don't state this."}
+    names = {mm.display_name for mm in db.scalars(select(Member).where(Member.workspace_id == workspace_id))}
+    if not same_topic(original.text, res.claim, names):
+        original.meta = {**(original.meta or {}), "rerender_none": "different_topic"}
+        return {"status": "different_topic", "reason": f"The sources {successor.display_name} can read say something else, not this."}
     ch = labels[res.passage]
     m = match(res.quote, ch.text)
     if not m.found:  # no fabricated quotes (trust rule 2)

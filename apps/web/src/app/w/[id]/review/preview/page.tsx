@@ -13,7 +13,8 @@ import { Alert, Button, ButtonLink, Card, EmptyState, Modal, PageHeader, Skeleto
 import { api, storePersona, type HandoverRef, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
-type Item = { id: string; type_label: string; text: string; status: Status; section: string; source_refs: string[]; reason?: string };
+type Item = { id: string; type_label: string; text: string; status: Status; section: string; source_refs: string[]; reason?: string;
+  matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean };
 type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
 
@@ -152,14 +153,11 @@ function PreviewInner() {
               ))}
             </div>
           </section>
-          <section className="lg:sticky lg:top-40 lg:h-fit">
+          <section className="scroll-quiet lg:sticky lg:top-[8.25rem] lg:max-h-[calc(100vh-9.75rem)] lg:overflow-auto lg:overscroll-contain lg:pr-1">
             <h2 className="flex items-center gap-2 font-semibold text-ink"><EyeOff className="h-4 w-4 text-missing" /> Withheld from {name} <span className="text-muted">({pv.data.withheld.length})</span></h2>
             <ul className="stagger mt-3 space-y-2" data-testid="withheld">
-              {pv.data.withheld.map((it) => (
-                <li key={it.id} className="rounded-2xl border border-missing/20 bg-missing-soft/50 p-3.5 text-sm">
-                  <p className="text-ink">{it.text}</p>
-                  <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-missing"><Lock className="h-3 w-3" /> {it.reason}</p>
-                </li>
+              {[...pv.data.withheld].sort((a, b) => Number(!!b.matters) - Number(!!a.matters)).map((it) => (
+                <WithheldItem key={it.id} it={it} name={name} wsId={ws.id} hid={handover!.id} canAct={!ws.read_only} onChanged={pv.reload} />
               ))}
               {pv.data.withheld.length === 0 && <li className="rounded-2xl border border-line bg-card p-4 text-sm text-muted">Nothing is withheld.</li>}
             </ul>
@@ -171,5 +169,52 @@ function PreviewInner() {
         </div>
       )}
     </div>
+  );
+}
+
+
+/** A withheld item, with the improvement #3 fixes: rewrite it from sources the successor can read, or change access. */
+function WithheldItem({ it, name, wsId, hid, canAct, onChanged }: { it: Item; name: string; wsId: string; hid: string; canAct: boolean; onChanged: () => void }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(it.rerender_tried && !it.rerendered ? `Tried before: no source ${name} can read states this.` : null);
+  async function rewrite() {
+    setBusy(true);
+    try {
+      const r = await api<{ status: string; reason?: string; claim_status?: string; text?: string }>(`/handovers/${hid}/rerender/${it.id}`, { workspaceId: wsId, method: "POST" });
+      if (r.status === "created" || r.status === "exists") {
+        toast(`Rewritten from sources ${name} can read. Approve a new version to share it`);
+        onChanged();
+      } else {
+        setResult(r.reason ?? `No source ${name} can read states this.`);
+      }
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <li className={`rounded-2xl border p-3.5 text-sm ${it.matters ? "border-amber/40 bg-amber-soft/50" : "border-missing/20 bg-missing-soft/50"}`} data-testid="withheld-item">
+      {it.matters && <p className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[11px] font-semibold text-amber-ink"><AlertTriangle className="h-3 w-3" /> Looks like {name}&apos;s own work · {it.matters}</p>}
+      <p className="text-ink">{it.text}</p>
+      <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-missing"><Lock className="h-3 w-3" /> {it.reason}</p>
+      {it.rerendered ? (
+        <div className="mt-2 rounded-xl bg-card p-2.5 text-xs ring-1 ring-line" data-testid="rerendered">
+          <p className="font-semibold text-verified">Rewritten from sources {name} can read</p>
+          <p className="mt-0.5 text-ink">{it.rerendered.text}</p>
+          <p className="mt-1 flex items-center gap-1.5 text-muted"><StatusChip status={it.rerendered.status} />
+            {it.rerendered.status === "inferred" ? `Not verified, so ${name} won't see it.` : it.rerendered.visible ? `${name} will see this in the next version you approve.` : ""}</p>
+        </div>
+      ) : canAct ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button size="sm" variant={it.matters ? "primary" : "ghost"} loading={busy} onClick={() => void rewrite()} data-testid="rerender">
+            Rewrite from {name}&apos;s sources
+          </Button>
+          {it.matters && <ButtonLink size="sm" variant="ghost" href={`/w/${wsId}/sources`}>Change who can access the source</ButtonLink>}
+          {result && <p className="w-full text-xs text-muted" data-testid="rerender-result">{result}</p>}
+        </div>
+      ) : null}
+    </li>
   );
 }

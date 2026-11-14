@@ -163,7 +163,14 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
     for c in claims:
         item = {"id": str(c.id), "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
                 "status": c.status, "section": None, "source_refs": list(dict.fromkeys(ref_for(*r) for r in ev.get(c.id, [])))}
-        item["section"] = _section(item)
+        # Same placement rules as the successor's real view (_project), so the preview is exact.
+        item["section"] = "decisions" if c.stale_reason else _section(item)
+        if item["section"] == "start_here":
+            item["rank"] = start_here_rank(c.text, target.display_name)
+            if item["rank"] == 2:
+                item["section"] = "owners"
+        if c.stale_reason:
+            item["stale_reason"] = c.stale_reason
         if visible(tv, cited.get(c.id, [])):
             shown.append(item)
         else:
@@ -173,6 +180,7 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
                              "rerendered": {"id": str(derived.id), "text": derived.text, "status": derived.status,
                                             "visible": visible(tv, claim_sources(db, [derived.id]).get(derived.id, []))} if derived else None,
                              "rerender_tried": bool((c.meta or {}).get("rerender_none"))})
+    shown.sort(key=lambda it: (it.get("rank", 1), it["type"] != "next_action"))
     hidden_inferred = sum(1 for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
                           if c.status == "inferred" and not c.superseded_by)
     all_live = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
