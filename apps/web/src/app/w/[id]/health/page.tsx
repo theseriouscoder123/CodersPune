@@ -21,7 +21,7 @@ function Stat({ icon, label, value, tone = "" }: { icon: React.ReactNode; label:
   return (
     <Card className="p-4">
       <p className="flex items-center gap-1.5 text-[12px] text-fg-3">{icon} {label}</p>
-      <p className={`mt-1 text-3xl font-semibold ${tone || "text-fg"}`}>{value}</p>
+      <p className={`mt-1 text-[26px] font-semibold leading-8 tracking-[-0.02em] ${tone || "text-fg"}`}>{value}</p>
     </Card>
   );
 }
@@ -44,7 +44,7 @@ export default function HealthPage() {
       {loading && <div className="mt-6"><SkeletonList rows={3} /></div>}
       {data && (
         <>
-          <div className="stagger mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat icon={<Activity className="h-3.5 w-3.5" />} label="AI calls" value={data.totals.calls} />
             <Stat icon={<AlertTriangle className="h-3.5 w-3.5" />} label="Failed (retried)" value={`${Math.round(data.totals.failure_rate * 100)}%`} tone={data.totals.failure_rate > 0.3 ? "text-con" : ""} />
             <Stat icon={<Gauge className="h-3.5 w-3.5" />} label="Daily-quota fallbacks" value={data.totals.daily_quota_hits} />
@@ -89,7 +89,7 @@ export default function HealthPage() {
           </div>
 
           <h2 className="mt-8 text-[16px] font-semibold text-fg">Recent runs</h2>
-          <div className="stagger mt-3 space-y-3">
+          <div className="mt-3 space-y-3">
             {data.runs.map((r) => (
               <Card key={r.id} className="p-4">
                 <div className="flex flex-wrap items-center gap-2 text-[13px]">

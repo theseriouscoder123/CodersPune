@@ -47,7 +47,7 @@ export default function RiskPage() {
               <ul className="mt-3 space-y-1.5">{risk.data.unowned.map((u) => <li key={u.id} className="text-[13px] text-fg">· {u.text.replace(/^Who owns (the )?/, "").replace(/\?$/, "")}</li>)}</ul>
             </Card>
           )}
-          <div className="stagger mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2" data-testid="risk-people">
+          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2" data-testid="risk-people">
             {risk.data.people.length === 0 && <EmptyState title="Nothing to assess yet">Connect a repository and run the pipeline first.</EmptyState>}
             {risk.data.people.map((p) => <PersonCard key={p.key} p={p} max={max} />)}
           </div>

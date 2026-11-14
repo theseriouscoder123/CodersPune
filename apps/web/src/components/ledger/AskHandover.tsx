@@ -58,7 +58,7 @@ export function AskHandover({ handoverId, workspaceId, onOpenEvidence }:
       </div>
 
       {res && (
-        <div className="animate-rise mt-4 rounded-lg border border-line bg-bg-side/60 p-4">
+        <div className="mt-4 rounded-lg border border-line bg-bg-side/60 p-4">
           <p className="text-[12px] font-semibold text-fg-3">You asked</p>
           <p className="text-[13px] text-fg">{res.question}</p>
           {busy && <p className="mt-3 flex items-center gap-2 text-[13px] text-fg-3"><Spinner /> Reading the approved handover…</p>}

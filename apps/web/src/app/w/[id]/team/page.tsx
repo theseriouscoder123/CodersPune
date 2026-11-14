@@ -115,7 +115,7 @@ export default function TeamPage() {
             )}
           </Card>
 
-          <div className="stagger mt-5 overflow-hidden rounded-lg border border-line bg-bg">
+          <div className="mt-5 overflow-hidden rounded-lg border border-line bg-bg">
             {t.members.map((m) => (
               <div key={m.id} className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 last:border-0">
                 <Avatar m={m} size={36} />

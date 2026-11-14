@@ -26,7 +26,7 @@ export function JoinClient() {
   }, [token, router]);
 
   return (
-    <div className="paper-grain flex flex-1 flex-col items-center justify-center px-5">
+    <div className="flex flex-1 flex-col items-center justify-center px-5">
       <div className="animate-pop w-full max-w-md rounded-lg border border-line bg-bg p-8 text-center">
         <div className="flex justify-center"><Logo /></div>
         {state.error ? (

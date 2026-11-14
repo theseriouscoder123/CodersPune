@@ -136,7 +136,7 @@ export default function RunPage() {
         </Alert>
       )}
 
-      <ol className="stagger mt-5 space-y-2">
+      <ol className="mt-5 space-y-2">
         {steps.map((s) => {
           const running = s.status === "running";
           return (

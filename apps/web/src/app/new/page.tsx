@@ -31,17 +31,17 @@ function AccessPicker({ label, value, onChange, people }: { label: string; value
       <span className="text-[12px] font-semibold text-fg-3">Who may read this source?</span>
       <div className="mt-1.5 flex flex-wrap gap-4">
         <label className="flex items-center gap-1.5">
-          <input className="accent-[var(--ink)]" type="radio" checked={value.mode === "all"} onChange={() => onChange({ mode: "all", handles: [] })} /> All members
+          <input className="accent-[var(--accent)]" type="radio" checked={value.mode === "all"} onChange={() => onChange({ mode: "all", handles: [] })} /> All members
         </label>
         <label className="flex items-center gap-1.5">
-          <input className="accent-[var(--ink)]" type="radio" checked={value.mode === "some"} onChange={() => onChange({ mode: "some", handles: value.handles })} /> Only selected people
+          <input className="accent-[var(--accent)]" type="radio" checked={value.mode === "some"} onChange={() => onChange({ mode: "some", handles: value.handles })} /> Only selected people
         </label>
       </div>
       {value.mode === "some" && (
         <div className="mt-2 flex flex-wrap gap-3">
           {named.map((p) => (
             <label key={p.handle} className="flex items-center gap-1.5">
-              <input className="accent-[var(--ink)]" type="checkbox" checked={value.handles.includes(p.handle.trim().toLowerCase())}
+              <input className="accent-[var(--accent)]" type="checkbox" checked={value.handles.includes(p.handle.trim().toLowerCase())}
                 onChange={(e) => {
                   const h = p.handle.trim().toLowerCase();
                   onChange({ mode: "some", handles: e.target.checked ? [...value.handles, h] : value.handles.filter((x) => x !== h) });
@@ -125,7 +125,7 @@ export default function NewWorkspacePage() {
   }
 
   return (
-    <div className="paper-grain flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-5 sm:px-6">
         <Logo />
         <div className="flex items-center gap-1">
@@ -134,7 +134,7 @@ export default function NewWorkspacePage() {
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-20 sm:px-6">
-        <div className="animate-rise">
+        <div>
           <p className="text-[12px] font-medium text-accent-ink">New workspace</p>
           <h1 className="mt-1 text-[28px] font-semibold leading-9 tracking-[-0.02em] text-fg">Start a handover from your own project</h1>
           <p className="mt-2 text-[15px] text-fg-2">
@@ -144,7 +144,7 @@ export default function NewWorkspacePage() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="stagger mt-8 space-y-5">
+        <form onSubmit={submit} className="mt-8 space-y-5">
           <Card className="p-5 sm:p-6">
             <label className="text-[13px] font-semibold text-fg" htmlFor="name">Project name</label>
             <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={`${INPUT} mt-1.5`} placeholder="e.g. Robotics club scoring app" maxLength={80} />
@@ -236,7 +236,7 @@ export default function NewWorkspacePage() {
 
           <Card className="p-5">
             <label className="flex items-start gap-3 text-[13px] text-fg-2">
-              <input type="checkbox" checked={authorised} onChange={(e) => setAuthorised(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--ink)]" />
+              <input type="checkbox" checked={authorised} onChange={(e) => setAuthorised(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--accent)]" />
               <span>I&apos;m authorised to use these sources, and they contain no confidential workplace data I don&apos;t have permission to share.</span>
             </label>
           </Card>

@@ -133,43 +133,14 @@
   --color-hl: var(--hl);
   --color-hl-line: var(--hl-line);
 
-  /* Transitional aliases: older class names resolve to the new tokens, so every screen takes the new look at once.
-     Components move to the token names screen by screen. */
-  --color-paper: var(--bg-side);
-  --color-paper-2: var(--bg-sunk);
-  --color-card: var(--bg);
-  --color-ink: var(--fg);
-  --color-ink-2: var(--fg-2);
-  --color-muted: var(--fg-3);
-  --color-amber: var(--accent);
-  --color-amber-ink: var(--accent-ink);
-  --color-amber-soft: var(--accent-soft);
-  --color-on-amber: #ffffff;
-  --color-verified: var(--ver);
-  --color-verified-soft: var(--ver-soft);
-  --color-verified-solid: var(--ver);
-  --color-supported: var(--ver);
-  --color-supported-soft: var(--ver-soft);
-  --color-inferred: var(--inf);
-  --color-inferred-soft: var(--bg-sunk);
-  --color-conflicting: var(--con);
-  --color-conflicting-soft: var(--con-soft);
-  --color-missing: var(--mis);
-  --color-missing-soft: var(--mis-soft);
-  --color-missing-solid: var(--mis);
-  --color-strong: var(--fg);
-  --color-on-strong: var(--bg);
-  --color-navy: var(--fg);
-  --color-panel: var(--bg-sunk);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* radius: 4 tags/kbd, 6 buttons/rows/inputs, 8 boxed lists/cards, 10 large panels */
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 6px;
+  --radius-lg: 8px;
   --radius-xl: 8px;
   --radius-2xl: 10px;
   --radius-3xl: 10px;
@@ -213,10 +184,6 @@ body {
   font-family: var(--font-jetbrains), ui-monospace, monospace;
 }
 
-/* Legacy utilities kept as no-ops while components migrate (the handoff bans grain, serif display, lift, stagger). */
-.paper-grain {}
-.font-display { font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; }
-
 /* ---------------------------------------------------------------- motion: 120–160ms, no entrance staggers, no lift */
 
 /* Hidden at first, shown after 8 s without any JavaScript (used by loading fallbacks). */
@@ -245,15 +212,9 @@ body {
   to { background-position: 200% 0; }
 }
 
-.animate-rise { animation: none; }
 .animate-fade { animation: fade 0.14s ease-out both; }
 .animate-pop { animation: pop 0.14s ease-out both; }
 .animate-drawer { animation: slide-in-right 0.16s ease-out both; }
-.animate-stamp { animation: none; }
-.animate-pulse-dot { animation: none; }
-.animate-draw { animation: none; }
-.stagger > * { animation: none; }
-.lift { transition: background-color 0.12s ease-out, border-color 0.12s ease-out; }
 
 .skeleton {
   background: linear-gradient(90deg, var(--hover) 25%, var(--skeleton-hi) 50%, var(--hover) 75%);
