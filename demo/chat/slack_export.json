@@ -526,7 +526,7 @@
       "name": "rohan",
       "real_name": "Rohan Deshpande"
     },
-    "text": "FIREBASE_SERVER_KEY=AI\u007aaSyD3m0-FAKE-KEY-n0t-real-0000000000",
+    "text": "FIREBASE_SERVER_KEY=AIzaSyD3m0-FAKE-KEY-n0t-real-0000000000",
     "ts": "1784735460.000046",
     "thread_ts": "1784735400.000045"
   },
@@ -1033,5 +1033,16 @@
     },
     "text": "easy, neha can add it",
     "ts": "1793716500.000091"
+  },
+  {
+    "type": "message",
+    "channel": "dev",
+    "user": "U0ROHAN",
+    "user_profile": {
+      "name": "rohan",
+      "real_name": "Rohan Deshpande"
+    },
+    "text": "heads up for the fest page: the sponsor logo has to be on it before we launch. neha, can you pick that up?",
+    "ts": "1793900000.000001"
   }
 ]

@@ -22,6 +22,7 @@ from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Sou
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii, scrub
 from baton.reconstruct.relations import start_here_rank
+from baton.reconstruct.rerender import looks_like_theirs
 from baton.ledger import evidence_rows, ref_for
 from baton.projection import claim_sources, visible, withheld_reason
 from baton.routers.claims import TYPE_LABELS, evidence_payload
@@ -156,6 +157,8 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
     kws = scope_keywords(h.scope)
     claims = [c for c in claims if in_scope(c, ev.get(c.id, []), kws)]
     cited = claim_sources(db, [c.id for c in claims])
+    derived_by = {d.derived_from: d for d in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id,
+                                                                            Claim.derived_from.is_not(None)))}
     shown, withheld = [], []
     for c in claims:
         item = {"id": str(c.id), "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
@@ -164,7 +167,12 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
         if visible(tv, cited.get(c.id, [])):
             shown.append(item)
         else:
-            withheld.append({**item, "reason": withheld_reason(db, h.workspace_id, tv, cited.get(c.id, []))})
+            derived = derived_by.get(c.id)
+            withheld.append({**item, "reason": withheld_reason(db, h.workspace_id, tv, cited.get(c.id, [])),
+                             "matters": looks_like_theirs(c.text, target.display_name),
+                             "rerendered": {"id": str(derived.id), "text": derived.text, "status": derived.status,
+                                            "visible": visible(tv, claim_sources(db, [derived.id]).get(derived.id, []))} if derived else None,
+                             "rerender_tried": bool((c.meta or {}).get("rerender_none"))})
     hidden_inferred = sum(1 for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
                           if c.status == "inferred" and not c.superseded_by)
     all_live = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))

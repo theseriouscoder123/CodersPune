@@ -74,6 +74,8 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
                                                          f"testimony claims · {aft.get('minutes', 0)} min")
         elif a.action == "successor_question_answered":
             label, what = "Answered a question from the successor", None
+        elif a.action == "rerender":
+            label, what = "Tried to rewrite a withheld item from the successor's sources", (a.after or {}).get("status")
         elif a.action == "relation_override":
             label, what = "Changed how two claims relate", f"{(a.before or {}).get('relation', '?')} → {(a.after or {}).get('relation', '?')}"
         elif a.action == "stale_override":

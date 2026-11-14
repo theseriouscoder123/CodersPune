@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
+import { AckControls, AckProgress, ReviewerQuestions, type AcksOut } from "@/components/ledger/Acks";
 import { HandoverChanges } from "@/components/ledger/HandoverChanges";
 import { AskHandover } from "@/components/ledger/AskHandover";
 import { EvidenceCard } from "@/components/ledger/EvidenceCard";
@@ -49,6 +50,8 @@ function HandoverInner() {
   const view = useApi<HandoverView>(hid ? `/handovers/${hid}` : null);
   const isReviewer = ws.persona.roles.includes("reviewer");
   const versions = useApi<Versions>(hid && isReviewer ? `/handovers/${hid}/versions` : null);
+  const isSuccessor = !!sel.selected && ws.persona.roles.includes("successor");
+  const acks = useApi<AcksOut>(hid && (isReviewer || isSuccessor) && view.data?.approved ? `/handovers/${hid}/acks` : null);
   const [drawer, setDrawer] = useState<{ item: HandoverItem; evidence: EvidenceInfo[] | null; error?: string } | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -142,8 +145,10 @@ function HandoverInner() {
                 );
               })}
             </div>
+            {acks.data && acks.data.counts.total > 0 && <AckProgress acks={acks.data} />}
           </Card>
 
+          {acks.data && isReviewer && <ReviewerQuestions acks={acks.data} wsId={ws.id} onChanged={acks.reload} />}
           {hid && <HandoverChanges handoverId={hid} version={v.version} />}
           {hid && <AskHandover handoverId={hid} workspaceId={ws.id} onOpenEvidence={openEvidence} />}
 
@@ -184,6 +189,9 @@ function HandoverInner() {
                             className="mt-2 inline-flex max-w-full items-center gap-1 text-left font-mono text-[11px] text-supported hover:underline">
                             <span className="truncate">{[...new Set(it.evidence.map((e) => e.ref))].join(" · ")}</span> <ArrowRight className="h-3 w-3 shrink-0 transition group-hover:translate-x-0.5" />
                           </button>
+                        )}
+                        {acks.data && hid && isSuccessor && !it.history && it.claim_id && (
+                          <AckControls hid={hid} wsId={ws.id} claimId={it.claim_id} ack={acks.data.items[it.claim_id]} canRespond={acks.data.can_respond} onChanged={acks.reload} />
                         )}
                       </li>
                     ))}
