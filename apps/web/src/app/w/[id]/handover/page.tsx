@@ -179,10 +179,11 @@ function HandoverInner() {
                       <li key={`r${i}`} className="flex items-center gap-2 rounded-xl border border-dashed border-line-2 bg-paper/60 px-3 py-2.5 text-sm italic text-muted"><Lock className="h-3.5 w-3.5" /> {it.text}</li>
                     ) : (
                       <li key={it.claim_id} onClick={it.evidence.length > 0 ? () => openEvidence(it) : undefined}
-                        className={`group rounded-xl border border-line bg-paper/40 px-3.5 py-3 transition hover:border-line-2 hover:bg-card ${it.evidence.length > 0 ? "cursor-pointer" : ""} ${it.history ? "opacity-70" : ""}`}>
+                        className={`group rounded-xl border border-line bg-paper/40 px-3.5 py-3 transition hover:border-line-2 hover:bg-card ${it.evidence.length > 0 ? "cursor-pointer" : ""} ${it.history ? "border-dashed bg-paper/20" : ""}`} data-history={it.history ? "1" : undefined}>
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusChip status={it.status} promoted={!!it.flags?.reviewer_confirmed_without_evidence} />
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{it.type_label}</span>
+                          {it.status === "supported" && !it.history && <span className="text-[11px] text-muted" data-testid="unconfirmed" title="The quote was found in the source and a separate AI check agrees, but no person has confirmed it">· not yet confirmed by a person</span>}
                           {it.history && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted"><History className="h-3 w-3" /> {it.stale ? "Probably done or parked" : "Superseded"}</span>}
                         </div>
                         <p className={`mt-1.5 text-[14.5px] leading-snug ${it.history ? "text-muted line-through decoration-line-2" : "text-ink"}`}>{it.text}</p>
@@ -191,7 +192,6 @@ function HandoverInner() {
                         )}
                         {it.stale && it.stale_reason && <p className="mt-1 text-xs text-muted" data-testid="stale-reason">{it.stale_reason}</p>}
                         {it.flags?.reviewer_confirmed_without_evidence && <p className="mt-1 text-xs text-muted">Reviewer-confirmed (no source evidence)</p>}
-                        {it.status === "supported" && !it.history && <p className="mt-1 text-[11px] text-muted" data-testid="unconfirmed">AI-checked against the quote, not yet confirmed by a person</p>}
                         {it.status === "missing" && <p className="mt-1.5 text-xs font-medium text-missing">No source answers this. Ask {v.leaver} or {reviewer?.name ?? "the reviewer"}.</p>}
                         {it.evidence.length > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); openEvidence(it); }} data-testid="source-ref"

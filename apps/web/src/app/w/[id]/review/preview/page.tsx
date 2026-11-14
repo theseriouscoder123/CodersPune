@@ -118,11 +118,10 @@ function PreviewInner() {
             {counts.unconfirmed} of the {counts.current} shared items passed the AI quote check but no person has confirmed them. {name} will see them marked that way.
           </p>
         )}
-        {pv.data?.warnings && (pv.data.warnings.unresolved_conflicts > 0 || pv.data.warnings.unreviewed > 0 || (pv.data.warnings.source_changed ?? 0) > 0) && (
+        {pv.data?.warnings && (pv.data.warnings.unresolved_conflicts > 0 || pv.data.warnings.missing > 0 || (pv.data.warnings.source_changed ?? 0) > 0) && (
           <div className="mt-4 space-y-1 rounded-xl border border-amber/30 bg-amber-soft/70 p-3 text-xs text-amber-ink" data-testid="approve-warnings">
             <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-3.5 w-3.5" /> Before you approve</p>
             {pv.data.warnings.unresolved_conflicts > 0 && <p>· {pv.data.warnings.unresolved_conflicts} claims are still in an unresolved conflict. They&apos;ll be shared under &quot;Risks and conflicts&quot;.</p>}
-            {pv.data.warnings.unreviewed > 0 && <p>· {pv.data.warnings.unreviewed} claims haven&apos;t been reviewed by a person yet.</p>}
             {(pv.data.warnings.source_changed ?? 0) > 0 && <p>· {pv.data.warnings.source_changed} claims lost their quote when a source changed. Re-check them first.</p>}
             {pv.data.warnings.missing > 0 && <p>· {pv.data.warnings.missing} expected items are missing and will appear as Unresolved.</p>}
           </div>
@@ -151,7 +150,7 @@ function PreviewInner() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{SECTION_NAMES[sec]} · {items.length}</p>
                   <ul className="mt-2 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
                     {items.map((it) => (
-                      <li key={it.id} className={`flex items-start gap-3 px-4 py-2.5 text-sm ${it.history ? "opacity-70" : ""}`}>
+                      <li key={it.id} className={`flex items-start gap-3 px-4 py-2.5 text-sm ${it.history ? "bg-paper/40" : ""}`} data-history={it.history ?? undefined}>
                         <StatusChip status={it.status} />
                         <span className={it.history ? "text-muted" : "text-ink"}>
                           {it.history && <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider">{it.history === "stale" ? "Probably done ·" : "Superseded ·"}</span>}
