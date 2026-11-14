@@ -79,3 +79,22 @@ def test_export_labels_history_and_carries_quotes(world):
     assert "Earlier, changed" in md and "Now: Push reminders moved from OneSignal to FCM." in md
     assert "> “" in md  # key quotes travel with the items
     assert "TechNova" not in md  # withheld for Neha, in the export too
+
+
+def test_compare_two_people(world):
+    """Person-to-person visibility diff: Neha vs Kabir (who can read #core-team), consistent with the counts."""
+    c = TestClient(app)
+    c.cookies.set("baton_visitor", "counts-visitor")
+    ws = world["ws"]
+    p = {m["handle"]: m["id"] for m in c.get(f"/api/workspaces/{ws}").json()["members"]}
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+    url = f"/api/handovers/{hid}/compare?a={p['neha']}&b={p['kabir']}"
+    assert c.get(url, headers={"X-Baton-Persona": p["neha"]}).status_code == 403
+    assert c.get(f"/api/handovers/{hid}/compare?a={p['neha']}&b={p['neha']}", headers={"X-Baton-Persona": p["meera"]}).status_code == 422
+    d = c.get(url, headers={"X-Baton-Persona": p["meera"]}).json()
+    assert d["only_a"] == []  # Kabir reads everything Neha reads here
+    assert any("TechNova" in x["text"] for x in d["only_b"]) and all("#core-team" in x["reason"] for x in d["only_b"])
+    a, b = d["a"]["counts"], d["b"]["counts"]
+    assert a["current"] + a["history"] == d["both"] + len(d["only_a"])
+    assert b["current"] + b["history"] == d["both"] + len(d["only_b"])
+    assert a["withheld"] == len(d["only_b"])  # what Neha can't see is exactly what only Kabir sees

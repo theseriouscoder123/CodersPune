@@ -53,6 +53,7 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 
 **Handover**
 - Visibility preview: exactly what the successor will see, what is withheld and why
+- **Person-to-person visibility diff (#3):** compare any two people's views of a version, with the reason for every difference
 - One count for every screen: shared, history and withheld
 - **Withheld items that look like the successor's own work, flagged (#3)**, with rewrite or change-access actions
 - **Re-rendering a withheld item from the successor's accessible sources only (#3)**, quote-checked, verified and approved before sharing
@@ -82,7 +83,7 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 |---|---|---|---|
 | 1 | Gap interview: targeted questions from Missing and Conflicting items; answers become a cited "leaver testimony" source | **Done.** Reviewer drafts, edits and sends; the leaver answers on their own page; testimony source with intersected access; testimony claims with explicit status rules; conflict picks propose a resolution; the successor sees testimony only after approval. No AI needed. | D50 |
 | 2 | Conflict and supersession timeline: reversed decision vs genuine contradiction; interactive timeline | **Done.** Pure relation rules with recorded signals, date sanity, stale open work, reviewer overrides that survive re-runs, an interactive timeline, and the successor sees history and "changed on". No AI. | D52 |
-| 3 | Successor acknowledgement and visibility diff with re-rendering | **Done**, except a person-to-person diff screen (see §10). Acknowledgement per version with carry-over and reset; questions answered and closed; withheld-but-theirs warnings; re-rendering from accessible sources only, with a test that pins what the AI receives. | D53, D54, D59 |
+| 3 | Successor acknowledgement and visibility diff with re-rendering | **Done.** Acknowledgement per version with carry-over and reset; questions answered and closed; withheld-but-theirs warnings; re-rendering from accessible sources only, with a test that pins what the AI receives; a person-to-person comparison (what A sees that B doesn't, with the reason) on the preview page. | D53, D54, D59, D60 |
 
 **Round 2 tester findings fixed (F1–F15 in `docs/07_ROUND3_PLAN.md`)**
 - One count for every screen (F1)
@@ -119,8 +120,8 @@ See `docs/ARCHITECTURE.md` (as built, with a diagram). In short:
 ## 6. Testing details
 
 From `docs/TESTING.md` §Round 3, all produced on 14 Nov 2026:
-- **API tests:** 214 passed, 0 failed (real Postgres).
-- **Production e2e:** 17/17 passed, covering the judge flow, interview, timeline, acknowledgements and rewrites, and counts across screens, plus axe accessibility in light and dark.
+- **API tests:** 215 passed, 0 failed (real Postgres).
+- **Production e2e:** 18/18 passed, covering the judge flow, interview, timeline, acknowledgements and rewrites, counts across screens and the person-to-person comparison, plus axe accessibility in light and dark.
 - **Citation eval** (production demo ledger):
   - recall 13/13, status accuracy 13/13, citation precision 9/10 (target ≥ 90% met);
   - 0 permission leaks, 0 secret leaks;
@@ -141,7 +142,7 @@ From `docs/TESTING.md` §Round 3, all produced on 14 Nov 2026:
 See `docs/ROADMAP.md`.
 - **Phase 1 (17 Nov – 20 Dec 2026):** real user sessions and one real DevClub handover.
 - **Phase 2 (Jan – Feb 2027):** GitHub sign-in, GitHub App for private repos, scheduled Refresh, a live Slack connector, overdue question tracking.
-- **Phase 3 (Mar – Apr 2027):** extraction quality across models, a person-to-person diff, larger repos, a knowledge-risk panel.
+- **Phase 3 (Mar – Apr 2027):** extraction quality across models, larger repos, a knowledge-risk panel.
 
 Each phase has effort estimates, exit tests and risks with mitigations.
 
@@ -178,12 +179,12 @@ Round 3 deviations are D47–D59 in `docs/DECISIONS.md`:
 - **Testimony status rules** (D50).
 - **Count, duplicate and speed fixes** (D56–D58).
 - **Changes from the readiness test** (D59).
+- **Person-to-person comparison** (D60).
 
 The successor-readiness measurement uses simulated testers rather than the 35 user tests the Round 1 PDF planned.
 
 ## 10. Not done, estimated or limited (honest)
 
-- **Person-to-person visibility diff screen:** not built (Round 3 cut list item 2). The preview shows the successor's view and withheld items, and the version changelog shows changes after the permission filter.
 - **Real people:** none have tested Round 3 yet. The readiness numbers come from simulated AI testers, and leaver effort is an estimate. The product logs real interview durations automatically.
 - **Email delivery of the interview link:** uses the existing optional Gmail SMTP path. Copying the link is the default.
 - **Live re-rendering on custom workspaces:** works but uses the AI (rate-limited, with a clear message when the quota is out). The demo's rewrites are precomputed.

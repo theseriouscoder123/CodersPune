@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Lock, 
 import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
+import { CompareViews } from "@/components/ledger/CompareViews";
 import { StatusChip } from "@/components/ledger/StatusChip";
 import { useToast } from "@/components/Toast";
 import { HandoverPicker, useHandoverSelection } from "@/components/workspace/HandoverPicker";
@@ -177,6 +178,11 @@ function PreviewInner() {
             </Card>
           </section>
         </div>
+      )}
+      {pv.data && handover && (
+        <CompareViews hid={handover.id} members={ws.members} defaultA={handover.successor_id}
+          defaultB={ws.members.find((m) => m.id !== handover.successor_id && m.roles.includes("member") && !m.roles.includes("leaver") && !m.roles.includes("reviewer"))?.id
+            ?? ws.members.find((m) => m.id !== handover.successor_id)!.id} />
       )}
     </div>
   );

@@ -28,7 +28,7 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
 **New in Round 3, the three improvements:**
 - **Gap interview (#1):** on **Verify** (Missing tab), *Prepare questions for the leaver* builds questions from the Missing and Conflicting items. Switch to **Rohan** to answer them. Each answer becomes a cited **leaver testimony** source that can never be wider in access than the items it answers.
 - **Decision timeline (#2):** on **Reconstruct**, the timeline tells a *changed decision* apart from a *contradiction* and flags open work that later events overtook ("Probably done or parked"). Click a label to see the exact signal, and override it as the reviewer.
-- **Acknowledgement and re-rendering (#3):** the preview flags withheld items that look like Neha's own work and offers **Rewrite from Neha's sources**, which rebuilds the item only from sources she can read (precomputed in the demo). As **Neha**, mark items *Got it*, *Ask a question* or *Not mine*. Meera answers questions in place, and Neha closes them. Responses carry over between versions unless the item changed.
+- **Acknowledgement and re-rendering (#3):** the preview flags withheld items that look like Neha's own work and offers **Rewrite from Neha's sources**, which rebuilds the item only from sources she can read (precomputed in the demo). The preview can also **compare any two people's views** (Neha vs Kabir shows exactly what #core-team adds). As **Neha**, mark items *Got it*, *Ask a question* or *Not mine*. Meera answers questions in place, and Neha closes them. Responses carry over between versions unless the item changed.
 
 ## The trust rules, and where they're enforced
 
@@ -79,8 +79,8 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
 
 | Measure | Result (14 Nov 2026) |
 |---|---|
-| API tests | **214 passed**, real Postgres |
-| End-to-end and accessibility, **against production** | **17/17 passed**, including every Round 3 journey; axe: 0 serious violations |
+| API tests | **215 passed**, real Postgres |
+| End-to-end and accessibility, **against production** | **18/18 passed**, including every Round 3 journey; axe: 0 serious violations |
 | Citation precision (target ≥ 90%) | **9/10**; claim recall 13/13, status accuracy 13/13 |
 | Permission safety (target 0) | **0 leaks** in 179 successor requests across all 29 GET routes |
 | Successor readiness (simulated blind testers) | **10/10 in about 14 s with Baton** vs 10/10 in about 37 s from raw sources (12 files) |

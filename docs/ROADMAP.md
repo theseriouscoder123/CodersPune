@@ -39,12 +39,11 @@ reconstruct → verify → review → approve → handover, plus the three Round
 - *Slack API review and rate limits.* Mitigation: keep exports as the default and make live sync opt-in.
 - *OAuth changes the auth model.* Mitigation: the permission projection is already server-side and tested by endpoint sweeps, so only identity resolution changes.
 
-## Phase 3: Quality and scale (Mar – Apr 2027, about 6 weeks)
+## Phase 3: Quality and scale (Mar – Apr 2027, about 5 weeks)
 
 | Work | Effort | Exit test |
 |---|---|---|
 | Extraction quality on non-Gemini models (recall was 9–10/13 on Groq vs 13/13 on Gemini): better batching and retries, plus a small paid model budget for real teams | 2 weeks | Recall ≥ 12/13 on two providers |
-| Person-to-person visibility diff (successor vs teammate), cut from Round 3 | 1 week | The reviewer can compare any two members' views |
 | Larger repos: history beyond about 60k characters per run, using embeddings to prioritise (`EMBEDDINGS=fastembed` seam exists) | 2 weeks | A 2,000-commit repo completes within the free time limits |
 | Knowledge-risk panel: files and services that only the leaver maintains, before a handover even starts | 1 week | Shown for the demo and one real repo |
 

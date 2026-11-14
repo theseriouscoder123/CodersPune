@@ -18,7 +18,7 @@ async function startDemo(page: Page) {
 
 async function switchPersona(page: Page, name: string) {
   await page.getByTestId("persona-switcher").click();
-  await page.getByRole("option", { name: new RegExp(name) }).click();
+  await page.getByTestId("persona-menu").getByRole("option", { name: new RegExp(name) }).click();
   await expect(page.getByTestId("persona-switcher")).toContainText(name);
 }
 

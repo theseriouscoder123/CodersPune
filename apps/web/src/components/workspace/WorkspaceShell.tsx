@@ -112,7 +112,7 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
         <ChevronDown className={`h-4 w-4 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="animate-pop absolute right-0 z-30 mt-2 w-80 origin-top-right overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)]" role="listbox">
+        <div className="animate-pop absolute right-0 z-30 mt-2 w-80 origin-top-right overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)]" role="listbox" data-testid="persona-menu">
           <p className="border-b border-line px-4 py-3 text-xs text-muted">
             Switch persona to see exactly what each person is allowed to see. The server enforces it.
           </p>

@@ -276,6 +276,48 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
             "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings}
 
 
+@router.get("/handovers/{handover_id}/compare")
+def compare(handover_id: uuid.UUID, request: Request, a: uuid.UUID, b: uuid.UUID, db: Session = Depends(get_db)) -> dict:
+    """Improvement #3 (visibility diff, person to person): of the items the next approval would share, what person A
+    sees that B doesn't, and the reverse, each with the reason. Reviewer only; built on the same items, placement and
+    visibility rule as the preview and every count, so the comparison can't disagree with them."""
+    h, ctx = _handover(db, request, handover_id)
+    if not ctx.is_reviewer:
+        raise HTTPException(403, "Only the reviewer can compare what two people see")
+    people = []
+    for mid in (a, b):
+        m = db.get(Member, mid)
+        if m is None or m.workspace_id != h.workspace_id:
+            raise HTTPException(404, "Member not found")
+        people.append(m)
+    if a == b:
+        raise HTTPException(422, "Pick two different people to compare")
+    va, vb = (_viewer_for(db, m.id, h.workspace_id) for m in people)
+    items = handover_items(db, h)
+    acls = chunk_acls(db, items)
+    cited = claim_sources(db, [uuid.UUID(it["claim_id"]) for it in items])
+    succ = db.get(Member, h.successor_member_id) if h.successor_member_id else None
+    only_a, only_b, both = [], [], 0
+
+    def row(it: dict, blocked_for) -> dict:
+        section, _, history = place(it, succ.display_name if succ else None)
+        return {"id": it["claim_id"], "text": it["text"], "status": it["status"],
+                "type_label": TYPE_LABELS.get(it["type"], it["type"]), "section": section, "history": history,
+                "reason": withheld_reason(db, h.workspace_id, blocked_for, cited.get(uuid.UUID(it["claim_id"]), []))}
+
+    for it in items:
+        sa, sb = item_visible(va, it, acls), item_visible(vb, it, acls)
+        if sa and sb:
+            both += 1
+        elif sa:
+            only_a.append(row(it, vb))
+        elif sb:
+            only_b.append(row(it, va))
+    return {"a": {"id": str(people[0].id), "name": people[0].display_name, "counts": count_items(items, va, acls)},
+            "b": {"id": str(people[1].id), "name": people[1].display_name, "counts": count_items(items, vb, acls)},
+            "both": both, "only_a": only_a, "only_b": only_b}
+
+
 class ApproveIn(BaseModel):
     note: str | None = Field(default=None, max_length=500)
     show_restricted_stubs: bool | None = None

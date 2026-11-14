@@ -25,3 +25,21 @@ test("approve dialog and successor page agree on counts", async ({ page }) => {
   const history = await page.locator("[data-section] li[data-history]").count();
   expect((await cards.count()) - history).toBe(Number(shared));
 });
+
+/** Improvement #3, person-to-person visibility diff on the preview page. */
+test("compare what two people see", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Try the demo" }).first().click();
+  await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
+  const ws = page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
+  await page.goto(`/w/${ws}/review/preview`);
+  const panel = page.getByTestId("compare-views");
+  await panel.scrollIntoViewIfNeeded();
+  await expect(panel.getByTestId("compare-summary")).toContainText("only Kabir");
+  await expect(panel).toContainText("TechNova");
+  await expect(panel).toContainText("Hidden from Neha: cites #core-team");
+  const neha = await panel.getByTestId("compare-b").locator("option", { hasText: "Neha" }).getAttribute("value");
+  await panel.getByTestId("compare-b").selectOption(neha!);
+  await expect(panel).toContainText("Pick two different people.");
+});

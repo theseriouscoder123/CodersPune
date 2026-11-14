@@ -43,7 +43,7 @@ test("gap interview: send, answer as the leaver, review the testimony", async ({
 
   // back to the reviewer
   await page.getByTestId("persona-switcher").click();
-  await page.getByRole("option", { name: /Meera/ }).click();
+  await page.getByTestId("persona-menu").getByRole("option", { name: /Meera/ }).click();
   await expect(page.getByTestId("open-testimony").first()).toBeVisible();
   await page.getByTestId("resolve-as-suggested").first().click();
   await expect(page.getByText("Conflict resolved").first()).toBeVisible();

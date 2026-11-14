@@ -51,8 +51,8 @@ The testers were fresh AI agents (Claude Sonnet) with no context from this proje
 
 | Layer | Result |
 |---|---|
-| API (`uv run pytest`) | **213 passed, 0 failed** (local Postgres 16). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts and export (2), duplicates (2), leak sweep (1). |
-| End-to-end on production (`pnpm exec playwright test`) | **17 passed, 0 failed.** Round 3 added: gap interview, decision timeline, acknowledgements and rewrites, and counts agreeing across screens. Accessibility (axe) still has 0 serious violations in light and dark. |
+| API (`uv run pytest`) | **215 passed, 0 failed** (local Postgres 16). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts, export and person-to-person comparison (3), duplicates (2), leak sweep (1). |
+| End-to-end on production (`pnpm exec playwright test`) | **18 passed, 0 failed.** Round 3 added: gap interview, decision timeline, acknowledgements and rewrites, counts agreeing across screens, and the person-to-person comparison. Accessibility (axe) still has 0 serious violations in light and dark. |
 
 ### Performance (production, measured from India)
 
