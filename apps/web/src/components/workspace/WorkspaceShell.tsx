@@ -1,20 +1,20 @@
 "use client";
 
-import { Check, ChevronDown, Eye, FileSearch, Gauge, GitBranch, Handshake, History, Lock, RotateCcw, Scale, Search, UserCheck, UsersRound } from "lucide-react";
+import { CalendarDays, Check, ChevronsUpDown, Gauge, History, Info, Lock, Menu, MessageCircleQuestion, Search, UsersRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
-import { Logo } from "@/components/Logo";
-import { canSearch, SearchPalette } from "@/components/workspace/SearchPalette";
-import { TourChecklist } from "@/components/workspace/TourChecklist";
-import { TryDemoButton } from "@/components/TryDemoButton";
+import { useConfirm } from "@/components/Confirm";
 import { LeaverBanner } from "@/components/interview/LeaverBanner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
-import { ButtonLink, Spinner } from "@/components/ui";
+import { TryDemoButton } from "@/components/TryDemoButton";
+import { ButtonLink, Kbd, Spinner } from "@/components/ui";
+import { canSearch, SearchPalette } from "@/components/workspace/SearchPalette";
+import { TourChecklist } from "@/components/workspace/TourChecklist";
 import { api, ApiError, storePersona, type WorkspaceInfo } from "@/lib/api";
-import { useConfirm } from "@/components/Confirm";
 
 type Ctx = { ws: WorkspaceInfo; personaVersion: number; switchPersona?: (id: string) => void };
 const WorkspaceContext = createContext<Ctx | null>(null);
@@ -25,39 +25,42 @@ export function useWorkspace(): Ctx {
   return ctx;
 }
 
-const STEPS = [
-  { key: "sources", href: "sources", label: "Connect", who: "all", Icon: GitBranch },
-  { key: "ledger", href: "ledger", label: "Reconstruct", who: "ledger", Icon: FileSearch },
-  { key: "review", href: "review", label: "Verify", who: "ledger", Icon: Scale },
-  { key: "preview", href: "review/preview", label: "Review", who: "reviewer", Icon: UserCheck },
-  { key: "handover", href: "handover", label: "Handover", who: "all", Icon: Handshake },
-];
-
-const ROLE_STYLE: Record<string, string> = {
-  admin: "bg-strong text-on-strong ring-strong",
-  reviewer: "bg-strong text-on-strong ring-strong",
-  leaver: "bg-amber-soft text-amber-ink ring-amber/40",
-  successor: "bg-verified-soft text-verified ring-verified/30",
-  member: "bg-paper-2 text-ink-2 ring-line",
+type Nav = {
+  sources: { visible: number; total: number }; claims?: number; to_review?: number;
+  handover?: { id: string; version: number | null; acks?: { done: number; total: number; questions_open: number; questions_answered: number } };
 };
 
-export function RoleBadge({ role }: { role: string }) {
-  return (
-    <span className={`rounded-full px-2 py-[2px] text-[10.5px] font-semibold capitalize ring-1 ${ROLE_STYLE[role] ?? ROLE_STYLE.member}`}>{role}</span>
-  );
-}
+const STEPS = [
+  { key: "sources", href: "sources", label: "Connect", who: "all" },
+  { key: "ledger", href: "ledger", label: "Reconstruct", who: "ledger" },
+  { key: "review", href: "review", label: "Verify", who: "ledger" },
+  { key: "preview", href: "review/preview", label: "Review & approve", who: "reviewer" },
+  { key: "handover", href: "handover", label: "Handover", who: "all" },
+] as const;
 
-const AVATAR = ["#14213d", "#2b5b88", "#1f6f4a", "#b5531a", "#8a5a06", "#0e7490", "#6d4c41", "#3f5f3a"];
+/** Pages that lay out their own full-height panes (no centred column). */
+const FULL_BLEED = [/\/review$/];
+
+const PAGE_TITLES: [RegExp, string][] = [
+  [/\/sources$/, "Connect"], [/\/ledger$/, "Reconstruct"], [/\/runs\//, "Pipeline run"], [/\/review\/preview$/, "Review & approve"],
+  [/\/review$/, "Verify"], [/\/handover$/, "Handover"], [/\/first-week$/, "First week"], [/\/leaving$/, "Before the last day"],
+  [/\/interview\//, "Gap interview"], [/\/risk$/, "Knowledge risk"], [/\/activity$/, "Activity"], [/\/team$/, "Team & access"],
+  [/\/health$/, "Pipeline health"],
+];
+
+/* ------------------------------------------------------------------ avatars, roles */
+
+const AVATAR = ["#B45309", "#0E7490", "#4D7C0F", "#475569", "#9F1239", "#1D4ED8", "#6D4C41", "#0F766E"];
 export function avatarColor(handle: string) {
   let h = 0;
   for (const ch of handle) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return AVATAR[h % AVATAR.length];
 }
 
-export function Avatar({ m, size = 28 }: { m: { name: string; handle: string }; size?: number }) {
+export function Avatar({ m, size = 22 }: { m: { name: string; handle: string }; size?: number }) {
   return (
-    <span className="grid shrink-0 place-items-center rounded-full font-semibold text-white ring-2 ring-card"
-      style={{ background: avatarColor(m.handle), width: size, height: size, fontSize: size * 0.42 }} aria-hidden>
+    <span className="grid shrink-0 place-items-center rounded-full font-semibold text-white ring-2 ring-bg"
+      style={{ background: avatarColor(m.handle), width: size, height: size, fontSize: Math.max(9, Math.round(size * 0.44)) }} aria-hidden>
       {m.name.slice(0, 1).toUpperCase()}
     </span>
   );
@@ -67,12 +70,28 @@ function shownRoles(roles: string[]) {
   const r = roles.filter((x) => x !== "member" && !(x === "admin" && roles.includes("reviewer")));
   return r.length ? r : ["member"];
 }
+const ROLE_LABEL: Record<string, string> = { admin: "Admin", reviewer: "Reviewer", leaver: "Leaving", successor: "Taking over", member: "Member" };
+
+export function RoleBadge({ role }: { role: string }) {
+  return <span className="rounded-[4px] border border-line px-1.5 text-[11px] font-medium leading-[18px] text-fg-3">{ROLE_LABEL[role] ?? role}</span>;
+}
+
+/* ------------------------------------------------------------------ top-bar actions slot */
+
+/** Pages render their actions here, so they sit in the top bar next to the breadcrumb (at most one primary). */
+const noSubscribe = () => () => {};
+export function TopbarActions({ children }: { children: React.ReactNode }) {
+  const el = useSyncExternalStore(noSubscribe, () => document.getElementById("topbar-actions"), () => null);
+  return el ? createPortal(children, el) : null;
+}
+
+/* ------------------------------------------------------------------ person switcher (sidebar footer) */
 
 function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: string) => void }) {
   const [open, setOpen] = useState(false);
-  const me = ws.members.find((m) => m.id === ws.persona.id);
   const ref = useRef<HTMLDivElement>(null);
-  const current = ws.members.find((m) => m.id === ws.persona.id);
+  const me = ws.members.find((m) => m.id === ws.persona.id);
+  const roleText = shownRoles(ws.persona.roles).map((r) => ROLE_LABEL[r] ?? r).join(", ");
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
@@ -88,45 +107,43 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
   if (ws.persona_locked) {
     // Identity comes from this person's invite link; the server won't accept anyone else.
     return (
-      <div className="flex items-center gap-2.5 rounded-xl border border-line bg-card py-1.5 pl-1.5 pr-3 text-sm" data-testid="persona-locked"
+      <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1.5 py-1" data-testid="persona-locked"
         title="You joined through a private invite link, so you always see this workspace as yourself.">
-        {me && <Avatar m={me} size={28} />}
-        <span className="text-left leading-tight">
-          <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted"><Lock className="h-2.5 w-2.5" /> Signed in as</span>
-          <span className="block font-semibold text-ink">{ws.persona.name}</span>
+        {me && <Avatar m={me} size={24} />}
+        <span className="min-w-0 leading-tight">
+          <span className="block truncate text-[13px] font-medium text-fg">{ws.persona.name}</span>
+          <span className="flex items-center gap-1 text-[11.5px] text-fg-3"><Lock className="h-3 w-3" /> Signed in as · {roleText}</span>
         </span>
-        <span className="hidden gap-1 sm:flex">{shownRoles(ws.persona.roles).map((r) => <RoleBadge key={r} role={r} />)}</span>
       </div>
     );
   }
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative min-w-0 flex-1" ref={ref}>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open} data-testid="persona-switcher"
-        className="flex items-center gap-2.5 rounded-xl border border-line bg-card py-1.5 pl-1.5 pr-3 text-sm shadow-[var(--shadow-sm)] transition hover:border-line-2 hover:shadow-[var(--shadow-md)]">
-        {current && <Avatar m={current} size={28} />}
-        <span className="text-left leading-tight">
-          <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Viewing as</span>
-          <span className="block font-semibold text-ink">{ws.persona.name}</span>
+        className="flex w-full min-w-0 items-center gap-2.5 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-hover">
+        {me && <Avatar m={me} size={24} />}
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-[13px] font-medium text-fg">{ws.persona.name}</span>
+          <span className="block truncate text-[11.5px] text-fg-3">Viewing as · {roleText}</span>
         </span>
-        <span className="hidden gap-1 sm:flex">{shownRoles(ws.persona.roles).map((r) => <RoleBadge key={r} role={r} />)}</span>
-        <ChevronDown className={`h-4 w-4 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-3" />
       </button>
       {open && (
-        <div className="animate-pop absolute right-0 z-30 mt-2 w-80 origin-top-right overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)]" role="listbox" data-testid="persona-menu">
-          <p className="border-b border-line px-4 py-3 text-xs text-muted">
-            Switch persona to see exactly what each person is allowed to see. The server enforces it.
+        <div className="animate-pop absolute bottom-full left-0 z-40 mb-1.5 w-72 overflow-hidden rounded-lg border border-line bg-bg shadow-[var(--pop)]" role="listbox" data-testid="persona-menu">
+          <p className="border-b border-line px-3 py-2.5 text-[12px] leading-[17px] text-fg-3">
+            Switch person to see exactly what each person is allowed to see. The server enforces it.
           </p>
-          <ul className="p-1.5">
+          <ul className="p-1">
             {ws.members.map((m) => (
               <li key={m.id}>
                 <button type="button" role="option" aria-selected={m.id === ws.persona.id} onClick={() => { setOpen(false); if (m.id !== ws.persona.id) onSwitch(m.id); }}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-paper ${m.id === ws.persona.id ? "bg-paper" : ""}`}>
-                  <Avatar m={m} size={34} />
-                  <span className="flex-1">
-                    <span className="block text-sm font-semibold text-ink">{m.name}</span>
-                    <span className="mt-1 flex flex-wrap gap-1">{shownRoles(m.roles).map((r) => <RoleBadge key={r} role={r} />)}</span>
+                  className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-hover ${m.id === ws.persona.id ? "bg-active" : ""}`}>
+                  <Avatar m={m} size={22} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-medium text-fg">{m.name}</span>
+                    <span className="block text-[11.5px] text-fg-3">{shownRoles(m.roles).map((r) => ROLE_LABEL[r] ?? r).join(", ")}</span>
                   </span>
-                  {m.id === ws.persona.id && <Check className="h-4 w-4 text-verified" />}
+                  {m.id === ws.persona.id && <Check className="h-3.5 w-3.5 text-fg-2" />}
                 </button>
               </li>
             ))}
@@ -137,65 +154,193 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
   );
 }
 
-function Stepper({ ws }: { ws: WorkspaceInfo }) {
-  const pathname = usePathname();
-  const roles = ws.persona.roles;
-  const allowed = (who: string) =>
-    who === "all" || (who === "reviewer" ? roles.includes("reviewer") : roles.some((r) => ["reviewer", "admin", "leaver"].includes(r)));
-  const activeKey = pathname.endsWith("/review/preview") ? "preview"
-    : STEPS.find((s) => pathname.includes(`/${s.href}`))?.key ?? (pathname.includes("/runs/") ? "ledger" : "");
-  const activeIdx = STEPS.findIndex((s) => s.key === activeKey);
-  const navRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    // On narrow screens keep the current step visible in the horizontally scrolling stepper.
-    navRef.current?.querySelector('[aria-current="step"]')?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
-  }, [activeKey]);
+/* ------------------------------------------------------------------ step-state icons */
 
+function StepIcon({ state }: { state: "done" | "current" | "todo" | "locked" }) {
+  if (state === "locked") return <Lock className="h-3.5 w-3.5 shrink-0 text-fg-4" aria-hidden />;
   return (
-    <nav ref={navRef} aria-label="Workflow steps" className="no-scrollbar -mx-1 overflow-x-auto px-1">
-      <ol className="flex min-w-max items-center">
-        {STEPS.map((s, i) => {
-          const active = i === activeIdx;
-          const ok = allowed(s.who);
-          const done = i < activeIdx && ok;
-          const node = (
-            <span className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition ${active ? "bg-card shadow-[var(--shadow-sm)] ring-1 ring-line" : ok ? "hover:bg-card/70" : ""}`}>
-              <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold transition ${
-                active ? "bg-strong text-on-strong" : done ? "bg-verified-solid text-white" : ok ? "bg-card text-ink-2 ring-1 ring-line-2" : "bg-paper-2 text-muted"}`}>
-                {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : !ok ? <Lock className="h-3 w-3" /> : <s.Icon className="h-3.5 w-3.5" strokeWidth={2.2} />}
-              </span>
-              <span className="leading-tight">
-                <span className={`block text-[10px] font-semibold uppercase tracking-wider ${active ? "text-amber-ink" : "text-muted"}`}>Step {i + 1}</span>
-                <span className={`block text-[13px] font-semibold ${active ? "text-ink" : ok ? "text-ink-2" : "text-muted"}`}>{s.label}</span>
-              </span>
-            </span>
-          );
-          return (
-            <li key={s.key} className="flex items-center">
-              {ok ? (
-                <Link href={`/w/${ws.id}/${s.href}`} aria-current={active ? "step" : undefined} data-testid={`step-${s.key}`}>{node}</Link>
-              ) : (
-                <span className="cursor-not-allowed opacity-70" tabIndex={0} aria-disabled="true"
-                  title={s.who === "reviewer" ? `Only the reviewer works in this step. ${ws.persona.name} sees the approved handover instead.` : `The ledger is for the reviewer and the leaver. ${ws.persona.name} sees the approved handover (step 5).`}>{node}</span>
-              )}
-              {i < STEPS.length - 1 && (
-                <span className="relative mx-1 h-px w-6 bg-line-2 sm:w-10" aria-hidden>
-                  <span className={`absolute inset-0 origin-left bg-verified-solid transition-transform duration-500 ${i < activeIdx && allowed(STEPS[i + 1].who) ? "scale-x-100" : "scale-x-0"}`} />
-                </span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
+    <svg width="14" height="14" viewBox="0 0 14 14" className="shrink-0" aria-hidden>
+      {state === "done" && <><circle cx="7" cy="7" r="6" fill="var(--fg-3)" /><path d="M4.4 7.2l1.7 1.7 3.5-3.6" stroke="var(--bg-side)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>}
+      {state === "current" && <><circle cx="7" cy="7" r="5.6" fill="none" stroke="var(--accent)" strokeWidth="1.5" /><path d="M7 3.2a3.8 3.8 0 0 1 0 7.6z" fill="var(--accent)" /></>}
+      {state === "todo" && <circle cx="7" cy="7" r="5.6" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" />}
+    </svg>
   );
 }
 
+/* ------------------------------------------------------------------ sidebar */
+
+function Sidebar({ ws, nav, onSwitch, onReset, resetting }: { ws: WorkspaceInfo; nav: Nav | null; onSwitch: (id: string) => void; onReset: () => void; resetting: boolean }) {
+  const pathname = usePathname();
+  const roles = ws.persona.roles;
+  const isReviewer = roles.includes("reviewer");
+  const isSuccessor = roles.includes("successor");
+  const manage = roles.includes("admin") || isReviewer;
+  const allowed = (who: string) => who === "all" || (who === "reviewer" ? isReviewer : roles.some((r) => ["reviewer", "admin", "leaver"].includes(r)));
+  const activeKey = pathname.endsWith("/review/preview") ? "preview"
+    : STEPS.find((s) => pathname.endsWith(`/${s.href}`) || pathname.includes(`/${s.href}/`) && s.key !== "review")?.key
+      ?? (pathname.includes("/runs/") ? "ledger" : pathname.endsWith("/first-week") ? "handover" : "");
+  const activeIdx = STEPS.findIndex((s) => s.key === activeKey);
+  const leaver = ws.members.find((m) => m.roles.includes("leaver"));
+  const successor = ws.members.find((m) => m.roles.includes("successor"));
+  const h = nav?.handover;
+  const count: Record<string, string | undefined> = {
+    sources: nav ? (nav.sources.visible < nav.sources.total ? `${nav.sources.visible} of ${nav.sources.total} sources` : `${nav.sources.total} source${nav.sources.total === 1 ? "" : "s"}`) : undefined,
+    ledger: nav?.claims !== undefined ? String(nav.claims) : undefined,
+    review: nav?.to_review !== undefined ? (nav.to_review ? `${nav.to_review} left` : "All reviewed") : undefined,
+    preview: h ? (h.version ? `v${h.version} approved` : "Draft") : undefined,
+    handover: h ? (h.acks ? `${h.acks.done} / ${h.acks.total}` : h.version ? `v${h.version}` : "Not sent") : undefined,
+  };
+  const questions = (h?.acks?.questions_open ?? 0) + (h?.acks?.questions_answered ?? 0);
+  const navLink = (active: boolean) =>
+    `flex h-7 items-center gap-2 rounded-md px-2 text-[13px] transition-colors ${active ? "bg-active font-medium text-fg" : "text-fg-2 hover:bg-hover hover:text-fg"}`;
+
+  return (
+    <div className="flex h-full flex-col gap-0.5 overflow-y-auto px-2.5 pb-2.5 pt-2.5 scroll-quiet" data-sidebar>
+      {/* workspace */}
+      <div className="flex h-8 items-center gap-2 rounded-md px-1.5">
+        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[5px] bg-fg text-[9.5px] font-bold text-bg" aria-hidden>
+          {ws.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-fg">{ws.name}</span>
+        {ws.read_only && <span className="text-[11px] text-fg-3">read-only</span>}
+      </div>
+
+      {canSearch(ws) && (
+        <button type="button" onClick={() => window.dispatchEvent(new Event("baton:search"))} aria-label="Search (Ctrl+K)" data-testid="search-open"
+          className="mt-1 flex h-7 items-center gap-2 rounded-md border border-line bg-bg px-2 text-[12.5px] text-fg-3 transition-colors hover:border-line-2">
+          <Search className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">Search claims, sources</span><Kbd>Ctrl</Kbd><Kbd>K</Kbd>
+        </button>
+      )}
+
+      {/* the five workflow steps */}
+      <div className="mt-4 flex items-center justify-between px-2 pb-1">
+        <span className="text-[12px] font-medium text-fg-3">Handover</span>
+        {leaver && successor && (
+          <span className="flex items-center gap-1" title={`${leaver.name} → ${successor.name}`}>
+            <Avatar m={leaver} size={16} /><span className="text-[10px] text-fg-4">→</span><Avatar m={successor} size={16} />
+          </span>
+        )}
+      </div>
+      <nav aria-label="Workflow steps">
+        <ol className="space-y-px">
+          {STEPS.map((s, i) => {
+            const ok = allowed(s.who);
+            const active = i === activeIdx;
+            const state = !ok ? "locked" : active ? "current" : i < activeIdx ? "done" : "todo";
+            const inner = (
+              <>
+                <StepIcon state={state} />
+                <span className="flex-1 truncate">{s.label}</span>
+                {count[s.key] && ok && <span className={`text-[12px] ${active ? "text-fg-2" : "text-fg-3"}`}>{count[s.key]}</span>}
+              </>
+            );
+            return (
+              <li key={s.key}>
+                {ok ? (
+                  <Link href={`/w/${ws.id}/${s.href}`} aria-current={active ? "step" : undefined} data-testid={`step-${s.key}`} className={navLink(active)}>{inner}</Link>
+                ) : (
+                  <span className="flex h-7 cursor-not-allowed items-center gap-2 rounded-md px-2 text-[13px] text-fg-4" tabIndex={0} aria-disabled="true"
+                    title={s.who === "reviewer" ? `Only the reviewer works in this step. ${ws.persona.name} sees the approved handover instead.` : `The ledger is for the reviewer and the leaver. ${ws.persona.name} sees the approved handover (step 5).`}>
+                    {inner}
+                  </span>
+                )}
+                {s.key === "handover" && isSuccessor && h?.version && (
+                  <div className="mt-px space-y-px pl-6">
+                    <Link href={`/w/${ws.id}/first-week`} className={navLink(pathname.endsWith("/first-week"))}><CalendarDays className="h-3.5 w-3.5 text-fg-3" /> Your first week</Link>
+                    <Link href={`/w/${ws.id}/handover#acks`} className={navLink(false)}>
+                      <MessageCircleQuestion className="h-3.5 w-3.5 text-fg-3" /> <span className="flex-1">Your questions</span>
+                      {questions > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10.5px] font-semibold text-white">{questions}</span>}
+                    </Link>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
+      {manage && (
+        <>
+          <p className="mt-4 px-2 pb-1 text-[12px] font-medium text-fg-3">Workspace</p>
+          <Link href={`/w/${ws.id}/risk`} data-testid="risk-link" className={navLink(pathname.endsWith("/risk"))} title="Knowledge risk: what would be lost if one person left" aria-label="Knowledge risk">
+            <Gauge className="h-3.5 w-3.5 text-fg-3" /> Knowledge risk
+          </Link>
+          {!ws.read_only && (
+            <Link href={`/w/${ws.id}/activity`} data-testid="activity-link" className={navLink(pathname.endsWith("/activity"))} title="Activity log: who did what, when" aria-label="Activity log">
+              <History className="h-3.5 w-3.5 text-fg-3" /> Activity
+            </Link>
+          )}
+          {!ws.read_only && (
+            <Link href={`/w/${ws.id}/team`} data-testid="team-link" className={navLink(pathname.endsWith("/team"))} title="People, invite links and access" aria-label="Team and access">
+              <UsersRound className="h-3.5 w-3.5 text-fg-3" /> Team &amp; access
+            </Link>
+          )}
+        </>
+      )}
+
+      {ws.synthetic && <div className="mt-4"><TourChecklist ws={ws} onSwitchPersona={onSwitch} /></div>}
+
+      <div className="min-h-4 flex-1" />
+
+      {(ws.synthetic || ws.read_only) && (
+        <div className="rounded-lg border border-dashed border-line-2 px-3 py-2.5 text-[12px] leading-[17px] text-fg-3">
+          {ws.synthetic && (
+            <>
+              <p className="flex items-center gap-1.5 font-medium text-fg-2"><Info className="h-3.5 w-3.5" /> Synthetic demo data</p>
+              <p className="mt-0.5">A fictional student-club project.{ws.read_only ? "" : " Your copy is private."}</p>
+            </>
+          )}
+          {ws.read_only && <p className="mt-1">This is the shared read-only template. Try the demo to get your own copy.</p>}
+          {ws.synthetic && !ws.read_only && (
+            <button type="button" onClick={onReset} disabled={resetting} aria-label="Reset demo" title="Discard your changes and start the demo again"
+              className="mt-1.5 inline-flex items-center gap-1.5 font-medium text-accent-ink hover:underline disabled:opacity-60">
+              {resetting && <Spinner className="h-3 w-3" />} Reset demo
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="mt-2 flex items-center gap-1 border-t border-line pt-2">
+        <PersonaSwitcher ws={ws} onSwitch={onSwitch} />
+        <ThemeToggle />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ top bar */
+
+function TopBar({ ws, onMenu }: { ws: WorkspaceInfo; onMenu: () => void }) {
+  const pathname = usePathname();
+  const leaver = ws.members.find((m) => m.roles.includes("leaver"));
+  const successor = ws.members.find((m) => m.roles.includes("successor"));
+  const title = PAGE_TITLES.find(([re]) => re.test(pathname))?.[1] ?? "";
+  return (
+    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center gap-2 border-b border-line bg-bg/95 px-3 backdrop-blur sm:px-4">
+      <button type="button" onClick={onMenu} aria-label="Open navigation" className="grid h-7 w-7 place-items-center rounded-md text-fg-3 hover:bg-hover hover:text-fg lg:hidden">
+        <Menu className="h-4 w-4" />
+      </button>
+      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
+        {leaver && successor && <span className="hidden truncate text-fg-3 sm:inline">{leaver.name} → {successor.name}</span>}
+        {leaver && successor && title && <span className="hidden text-fg-4 sm:inline">/</span>}
+        {title && <span className="truncate font-medium text-fg">{title}</span>}
+      </nav>
+      <div id="topbar-actions" className="ml-auto flex min-w-0 items-center gap-2" />
+    </header>
+  );
+}
+
+/* ------------------------------------------------------------------ shell */
+
 export function WorkspaceShell({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [result, setResult] = useState<{ ws?: WorkspaceInfo; error?: string } | null>(null);
   const [personaVersion, setPersonaVersion] = useState(0);
   const [resetting, setResetting] = useState(false);
+  // The phone drawer belongs to the page it was opened on: navigating or switching person closes it.
+  const [drawerAt, setDrawerAt] = useState<string | null>(null);
+  const [nav, setNav] = useState<Nav | null>(null);
   const confirmDialog = useConfirm();
 
   const load = useCallback(() => {
@@ -203,8 +348,21 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
       .then((ws) => setResult({ ws }))
       .catch((e: unknown) => setResult(e instanceof ApiError && (e.status === 404 || e.status === 422) ? { error: "private" } : { error: e instanceof Error ? e.message : String(e) }));
   }, [workspaceId]);
-
   useEffect(load, [load, personaVersion]);
+
+  const personaId = result?.ws?.persona.id;
+  useEffect(() => {
+    if (!personaId) return;
+    let cancelled = false;
+    api<Nav>(`/workspaces/${workspaceId}/nav`, { workspaceId, persona: personaId }).then((n) => !cancelled && setNav(n)).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceId, personaId, pathname, personaVersion]);
+
+  const here = `${pathname}|${personaVersion}`;
+  const drawer = drawerAt === here;
+  const setDrawer = (open: boolean) => setDrawerAt(open ? here : null);
 
   const switchPersona = (id: string) => {
     storePersona(workspaceId, id);
@@ -225,100 +383,71 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
 
   if (result?.error)
     return (
-      <div className="paper-grain flex flex-1 items-center justify-center px-4">
-        <div className="animate-pop max-w-md rounded-2xl border border-line bg-card p-8 text-center shadow-[var(--shadow-md)]">
-          <div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-paper-2 text-ink-2"><Lock className="h-5 w-5" /></div>
+      <div className="flex flex-1 items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md rounded-[10px] border border-line bg-bg p-6 text-center">
+          <div className="mx-auto mb-3 grid h-8 w-8 place-items-center rounded-md border border-line text-fg-3"><Lock className="h-4 w-4" /></div>
           {result.error === "private" ? (
             <>
-              <p className="font-display text-xl font-semibold text-ink">This workspace is private</p>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
+              <p className="text-[14px] font-semibold text-fg">This workspace is private</p>
+              <p className="mt-1.5 text-[13px] leading-5 text-fg-3">
                 A workspace belongs to the browser that created it and to people invited with a private link. Ask its owner for an
                 invite link, or open your own copy of the demo.
               </p>
-              <div className="mt-6 flex flex-col items-center gap-2">
+              <div className="mt-5 flex flex-col items-center gap-2">
                 <TryDemoButton />
                 <ButtonLink href="/" variant="ghost" size="sm">Go to the start page</ButtonLink>
               </div>
             </>
           ) : (
             <>
-              <p className="font-display text-xl font-semibold text-ink">Couldn&apos;t open this workspace</p>
-              <p className="mt-2 text-sm text-muted">{result.error}</p>
-              <ButtonLink href="/" className="mt-6">Go to the start page</ButtonLink>
+              <p className="text-[14px] font-semibold text-fg">Couldn&apos;t open this workspace</p>
+              <p className="mt-1.5 text-[13px] text-fg-3">{result.error}</p>
+              <ButtonLink href="/" className="mt-5">Go to the start page</ButtonLink>
             </>
           )}
         </div>
       </div>
     );
   const ws = result?.ws;
-  if (!ws)
-    return (
-      <div className="flex flex-1 items-center justify-center gap-3 text-muted"><Spinner /> Opening workspace…</div>
-    );
+  if (!ws) return <div className="flex flex-1 items-center justify-center gap-2.5 text-[13px] text-fg-3"><Spinner className="h-4 w-4" /> Opening workspace…</div>;
 
+  const sidebar = <Sidebar ws={ws} nav={nav} onSwitch={switchPersona} onReset={resetDemo} resetting={resetting} />;
   return (
     <ToastProvider>
       <WorkspaceContext.Provider value={{ ws, personaVersion, switchPersona }}>
-        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-strong focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-on-strong">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-2 focus:z-50 focus:rounded-md focus:bg-fg focus:px-3 focus:py-1.5 focus:text-[13px] focus:font-medium focus:text-bg">
           Skip to content
         </a>
-        <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 pt-3 sm:px-6">
-            <div className="flex min-w-0 items-center gap-3">
-              <Logo small />
-              <span className="h-5 w-px bg-line-2" aria-hidden />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-ink">{ws.name}</p>
-                <div className="flex items-center gap-1.5">
-                  {ws.synthetic && <span className="text-[11px] font-medium text-amber-ink" title="Fictional project written for this demo">● Synthetic demo data</span>}
-                  {ws.read_only && <span className="inline-flex items-center gap-1 text-[11px] text-muted"><Eye className="h-3 w-3" /> read-only</span>}
-                </div>
+        <div className="flex min-h-screen w-full">
+          <aside className="no-print sticky top-0 hidden h-screen w-[236px] shrink-0 border-r border-line bg-bg-side lg:block" aria-label="Workspace navigation">
+            {sidebar}
+          </aside>
+          {drawer && (
+            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
+              <div className="animate-fade absolute inset-0 bg-[var(--overlay)]" onClick={() => setDrawer(false)} />
+              <div className="animate-drawer absolute inset-y-0 left-0 w-[min(280px,86vw)] border-r border-line bg-bg-side">
+                <button type="button" onClick={() => setDrawer(false)} aria-label="Close navigation" className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-md text-fg-3 hover:bg-hover">
+                  <X className="h-4 w-4" />
+                </button>
+                {sidebar}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {ws.synthetic && !ws.read_only && (
-                <button onClick={resetDemo} disabled={resetting} title="Discard your changes and start the demo again" aria-label="Reset demo"
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-muted transition hover:bg-paper-2 hover:text-ink">
-                  {resetting ? <Spinner className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />}<span className="hidden sm:inline">Reset demo</span>
-                </button>
-              )}
-              {canSearch(ws) && (
-                <button type="button" onClick={() => window.dispatchEvent(new Event("baton:search"))} aria-label="Search (Ctrl+K)" title="Search claims and sources (Ctrl+K)"
-                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="search-open">
-                  <Search className="h-4 w-4" />
-                </button>
-              )}
-              {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && (
-                <Link href={`/w/${ws.id}/risk`} title="Knowledge risk: what would be lost if one person left" aria-label="Knowledge risk"
-                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="risk-link">
-                  <Gauge className="h-4 w-4" />
-                </Link>
-              )}
-              {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
-                <Link href={`/w/${ws.id}/activity`} title="Activity log: who did what, when" aria-label="Activity log"
-                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="activity-link">
-                  <History className="h-4 w-4" />
-                </Link>
-              )}
-              {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
-                <Link href={`/w/${ws.id}/team`} title="People, invite links and access" aria-label="Team and access"
-                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="team-link">
-                  <UsersRound className="h-4 w-4" />
-                </Link>
-              )}
-              <ThemeToggle />
-              <PersonaSwitcher ws={ws} onSwitch={switchPersona} />
-            </div>
+          )}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <TopBar ws={ws} onMenu={() => setDrawer(true)} />
+            <LeaverBanner />
+            <main id="main" tabIndex={-1} key={personaVersion} className="w-full min-w-0 flex-1 outline-none">
+              {FULL_BLEED.some((re) => re.test(pathname)) ? children : <PageBody>{children}</PageBody>}
+            </main>
           </div>
-          <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
-            <Stepper ws={ws} />
-          </div>
-        </header>
-        <LeaverBanner />
-        <main id="main" tabIndex={-1} key={personaVersion} className="animate-fade outline-none mx-auto w-full max-w-7xl flex-1 px-4 pt-7 pb-24 sm:px-6">{children}</main>
-        {ws.synthetic && <TourChecklist ws={ws} onSwitchPersona={switchPersona} />}
+        </div>
         {canSearch(ws) && <SearchPalette ws={ws} />}
       </WorkspaceContext.Provider>
     </ToastProvider>
   );
+}
+
+/** Centred document column used by most pages (max 1160px, 32px × 40px padding; tighter on phones). */
+export function PageBody({ children, wide = false, className = "" }: { children: React.ReactNode; wide?: boolean; className?: string }) {
+  return <div className={`mx-auto w-full ${wide ? "max-w-[1240px]" : "max-w-[1160px]"} px-4 pb-24 pt-6 sm:px-8 sm:pt-8 lg:px-10 ${className}`}>{children}</div>;
 }

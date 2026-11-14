@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Compass, X } from "lucide-react";
+import { X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -41,7 +41,6 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
   const base = `baton:tour:${ws.id}`;
   const visited = useSyncExternalStore(subscribe, () => read(`${base}:visited`) ?? "", () => "");
   const hidden = useSyncExternalStore(subscribe, () => read(`${base}:hidden`) === "1", () => true);
-  const [open, setOpen] = useState(false);
   const [server, setServer] = useState<TourState | null>(null);
   const isSuccessor = ws.persona.roles.includes("successor");
 
@@ -67,7 +66,7 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
     };
   }, [ws.id, pathname, ws.persona.id]);
 
-  if (hidden || ws.read_only) return null;
+  if (ws.read_only) return null;
   const seen = new Set(visited.split(",").filter(Boolean));
   const successorName = ws.members.find((m) => m.roles.includes("successor"))?.name ?? "the successor";
   const reviewerId = ws.members.find((m) => m.roles.includes("reviewer"))?.id;
@@ -77,11 +76,11 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
     router.push(`/w/${ws.id}/${href}`);
   };
   const steps = [
-    { key: "sources", label: "See the connected sources and who can access each", done: seen.has("sources"), go: () => router.push(`/w/${ws.id}/sources`) },
-    { key: "ledger", label: "Read the reconstructed ledger and decision timeline", done: seen.has("ledger"), go: asReviewer("ledger") },
-    { key: "review", label: "Open a claim and inspect its quoted evidence", done: seen.has("review"), go: asReviewer("review") },
-    { key: "reviewed", label: "Confirm, edit or reject a claim as the reviewer", done: (server?.reviewed ?? 0) > 0, go: asReviewer("review") },
-    { key: "approved", label: "Preview the successor's view and approve a version", done: !!server?.approved, go: asReviewer("review/preview") },
+    { key: "sources", label: "See the sources and who can access each", done: seen.has("sources"), go: () => router.push(`/w/${ws.id}/sources`) },
+    { key: "ledger", label: "Read the ledger and decision timeline", done: seen.has("ledger"), go: asReviewer("ledger") },
+    { key: "review", label: "Inspect a claim's quoted evidence", done: seen.has("review"), go: asReviewer("review") },
+    { key: "reviewed", label: "Confirm, edit or reject a claim", done: (server?.reviewed ?? 0) > 0, go: asReviewer("review") },
+    { key: "approved", label: `Preview ${successorName}'s view and approve`, done: !!server?.approved, go: asReviewer("review/preview") },
     {
       key: "handover-successor", label: `Switch to ${successorName} and read the handover`, done: seen.has("handover-successor"),
       go: () => {
@@ -93,46 +92,52 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
   const doneCount = steps.filter((s) => s.done).length;
   const next = steps.find((s) => !s.done);
 
+  if (hidden) {
+    return (
+      <button type="button" onClick={() => write(`${base}:hidden`, null)} data-testid="tour-open"
+        className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] text-fg-2 transition-colors hover:bg-hover hover:text-fg"
+        aria-label={next ? `Getting started, ${doneCount} of 6 steps done` : "Getting started: tour complete"}>
+        <span className="flex-1 text-left">Getting started</span>
+        <span className="text-[12px] text-fg-3">{next ? `${doneCount} of 6` : "Tour complete"}</span>
+      </button>
+    );
+  }
   return (
-    <div className="no-print pointer-events-none fixed bottom-4 right-4 z-30 w-[min(360px,calc(100vw-2rem))]" data-testid="tour">
-      {open ? (
-        <div className="animate-pop pointer-events-auto rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)]">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <p className="flex items-center gap-2 text-sm font-semibold text-ink"><Compass className="h-4 w-4 text-amber-ink" /> Demo tour · {doneCount}/6</p>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setOpen(false)} className="rounded-lg p-1 text-muted hover:bg-paper-2 hover:text-ink" aria-label="Collapse tour"><ChevronDown className="h-4 w-4" /></button>
-              <button onClick={() => write(`${base}:hidden`, "1")} className="rounded-lg p-1 text-muted hover:bg-paper-2 hover:text-ink" aria-label="Hide tour"><X className="h-4 w-4" /></button>
-            </div>
-          </div>
-          <ol className="space-y-0.5 p-2">
-            {steps.map((s, i) => {
-              const isNext = s === next;
-              return (
-                <li key={s.key} className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm ${isNext ? "bg-amber-soft/70" : ""}`}>
-                  <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-semibold ${s.done ? "bg-verified-solid text-white" : isNext ? "bg-amber text-on-amber" : "bg-paper-2 text-muted"}`}>
-                    {s.done ? <Check className="h-3 w-3" strokeWidth={3} /> : i + 1}
-                  </span>
-                  <span className={`flex-1 leading-snug ${s.done ? "text-muted line-through decoration-line-2" : "text-ink"}`}>{s.label}</span>
-                  {!s.done && (
-                    <button onClick={() => { s.go(); }} className={`shrink-0 rounded-lg px-2 py-1 text-xs font-semibold ${isNext ? "bg-strong text-on-strong" : "text-ink-2 hover:bg-paper-2"}`}>Go</button>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-          {!next && (
-            <div className="border-t border-line px-4 py-3 text-sm">
-              <p className="font-semibold text-ink">You&apos;ve seen the whole loop.</p>
-              <p className="mt-0.5 text-xs text-muted">Try it on a real project: <Link href="/new" className="font-medium text-ink underline underline-offset-2">build a ledger from any public GitHub repo</Link>.</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <button onClick={() => setOpen(true)} data-testid="tour-open" aria-label={next ? `Demo tour, ${doneCount} of 6 steps done` : "Demo tour complete"}
-          className="animate-rise pointer-events-auto ml-auto flex items-center gap-2 rounded-full border border-line bg-card py-1.5 pl-1.5 pr-3 sm:py-2 sm:pl-3 sm:pr-4 text-sm font-medium text-ink shadow-[var(--shadow-md)] transition hover:shadow-[var(--shadow-lg)]">
-          <span className="relative grid h-6 w-6 place-items-center rounded-full bg-amber-soft text-amber-ink"><Compass className="h-3.5 w-3.5" /></span>
-          {next ? <><span className="hidden sm:inline">Demo tour</span> <span className="text-muted">{doneCount}/6</span></> : <><span className="hidden sm:inline">Tour complete</span> <Check className="h-4 w-4 text-verified" /></>}
-        </button>
+    <div className="no-print rounded-lg border border-line bg-bg p-2.5" data-testid="tour">
+      <div className="flex items-center gap-2 px-0.5">
+        <p className="flex-1 text-[12.5px] font-semibold text-fg">Getting started</p>
+        <span className="text-[12px] text-fg-3" data-testid="tour-open" aria-label={next ? `${doneCount} of 6 steps done` : "Tour complete"}>
+          {next ? `${doneCount} of 6` : "Tour complete"}
+        </span>
+        <button type="button" onClick={() => write(`${base}:hidden`, "1")} aria-label="Hide getting started"
+          className="grid h-5 w-5 place-items-center rounded text-fg-3 transition-colors hover:bg-hover hover:text-fg"><X className="h-3 w-3" /></button>
+      </div>
+      <div className="mt-2 flex gap-[3px] px-0.5" aria-hidden>
+        {steps.map((s) => <span key={s.key} className={`h-1 flex-1 rounded-sm ${s.done ? "bg-ver" : s === next ? "bg-accent" : "bg-line-2"}`} />)}
+      </div>
+      <ol className="mt-2 space-y-px">
+        {steps.map((s) => {
+          const isNext = s === next;
+          return (
+            <li key={s.key}>
+              <button type="button" onClick={() => { if (!s.done) s.go(); }} disabled={s.done}
+                className={`flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[12px] leading-[17px] transition-colors ${isNext ? "bg-accent-soft text-fg" : s.done ? "text-fg-3" : "text-fg-2 hover:bg-hover"}`}>
+                <svg width="12" height="12" viewBox="0 0 14 14" className="mt-[2.5px] shrink-0" aria-hidden>
+                  {s.done ? <><circle cx="7" cy="7" r="6" fill="var(--fg-4)" /><path d="M4.4 7.2l1.7 1.7 3.5-3.6" stroke="var(--bg)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>
+                    : <circle cx="7" cy="7" r="5.6" fill="none" stroke={isNext ? "var(--accent)" : "var(--fg-4)"} strokeWidth="1.5" />}
+                </svg>
+                <span className="flex-1">{s.label}</span>
+                {isNext && <span className="shrink-0 font-semibold text-accent-ink">Go</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {!next && (
+        <p className="mt-2 border-t border-line px-1 pt-2 text-[12px] leading-[17px] text-fg-3">
+          <b className="font-semibold text-fg">You&apos;ve seen the whole loop.</b>{" "}
+          <Link href="/new" className="text-accent-ink hover:underline">Try it on your own repo →</Link>
+        </p>
       )}
     </div>
   );

@@ -46,10 +46,10 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       }}
       title={`${label}. Click for ${next}.`}
       aria-label={`${label}. Switch to ${next}.`}
-      className={`grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink ${className}`}
+      className={`grid h-7 w-7 shrink-0 place-items-center rounded-md text-fg-3 transition-colors hover:bg-hover hover:text-fg ${className}`}
       data-testid="theme-toggle"
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-3.5 w-3.5" />
     </button>
   );
 }
