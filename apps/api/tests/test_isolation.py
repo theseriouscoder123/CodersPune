@@ -94,7 +94,7 @@ def test_foreign_ids_never_leak_or_change(two):
             ("POST", f"/api/claims/{bc}/review", {"action": "reject", "note": "x"}),
             ("POST", f"/api/conflicts/{b['group']}/resolve", {"keep_as_risk": True}),
             ("POST", f"/api/handovers/{bh}/approve", {}), ("POST", f"/api/handovers/{bh}/ask", {"question": "what is it?"}),
-            ("POST", f"/api/runs/{b['run']}/advance", None), ("POST", f"/api/workspaces/{bw}/runs", {"mode": "refresh"}),
+            ("POST", f"/api/runs/{b['run']}/advance", None), ("POST", f"/api/runs/{b['run']}/cancel", None), ("POST", f"/api/workspaces/{bw}/runs", {"mode": "refresh"}),
             ("POST", f"/api/workspaces/{bw}/handovers", {"successor_id": b["members"]["kabir"]}),
             ("POST", f"/api/workspaces/{bw}/invites/{b['members']['neha']}", None),
             ("DELETE", f"/api/workspaces/{bw}/invites/{b['members']['neha']}", None),
@@ -209,3 +209,33 @@ def test_failed_run_can_be_retried_from_the_failed_step(two):
     assert c.post(f"/api/runs/{rid}/retry", headers=admin).status_code == 409
     with SessionLocal.begin() as db:
         db.get(Run, rid).status = "failed"  # leave the fixture without a live run
+
+
+def test_running_run_can_be_cancelled_and_resumed(two):
+    from baton.db.models import Job
+
+    a, _ = two
+    with SessionLocal.begin() as db:
+        r = Run(workspace_id=a["ws"], status="running")
+        db.add(r)
+        db.flush()
+        db.add_all([Job(run_id=r.id, step="ingest", status="done"), Job(run_id=r.id, step="extract", status="running"),
+                    Job(run_id=r.id, step="match", status="pending")])
+        rid = str(r.id)
+    c = _client("iso-a")
+    admin = {"X-Baton-Persona": a["members"]["meera"]}
+    try:
+        assert c.post(f"/api/runs/{rid}/cancel", headers={"X-Baton-Persona": a["members"]["neha"]}).status_code == 403
+        assert _client("iso-b").post(f"/api/runs/{rid}/cancel").status_code in (403, 404)  # another visitor
+        p = c.post(f"/api/runs/{rid}/cancel", headers=admin).json()
+        assert p["status"] == "cancelled" and "Cancelled by" in p["error"]
+        assert {s["step"]: s["status"] for s in p["steps"]} == {"ingest": "done", "extract": "pending", "match": "pending"}
+        assert c.post(f"/api/runs/{rid}/cancel", headers=admin).status_code == 409  # already stopped
+        assert c.post(f"/api/runs/{rid}/advance", headers=admin).json()["status"] == "cancelled"  # polls don't restart it
+        acts = c.get(f"/api/workspaces/{a['ws']}/activity", headers=admin).json()["entries"]
+        assert any(e["action"] == "run_cancelled" for e in acts)
+        p = c.post(f"/api/runs/{rid}/retry", headers=admin).json()
+        assert p["status"] == "running" and not p["error"]
+    finally:
+        with SessionLocal.begin() as db:
+            db.get(Run, rid).status = "failed"  # leave the fixture without a live run

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from baton.auth import Ctx, resolve_ctx, workspace_ctx
 from baton.config import get_settings
-from baton.db.models import Job, Run
+from baton.db.models import AuditEvent, Job, Run
 from baton.db.session import get_db
 from baton.pipeline import RunBusy, advance, create_run, run_progress
 
@@ -72,15 +73,36 @@ def advance_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_d
     return advance(run_id)
 
 
+@router.post("/runs/{run_id}/cancel")
+def cancel_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
+    """Stop a queued or running run. The slice already in flight finishes its current item (at most one slice, about
+    45 s), then the run stops. Finished steps are kept, so the run can be resumed later with /retry."""
+    ctx = _run_ctx(db, request, run_id)
+    if not (ctx.is_admin and ctx.can_write):
+        raise HTTPException(403, "Only the workspace admin can cancel a run")
+    run = db.get(Run, run_id)
+    if run.status not in ("queued", "running"):
+        raise HTTPException(409, "This run has already finished")
+    for j in db.scalars(select(Job).where(Job.run_id == run_id, Job.status.in_(["pending", "running"]))):
+        if j.status == "running":
+            j.status = "pending"  # a resume starts this step again from its saved progress
+    run.status, run.finished_at = "cancelled", datetime.now(UTC)
+    run.error = f"Cancelled by {ctx.member.display_name}. Claims found before that are kept; resume to finish the run."
+    db.add(AuditEvent(workspace_id=run.workspace_id, actor_member_id=ctx.member.id, actor_role="admin",
+                      action="run_cancelled", target=str(run_id)))
+    db.commit()
+    return run_progress(run_id)
+
+
 @router.post("/runs/{run_id}/retry")
 def retry_run(run_id: uuid.UUID, request: Request, db: Session = Depends(get_db)) -> dict:
-    """Resume a failed run from the step that failed. Finished steps (and their AI work) are kept."""
+    """Resume a failed or cancelled run from the step where it stopped. Finished steps (and their AI work) are kept."""
     ctx = _run_ctx(db, request, run_id)
     if not (ctx.is_admin and ctx.can_write):
         raise HTTPException(403, "Only the workspace admin can retry a run")
     run = db.get(Run, run_id)
-    if run.status != "failed":
-        raise HTTPException(409, "Only a failed run can be retried")
+    if run.status not in ("failed", "cancelled"):
+        raise HTTPException(409, "Only a failed or cancelled run can be resumed")
     busy = db.scalar(select(Run).where(Run.workspace_id == run.workspace_id, Run.status.in_(["queued", "running"])))
     if busy:
         raise HTTPException(409, {"message": "Another run is already in progress", "run_id": str(busy.id)})
