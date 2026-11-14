@@ -104,6 +104,7 @@ def test_foreign_ids_never_leak_or_change(two):
             ("POST", f"/api/workspaces/{bw}/notify/test", {"channel": "slack"}),
             ("POST", f"/api/workspaces/{bw}/questions/email", None),
             ("POST", f"/api/workspaces/{bw}/claims/bulk-review", {"claim_ids": [bc], "action": "reject"}),
+            ("GET", f"/api/workspaces/{bw}/relations", None), ("POST", f"/api/claims/{bc}/stale", {"still_open": True}),
             ("GET", f"/api/workspaces/{bw}/interviews", None), ("POST", f"/api/workspaces/{bw}/interviews", {}),
             ("GET", f"/api/sources/{bsrc}/acl", None), ("PATCH", f"/api/sources/{bsrc}/acl", {"roles": ["all_members"]}),
             ("DELETE", f"/api/workspaces/{bw}", {"confirm_name": "iso-beta"}),

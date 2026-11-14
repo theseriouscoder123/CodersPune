@@ -30,7 +30,7 @@ from baton.db.models import (
     Workspace,
 )
 from baton.db.session import SessionLocal
-from baton.ledger import recompute_statuses
+from baton.ledger import rebuild_relations, recompute_statuses
 from baton.llm.base import LLMError, LLMNotConfigured, get_llm
 from baton.llm.prompts import COVER_SYSTEM, CoverResult
 from baton.reconstruct.checklist import build_checklist
@@ -689,17 +689,23 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
 
 def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[int, int]:
     """Plan conflicts/supersession for claims not already in a (resolved) group. Deterministic, no LLM."""
+    from baton.db.models import ClaimRelation
+    reviewer_rel = select(ClaimRelation.from_claim_id).where(ClaimRelation.workspace_id == workspace_id, ClaimRelation.decided_by == "reviewer").union(
+        select(ClaimRelation.to_claim_id).where(ClaimRelation.workspace_id == workspace_id, ClaimRelation.decided_by == "reviewer"))
     if reset:  # forget unresolved groups and AUTOMATIC supersessions (never ones a reviewer chose)
-        decided = select(ReviewEvent.claim_id)
+        decided = select(ReviewEvent.claim_id).union(reviewer_rel)
         db.execute(update(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state == "none",
                                        Claim.id.not_in(decided)).values(superseded_by=None))
-        unresolved = select(ConflictGroup.id).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False))
+        kept_groups = select(Claim.conflict_group_id).where(Claim.id.in_(reviewer_rel), Claim.conflict_group_id.is_not(None))
+        unresolved = select(ConflictGroup.id).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False),
+                                                    ConflictGroup.id.not_in(kept_groups))  # groups a reviewer made stay
         db.execute(update(Claim).where(Claim.conflict_group_id.in_(unresolved)).values(conflict_group_id=None))
-        db.execute(delete(ConflictGroup).where(ConflictGroup.workspace_id == workspace_id, ConflictGroup.resolved.is_(False)))
+        db.execute(delete(ConflictGroup).where(ConflictGroup.id.in_(unresolved)))
     members, _, _, _ = _people(db, workspace_id)
     people = frozenset(n.lower() for m in members.values() for n in (m.display_name, m.handle))
     claims = list(db.scalars(select(Claim).where(Claim.workspace_id == workspace_id, Claim.review_state != "rejected",
-                                                 Claim.conflict_group_id.is_(None))))
+                                                 Claim.conflict_group_id.is_(None),
+                                                 Claim.id.not_in(reviewer_rel))))  # a reviewer's relation choice stands
     plan = plan_conflicts([ClaimLite(str(c.id), c.subject_key, c.value, c.occurred_at, c.supersedes_hint, c.text)
                            for c in claims], people)
     by_id = {str(c.id): c for c in claims}
@@ -718,15 +724,18 @@ def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[in
 def step_conflicts(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
         n_groups, n_sup = replan_conflicts(db, workspace_id, reset=True)
+        rel = rebuild_relations(db, workspace_id)  # why claims relate + stale open work (improvement #2)
         j = db.get(Job, job_id)
         j.progress = j.total = n_groups
-        j.message = f"{_n(n_groups, 'conflict')}, {_n(n_sup, 'reversed decision')}"
+        j.message = (f"{_n(n_groups, 'conflict')}, {_n(n_sup, 'reversed decision')}"
+                     + (f", {_n(rel['stale'], 'stale open item')}" if rel.get("stale") else ""))
     return True
 
 
 def step_status(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
         n = recompute_statuses(db, workspace_id)
+        rebuild_relations(db, workspace_id)  # stale rules use the fresh statuses
         j = db.get(Job, job_id)
         j.progress = j.total = n
         j.message = f"{_n(n, 'claim')} graded by deterministic rules"

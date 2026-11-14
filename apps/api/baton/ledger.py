@@ -83,3 +83,63 @@ def recompute_statuses(db: Session, workspace_id, claim_ids: list | None = None)
 
 def as_uuid(v) -> uuid.UUID:
     return v if isinstance(v, uuid.UUID) else uuid.UUID(str(v))
+
+
+def rebuild_relations(db: Session, workspace_id) -> dict:
+    """Round 3 improvement #2: record WHY claims relate (reversal / historical / contradiction) and mark stale open work.
+    Deterministic, no LLM. Reviewer decisions (decided_by='reviewer', meta.stale_override) are never overwritten."""
+    from sqlalchemy import delete
+
+    from baton.db.models import ClaimRelation
+    from baton.reconstruct.relations import C, classify_supersession, contradiction_signal, ordered, stale_reasons
+
+    claims = list(db.scalars(select(Claim).where(Claim.workspace_id == workspace_id)))
+    by_id = {c.id: c for c in claims}
+    ev = evidence_rows(db, [c.id for c in claims])
+
+    def lite(c: Claim) -> C:
+        rows = ev.get(c.id, [])
+        origin = "extracted" if (c.origin == "checklist" and c.status != "missing") else c.origin  # covered checklist items count
+        return C(str(c.id), c.type, c.text, c.subject_key, c.value, c.occurred_at, origin, c.supersedes_hint,
+                 ref_for(*rows[0]) if rows else "")
+
+    db.execute(delete(ClaimRelation).where(ClaimRelation.workspace_id == workspace_id, ClaimRelation.decided_by == "rule"))
+    kept = {(r.from_claim_id, r.to_claim_id) for r in db.scalars(select(ClaimRelation).where(ClaimRelation.workspace_id == workspace_id))}
+    kept |= {(b, a) for a, b in kept}
+    counts = {"reversal": 0, "historical": 0, "contradiction": 0, "stale": 0}
+
+    def add(a: Claim, b: Claim, relation: str, signal: str) -> None:
+        if (a.id, b.id) in kept or a.id == b.id:
+            return
+        kept.add((a.id, b.id))
+        kept.add((b.id, a.id))
+        db.add(ClaimRelation(workspace_id=workspace_id, from_claim_id=a.id, to_claim_id=b.id, relation=relation, signal=signal))
+        counts[relation] = counts.get(relation, 0) + 1
+
+    for c in claims:
+        if c.superseded_by and c.superseded_by in by_id and c.review_state != "rejected":
+            newer = by_id[c.superseded_by]
+            r = classify_supersession(lite(c), lite(newer))
+            add(c, newer, r.relation, r.signal)
+    groups: dict = defaultdict(list)
+    for c in claims:
+        if c.conflict_group_id and c.review_state != "rejected":
+            groups[c.conflict_group_id].append(c)
+    for members in groups.values():
+        for i, a in enumerate(members):
+            for b in members[i + 1:]:
+                if a.superseded_by == b.id or b.superseded_by == a.id:
+                    continue  # resolved with a winner: already recorded as a supersession above
+                la, lb = ordered(lite(a), lite(b))
+                add(by_id[uuid.UUID(la.id)], by_id[uuid.UUID(lb.id)], "contradiction", contradiction_signal(la, lb))
+
+    stale = stale_reasons([lite(c) for c in claims if c.review_state != "rejected" and not c.superseded_by])
+    for c in claims:
+        override = (c.meta or {}).get("stale_override")
+        reason = None if override == "still_open" else stale.get(str(c.id))
+        if c.stale_reason != reason:
+            c.stale_reason = reason
+        if reason:
+            counts["stale"] += 1
+    db.flush()
+    return counts

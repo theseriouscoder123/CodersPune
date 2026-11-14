@@ -72,6 +72,10 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             aft = a.after or {}
             label, what = "Answered the gap interview", (f"{aft.get('answered', 0)} answered · {aft.get('testimony_claims', 0)} "
                                                          f"testimony claims · {aft.get('minutes', 0)} min")
+        elif a.action == "relation_override":
+            label, what = "Changed how two claims relate", f"{(a.before or {}).get('relation', '?')} → {(a.after or {}).get('relation', '?')}"
+        elif a.action == "stale_override":
+            label, what = ("Marked open work as still open" if (a.after or {}).get("still_open") else "Let Baton flag open work as stale"), None
         else:
             label, what = a.action.replace("_", " ").capitalize(), a.target
         out.append({"at": a.created_at.isoformat(), "kind": "audit", "action": a.action, "label": label,

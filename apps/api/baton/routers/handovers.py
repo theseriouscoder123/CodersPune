@@ -21,6 +21,7 @@ from baton.auth import Ctx, _roles, resolve_ctx, workspace_ctx
 from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Source, Workspace
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii, scrub
+from baton.reconstruct.relations import start_here_rank
 from baton.ledger import evidence_rows, ref_for
 from baton.projection import claim_sources, visible, withheld_reason
 from baton.routers.claims import TYPE_LABELS, evidence_payload
@@ -209,6 +210,7 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
             "claim_id": str(c.id), "type": c.type, "text": c.text, "status": c.status, "status_reason": c.status_reason,
             "flags": (c.meta or {}).get("flags", {}), "occurred_at": c.occurred_at.isoformat() if c.occurred_at else None,
             "superseded_by": str(c.superseded_by) if c.superseded_by and c.superseded_by in by_id else None,
+            "stale_reason": c.stale_reason,
             "evidence": [{"evidence_id": str(e.id), "chunk_id": str(ch.id), "ref": ref_for(e, ch, s)} for e, ch, s in ev.get(c.id, [])],
         })
     n = (db.scalar(select(func.max(HandoverVersion.version)).where(HandoverVersion.handover_id == h.id)) or 0) + 1
@@ -271,6 +273,9 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
     acls = {cid: acl for cid, acl in db.execute(select(Chunk.id, Source.acl).join(Source, Source.id == Chunk.source_id)
                                                 .where(Chunk.id.in_(chunk_ids)))} if chunk_ids else {}
     texts = {it["claim_id"]: it["text"] for it in items}
+    when = {it["claim_id"]: it.get("occurred_at") for it in items}
+    succ = db.get(Member, h.successor_member_id) if h.successor_member_id else None
+    succ_name = succ.display_name if succ else None
     sections = {key: [] for key, _, _ in SECTIONS}
     stubs = 0
     for it in items:
@@ -288,11 +293,22 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
                "superseded_by_text": texts.get(it["superseded_by"]) if it.get("superseded_by") else None}
         if it.get("superseded_by"):
             out["history"] = True
+            out["superseded_on"] = when.get(it["superseded_by"])
+            sections["decisions"].append(out)
+        elif it.get("stale_reason"):  # improvement #2: overtaken open work is history, not a next step
+            out["history"] = True
+            out["stale"] = True
+            out["stale_reason"] = mask_pii(it["stale_reason"]) if mask else it["stale_reason"]
             sections["decisions"].append(out)
         else:
-            sections[_section(it)].append(out)
+            key = _section(it)
+            if key == "start_here":
+                out["rank"] = start_here_rank(out["text"], succ_name)
+                if out["rank"] == 2:
+                    key = "owners"  # someone else's task: who's doing what, not the successor's next step
+            sections[key].append(out)
     # Start with concrete next actions, newest first; then unfinished work. Other sections newest first.
-    sections["start_here"].sort(key=lambda it: (it["type"] != "next_action", -_ts(it.get("occurred_at"))))
+    sections["start_here"].sort(key=lambda it: (it.get("rank", 1), it["type"] != "next_action", -_ts(it.get("occurred_at"))))
     for key in ("owners", "decisions", "risks", "dependencies"):
         sections[key].sort(key=lambda it: (bool(it.get("history")), -_ts(it.get("occurred_at"))))
     approver = db.get(Member, v.approved_by) if v.approved_by else None

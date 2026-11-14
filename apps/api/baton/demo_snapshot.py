@@ -28,7 +28,7 @@ from baton.db.models import (
     Source,
 )
 from baton.ingest.fixtures import DEMO_DIR
-from baton.ledger import recompute_statuses
+from baton.ledger import rebuild_relations, recompute_statuses
 
 SNAPSHOT = DEMO_DIR / "frozen_ledger.json"
 
@@ -117,6 +117,7 @@ def import_snapshot(db: Session, workspace_id, path: Path = SNAPSHOT) -> dict:
         db.add(Handover(workspace_id=workspace_id, leaver_member_id=leaver, successor_member_id=successor))
     db.flush()
     recompute_statuses(db, workspace_id)
+    rebuild_relations(db, workspace_id)  # improvement #2: relation signals + stale open work, no LLM
     if missing_chunks:
         raise RuntimeError(f"{missing_chunks} evidence items no longer match the demo data; re-run the live pipeline")
     return {"claims": len(made)}

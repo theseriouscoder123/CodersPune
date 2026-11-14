@@ -7,7 +7,7 @@ from sqlalchemy import text
 from baton import __version__
 from baton.config import get_settings
 from baton.db.session import engine
-from baton.routers import activity, ask, claims, custom, handovers, interviews, lifecycle, runs, search, sources, team, workspaces
+from baton.routers import activity, ask, claims, custom, handovers, interviews, lifecycle, relations, runs, search, sources, team, workspaces
 from baton.routers import health as pipeline_health_routes
 from baton.security import install as install_hardening
 
@@ -65,5 +65,5 @@ def health() -> dict:
 
 
 app.include_router(api)
-for r in (workspaces.router, custom.router, runs.router, claims.router, handovers.router, pipeline_health_routes.router, team.router, ask.router, activity.router, search.router, lifecycle.router, sources.router, interviews.router):
+for r in (workspaces.router, custom.router, runs.router, claims.router, handovers.router, pipeline_health_routes.router, team.router, ask.router, activity.router, search.router, lifecycle.router, sources.router, interviews.router, relations.router):
     app.include_router(r)
