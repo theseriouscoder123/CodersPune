@@ -188,15 +188,20 @@ export type HandoverItem = {
   history?: boolean;
   superseded_by_text?: string | null;
   restricted?: boolean;
+  rank?: number;
+  asked_on?: string | null;
   evidence: { evidence_id: string; chunk_id: string; ref: string }[];
 };
 
 export type HandoverView =
-  | { approved: false; leaver: string; successor: string; message: string }
+  | { approved: false; leaver: string; successor: string; message: string; reviewer?: string | null; leaves_on?: string | null }
   | {
       approved: true;
       leaver: string;
       successor: string;
+      reviewer?: string | null;
+      leaves_on?: string | null;
+      name?: string | null;
       handover_id: string;
       version: number;
       approved_at: string;

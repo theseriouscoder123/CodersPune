@@ -449,12 +449,22 @@ def get_handover(handover_id: uuid.UUID, request: Request, db: Session = Depends
         raise HTTPException(403, "This handover is shared with the successor, the leaver and the reviewer only")
     names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == h.workspace_id))}
     v = _latest(db, h, version)
-    meta = {"leaver": names.get(h.leaver_member_id), "successor": names.get(h.successor_member_id),
-            "name": h.name, "scope": scope_keywords(h.scope)}
+    reviewer = next((names[m] for m in names if "reviewer" in _roles(db, m, h.workspace_id)), None)
+    meta = {"leaver": names.get(h.leaver_member_id), "successor": names.get(h.successor_member_id), "reviewer": reviewer,
+            "name": h.name, "scope": scope_keywords(h.scope), "leaves_on": h.leaves_on.isoformat() if h.leaves_on else None}
     if v is None:
-        return {**meta, "approved": False,
-                "message": f"Your handover is being prepared by {next((names[m] for m in names if 'reviewer' in _roles(db, m, h.workspace_id)), 'the reviewer')}."}
-    return {**meta, "approved": True, **_project(db, h, v, ctx.viewer, mask=not ctx.is_reviewer)}
+        return {**meta, "approved": False, "message": f"Your handover is being prepared by {reviewer or 'the reviewer'}."}
+    out = _project(db, h, v, ctx.viewer, mask=not ctx.is_reviewer)
+    # Unresolved items: when the leaver was asked about them in a sent gap interview (the items are already visible).
+    from baton.db.models import Interview, InterviewQuestion
+    asked = {str(q.claim_id): iv.sent_at.isoformat() for q, iv in db.execute(
+        select(InterviewQuestion, Interview).join(Interview, Interview.id == InterviewQuestion.interview_id)
+        .where(Interview.workspace_id == h.workspace_id, Interview.sent_at.is_not(None), InterviewQuestion.claim_id.is_not(None)))}
+    for s in out["sections"]:
+        for it in s["items"]:
+            if it.get("claim_id") in asked:
+                it["asked_on"] = asked[it["claim_id"]]
+    return {**meta, "approved": True, **out}
 
 
 @router.get("/handovers/{handover_id}/changes")
