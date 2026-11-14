@@ -169,6 +169,9 @@ export type RunInfo = { id: string; status: string; error: string | null; starte
 export type HandoverRef = { id: string; name: string; leaver: string; successor: string; leaver_id: string; successor_id: string; scope: string; show_restricted_stubs: boolean; latest_version: number | null };
 
 export type HandoverItem = {
+  stale?: boolean;
+  stale_reason?: string | null;
+  superseded_on?: string | null;
   claim_id: string;
   type: string;
   type_label: string;

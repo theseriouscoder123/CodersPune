@@ -170,10 +170,13 @@ function HandoverInner() {
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusChip status={it.status} promoted={!!it.flags?.reviewer_confirmed_without_evidence} />
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{it.type_label}</span>
-                          {it.history && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted"><History className="h-3 w-3" /> Superseded</span>}
+                          {it.history && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted"><History className="h-3 w-3" /> {it.stale ? "Probably done or parked" : "Superseded"}</span>}
                         </div>
                         <p className={`mt-1.5 text-[14.5px] leading-snug ${it.history ? "text-muted line-through decoration-line-2" : "text-ink"}`}>{it.text}</p>
-                        {it.history && it.superseded_by_text && <p className="mt-1 text-xs text-muted">Replaced by: {it.superseded_by_text}</p>}
+                        {it.history && it.superseded_by_text && (
+                          <p className="mt-1 text-xs text-muted">{it.superseded_on ? `Changed ${fmtDate(it.superseded_on)}: ` : "Replaced by: "}{it.superseded_by_text}</p>
+                        )}
+                        {it.stale && it.stale_reason && <p className="mt-1 text-xs text-muted" data-testid="stale-reason">{it.stale_reason}</p>}
                         {it.flags?.reviewer_confirmed_without_evidence && <p className="mt-1 text-xs text-muted">Reviewer-confirmed (no source evidence)</p>}
                         {it.status === "missing" && <p className="mt-1.5 text-xs font-medium text-missing">No source answers this. Ask {v.leaver} or {reviewer?.name ?? "the reviewer"}.</p>}
                         {it.evidence.length > 0 && (

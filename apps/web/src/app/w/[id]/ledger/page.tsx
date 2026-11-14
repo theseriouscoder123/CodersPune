@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
+import { DecisionTimeline, type RelationsOut } from "@/components/ledger/DecisionTimeline";
 import { STATUS_HELP, STATUS_META, STATUS_ORDER, StatusChip } from "@/components/ledger/StatusChip";
 import { NotForPersona } from "@/components/workspace/NotForPersona";
 import { useWorkspace } from "@/components/workspace/WorkspaceShell";
@@ -20,6 +21,7 @@ export default function LedgerPage() {
   const ledger = useApi<Ledger>(canSee ? `/workspaces/${ws.id}/claims` : null);
   const run = useApi<{ run: RunInfo | null }>(canSee ? `/workspaces/${ws.id}/runs/latest` : null);
   const timeline = useApi<{ events: ClaimSummary[] }>(canSee ? `/workspaces/${ws.id}/timeline` : null);
+  const relations = useApi<RelationsOut>(canSee ? `/workspaces/${ws.id}/relations` : null);
   const [starting, setStarting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [runOpen, setRunOpen] = useState(false);
@@ -104,33 +106,8 @@ export default function LedgerPage() {
       )}
 
       <div className="mt-9 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-        <section>
-          <h2 className="font-display text-xl font-semibold text-ink">Decision timeline</h2>
-          <p className="text-sm text-muted">In date order. A reversed decision stays visible and is marked superseded, not treated as a contradiction.</p>
-          {timeline.loading && <div className="mt-5 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}</div>}
-          <ol className="stagger relative mt-5 space-y-1 pl-6" data-testid="timeline">
-            <span className="absolute bottom-2 left-[7px] top-2 w-px bg-line-2" aria-hidden />
-            {timeline.data?.events.map((e) => (
-              <li key={e.id} className="relative">
-               <Link href={`/w/${ws.id}/review?tab=${e.superseded_by ? "superseded" : "all"}&claim=${e.id}`} title="Open this decision and its evidence"
-                className="block rounded-xl px-3 py-2.5 transition hover:bg-card focus-visible:bg-card">
-                <span className={`absolute -left-[22px] top-4 h-3 w-3 rounded-full ring-4 ring-paper ${e.superseded_by ? "bg-line-2" : STATUS_META[e.status]?.dot ?? "bg-amber"}`} />
-                <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                  <span className="font-mono">{e.occurred_at?.slice(0, 10)}</span><span>·</span><span>{e.type_label}</span><span>·</span>
-                  <span className="text-supported">{e.source_refs.join(", ")}</span>
-                </p>
-                <p className={`mt-0.5 text-[14.5px] ${e.superseded_by ? "text-muted line-through decoration-line-2" : "text-ink"}`}>{e.text}</p>
-                {e.superseded_by && (
-                  <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-paper-2 px-2.5 py-0.5 text-xs font-medium text-ink-2">
-                    Superseded by: {e.superseded_by_text ?? "a later decision"}
-                  </p>
-                )}
-               </Link>
-              </li>
-            ))}
-            {timeline.data && timeline.data.events.length === 0 && <li className="text-sm text-muted">No dated decisions yet.</li>}
-          </ol>
-        </section>
+        <DecisionTimeline wsId={ws.id} events={timeline.data?.events} relations={relations.data} loading={timeline.loading || relations.loading}
+          canEdit={ws.persona.roles.includes("reviewer") && !ws.read_only} onChanged={() => { timeline.reload(); relations.reload(); }} />
 
         <aside className="h-fit lg:sticky lg:top-40">
           <Card className="p-5">
