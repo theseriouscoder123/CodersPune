@@ -24,6 +24,10 @@ function fmtDate(iso: string, withTime = false) {
   return d.toLocaleString(undefined, withTime ? { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
     : { day: "numeric", month: "short", year: "numeric" });
 }
+/** A history item written down after the change it describes ("previously used Supabase", mentioned in March about
+ * a change made in February): show it as an earlier state, never as an event dated after its replacement. */
+const pastState = (it: { history?: boolean | string | null; occurred_at?: string | null; superseded_on?: string | null }) =>
+  !!it.history && !!it.superseded_on && !!it.occurred_at && it.occurred_at.slice(0, 10) > it.superseded_on.slice(0, 10);
 const shortDate = (iso: string) => new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 function daysUntil(iso: string) {
   const a = new Date(`${iso}T00:00:00`).getTime();
@@ -310,11 +314,11 @@ function HandoverInner() {
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-fg-3">
-                              {it.occurred_at ? it.occurred_at.slice(0, 10) : "undated"}
-                              {it.history && <span className="rounded-[4px] bg-hover px-1.5 font-sans text-[10.5px] font-semibold uppercase tracking-wide text-fg-2">{it.stale ? "Probably done" : "Changed later"}</span>}
+                              {pastState(it) ? `before ${it.superseded_on!.slice(0, 10)}` : it.occurred_at ? it.occurred_at.slice(0, 10) : "undated"}
+                              {it.history && <span className="rounded-[4px] bg-hover px-1.5 font-sans text-[10.5px] font-semibold uppercase tracking-wide text-fg-2">{it.stale ? "Probably done" : pastState(it) ? "Earlier state" : "Changed later"}</span>}
                             </p>
                             <p className={`mt-0.5 text-[14px] leading-[21px] ${it.history ? "text-fg-3" : "text-fg"}`}>{it.text}</p>
-                            {it.history && it.superseded_by_text && <p className="mt-0.5 text-[12.5px] text-fg-3">{it.superseded_on ? `Replaced on ${shortDate(it.superseded_on)} by: ` : "Replaced by: "}{it.superseded_by_text}</p>}
+                            {it.history && it.superseded_by_text && <p className="mt-0.5 text-[12.5px] text-fg-3">{pastState(it) ? `Mentioned ${shortDate(it.occurred_at!)} as how it used to be. Now: ` : it.superseded_on ? `Replaced on ${shortDate(it.superseded_on)} by: ` : "Replaced by: "}{it.superseded_by_text}</p>}
                             {it.stale && it.stale_reason && <p className="mt-0.5 text-[12.5px] text-fg-3" data-testid="stale-reason">{it.stale_reason}</p>}
                             {itemMeta(it)}
                           </div>

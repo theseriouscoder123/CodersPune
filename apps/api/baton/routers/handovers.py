@@ -567,9 +567,12 @@ def export_md(handover_id: uuid.UUID, request: Request, db: Session = Depends(ge
             if it.get("stale"):
                 lines.append(f"- Probably done or parked: {it['text']} [{tag}] ({refs}). {it.get('stale_reason') or ''}".rstrip())
             elif it.get("history"):
-                when = f" on {it['superseded_on'][:10]}" if it.get("superseded_on") else ""
+                on, said = (it.get("superseded_on") or "")[:10], (it.get("occurred_at") or "")[:10]
                 now = f" Now: {it['superseded_by_text']}" if it.get("superseded_by_text") else ""
-                lines.append(f"- Earlier, changed{when}: {it['text']} [{tag}] ({refs}).{now}")
+                if on and said and said > on:  # written down after the change it describes: an earlier state, not a later event
+                    lines.append(f"- Earlier state (before {on}, mentioned {said}): {it['text']} [{tag}] ({refs}).{now}")
+                else:
+                    lines.append(f"- Earlier, changed{f' on {on}' if on else ''}: {it['text']} [{tag}] ({refs}).{now}")
             else:
                 lines.append(f"- {it['text']} [{tag}] ({refs})")
             q = next((quotes[e["evidence_id"]] for e in it.get("evidence", []) if e["evidence_id"] in quotes), None)

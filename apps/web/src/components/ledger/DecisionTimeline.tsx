@@ -25,8 +25,9 @@ const short = (s: string, n = 90) => { const t = s.replace(/[.\s]+$/, ""); retur
 /** What one relation says about one of its two claims, in plain words. */
 function explain(rel: Rel, role: "earlier" | "later") {
   const other = role === "earlier" ? rel.later : rel.earlier;
+  const self = role === "earlier" ? rel.earlier : rel.later;
   if (rel.relation === "reversal") return role === "earlier" ? { tag: "Changed decision", text: `Replaced${other.occurred_at ? ` on ${fmt(other.occurred_at)}` : ""} by “${short(other.text, 70)}”. Kept as history, not treated as a contradiction.` } : { tag: "Changed decision", text: `Replaces an earlier decision: “${short(other.text, 70)}”.` };
-  if (rel.relation === "historical") return role === "earlier" ? { tag: "Earlier state", text: `Describes how things were before. Current state: “${short(other.text, 70)}”.` } : { tag: "Current state", text: `An earlier claim describes how it used to be: “${short(other.text, 70)}”.` };
+  if (rel.relation === "historical") return role === "earlier" ? { tag: "Earlier state", text: `Describes how things were before${other.occurred_at ? ` ${fmt(other.occurred_at)}` : ""}${self.occurred_at ? ` (written down ${fmt(self.occurred_at)})` : ""}. Current state: “${short(other.text, 70)}”.` } : { tag: "Current state", text: `An earlier claim describes how it used to be: “${short(other.text, 70)}”.` };
   if (rel.relation === "contradiction") return { tag: "Contradiction", text: `Disagrees with “${short(other.text, 80)}”. Both can't be true.` };
   return { tag: "Unrelated", text: "A reviewer marked these as unrelated." };
 }
@@ -50,6 +51,13 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
   }, [relations]);
   const staleById = useMemo(() => new Map((relations?.stale ?? []).map((s) => [s.id, s])), [relations]);
 
+  // earlier-state claim id -> the claim describing the current state (from "historical" relations)
+  const pastOf = useMemo(() => {
+    const m = new Map<string, Node>();
+    for (const r of relations?.relations ?? []) if (r.relation === "historical" && r.later.occurred_at) m.set(r.earlier.id, r.later);
+    return m;
+  }, [relations]);
+
   // Dated events, plus undated claims that take part in a relation or are stale (they describe the current code).
   const rows = useMemo(() => {
     const seen = new Set((events ?? []).map((e) => e.id));
@@ -58,8 +66,11 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
     for (const s of relations?.stale ?? []) if (!seen.has(s.id)) { seen.add(s.id); extra.push(s); }
     const base = (events ?? []).map((e) => ({ id: e.id, text: e.text, type: e.type_label, status: e.status as string, occurred_at: e.occurred_at, refs: e.source_refs, superseded: !!e.superseded_by }));
     const more = extra.map((n) => ({ id: n.id, text: n.text, type: n.type.replaceAll("_", " "), status: n.status, occurred_at: n.occurred_at, refs: n.refs, superseded: n.superseded }));
-    return [...base, ...more].sort((a, b) => (a.occurred_at ?? "9999").localeCompare(b.occurred_at ?? "9999"));
-  }, [events, relations]);
+    // An "earlier state" claim is dated by when it was written down, which can be after the change it describes.
+    // Place it just before the claim that replaced it, so the timeline never reads backwards.
+    const key = (r: { id: string; occurred_at: string | null }) => pastOf.get(r.id)?.occurred_at ?? r.occurred_at ?? "9999";
+    return [...base, ...more].sort((a, b) => key(a).localeCompare(key(b)) || Number(pastOf.has(b.id)) - Number(pastOf.has(a.id)));
+  }, [events, relations, pastOf]);
 
   const shown = rows.filter((r) => {
     const rels = byClaim.get(r.id) ?? [];
@@ -100,7 +111,11 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
           const muted = e.superseded || !!stale;
           return (
             <li key={e.id} className={`grid grid-cols-[78px_20px_minmax(0,1fr)] sm:grid-cols-[92px_24px_minmax(0,1fr)] ${collapsed && i >= FIRST ? "hidden" : ""}`}>
-              <span className="pr-2 pt-[3px] text-right font-mono text-[11.5px] text-fg-3">{e.occurred_at ? e.occurred_at.slice(0, 10) : "undated"}</span>
+              <span className="pr-2 pt-[3px] text-right font-mono text-[11.5px] text-fg-3">
+                {pastOf.has(e.id)
+                  ? <><span className="block font-sans text-[11px]">before</span>{pastOf.get(e.id)!.occurred_at!.slice(0, 10)}</>
+                  : e.occurred_at ? e.occurred_at.slice(0, 10) : "undated"}
+              </span>
               <span className="relative flex justify-center" aria-hidden>
                 <span className="absolute inset-y-0 w-px bg-line" />
                 <span className={`relative mt-[6px] h-[9px] w-[9px] rounded-full border-[1.5px] bg-bg ${contra ? "border-con" : muted ? "border-fg-4" : "border-fg-3"}`} />
