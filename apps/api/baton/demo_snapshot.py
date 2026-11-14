@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from sqlalchemy import select
@@ -114,7 +114,8 @@ def import_snapshot(db: Session, workspace_id, path: Path = SNAPSHOT) -> dict:
         if c["superseded_by"] and c["superseded_by"] in made:
             made[c["key"]].superseded_by = made[c["superseded_by"]].id
     if leaver and successor:
-        db.add(Handover(workspace_id=workspace_id, leaver_member_id=leaver, successor_member_id=successor))
+        # The demo story: Rohan's last day is 15 Nov 2026 (meeting notes, 28 Oct).
+        db.add(Handover(workspace_id=workspace_id, leaver_member_id=leaver, successor_member_id=successor, leaves_on=date(2026, 11, 15)))
     db.flush()
     merge_duplicates(db, workspace_id)  # fix F3
     recompute_statuses(db, workspace_id)

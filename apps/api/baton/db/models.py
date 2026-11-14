@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Computed,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -240,6 +241,8 @@ class Handover(Base):
     scope: Mapped[str | None] = mapped_column(Text)  # comma-separated keywords/paths; empty = whole project
     name: Mapped[str | None] = mapped_column(Text)
     show_restricted_stubs: Mapped[bool] = mapped_column(Boolean, server_default=sql("false"), nullable=False)
+    leaves_on: Mapped[date | None] = mapped_column(Date)  # the leaver's last day ("Before Rohan leaves")
+    leaving_marks: Mapped[dict] = mapped_column(JSONB, server_default=sql("'{}'::jsonb"), nullable=False)  # key -> {done, by, at}
     created_at: Mapped[datetime] = created()
 
 

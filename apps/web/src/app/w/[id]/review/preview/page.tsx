@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, CheckCircle2, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 import { Suspense, useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
@@ -87,6 +87,7 @@ function PreviewInner() {
         description={handover?.latest_version ? `Version ${handover.latest_version} is approved. Approving again creates version ${nextVersion}.` : "Nothing is approved yet, so the successor currently sees nothing."}
         actions={<>
           <ButtonLink href={`/w/${ws.id}/review`} variant="secondary"><ArrowLeft className="h-4 w-4" /> Back to claims</ButtonLink>
+          {handover && <ButtonLink href={`/w/${ws.id}/leaving?h=${handover.id}`} variant="secondary" data-testid="leaving-link"><CalendarClock className="h-4 w-4" /> Before {handover.leaver} leaves</ButtonLink>}
           {!ws.read_only && <Button variant="success" onClick={() => setOpen(true)} data-testid="approve-open"><ShieldCheck className="h-4 w-4" /> Approve handover v{nextVersion}</Button>}
         </>} />
       <HandoverPicker handovers={sel.handovers} selected={handover} onCreated={sel.reload} />
