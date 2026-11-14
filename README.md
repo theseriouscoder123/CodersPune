@@ -105,7 +105,7 @@ cd apps/api && uv run uvicorn baton.main:app --reload --port 8000
 cd apps/web && pnpm install && pnpm dev                # http://localhost:3000
 ```
 
-Checked from a clean clone on 14 Nov 2026 with no AI key: migrations, demo restore, eval, API and web all work.
+Checked from a clean clone on 15 Nov 2026 with no AI key: migrations, demo restore, the API serving a demo copy, and the web build all work.
 
 Live AI features (custom repos, re-runs, Ask, rewriting withheld items) need `LLM_*` / `GEMINI_API_KEYS` /
 `GROQ_API_KEYS`. With a key, `uv run python -m baton.seed_rerender` precomputes the demo's rewrites (improvement #3).
