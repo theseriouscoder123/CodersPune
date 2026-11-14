@@ -72,6 +72,8 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             aft = a.after or {}
             label, what = "Answered the gap interview", (f"{aft.get('answered', 0)} answered · {aft.get('testimony_claims', 0)} "
                                                          f"testimony claims · {aft.get('minutes', 0)} min")
+        elif a.action == "successor_question_answered":
+            label, what = "Answered a question from the successor", None
         elif a.action == "relation_override":
             label, what = "Changed how two claims relate", f"{(a.before or {}).get('relation', '?')} → {(a.after or {}).get('relation', '?')}"
         elif a.action == "stale_override":
