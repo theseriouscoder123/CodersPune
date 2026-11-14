@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     llm_api_key: str = ""  # single key for llm_provider (kept for compatibility; joins that provider's pool)
     gemini_api_keys: str = ""  # comma-separated key pool
     groq_api_keys: str = ""  # comma-separated key pool
+    # Any OpenAI-compatible server (self-hosting): OpenAI, Azure OpenAI's v1 endpoint, vLLM, LM Studio or a local
+    # Ollama (http://localhost:11434/v1, no key). Use it with chain entries like "openai:llama3.1:8b".
+    openai_base_url: str = ""
+    openai_api_keys: str = ""  # comma-separated key pool; may be empty for a local server
     llm_model_extract: str = ""
     llm_model_verify: str = ""
     verifier: str = "llm"
@@ -42,7 +46,7 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     def key_pool(self, provider: str) -> list[str]:
-        raw = {"gemini": self.gemini_api_keys, "groq": self.groq_api_keys}.get(provider, "")
+        raw = {"gemini": self.gemini_api_keys, "groq": self.groq_api_keys, "openai": self.openai_api_keys}.get(provider, "")
         keys = [k.strip() for k in raw.split(",") if k.strip()]
         if provider == self.llm_provider.lower() and self.llm_api_key.strip() and self.llm_api_key.strip() not in keys:
             keys.insert(0, self.llm_api_key.strip())
@@ -54,7 +58,7 @@ class Settings(BaseSettings):
 
     @property
     def llm_configured(self) -> bool:
-        has_key = bool(self.llm_api_key or self.gemini_api_keys or self.groq_api_keys)
+        has_key = bool(self.llm_api_key or self.gemini_api_keys or self.groq_api_keys or self.openai_base_url.strip())
         return bool(has_key and self.llm_model_extract and self.llm_model_verify)
 
 

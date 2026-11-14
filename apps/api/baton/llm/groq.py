@@ -1,4 +1,5 @@
-"""Groq transport (OpenAI-compatible chat completions). No SDK dependency.
+"""OpenAI-compatible chat-completions transport, used for Groq and for any OpenAI-compatible endpoint (OpenAI,
+Azure OpenAI's v1 endpoint, vLLM, LM Studio, a local Ollama) via OPENAI_BASE_URL. No SDK dependency.
 
 Structured output: we ask for `response_format: json_schema` (best effort, strict off). Models that don't support it
 answer 400; we then fall back to JSON mode with the schema in the system prompt and remember that per model. Either
@@ -23,9 +24,11 @@ _RETRY_IN = re.compile(r"try again in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?", re.
 class GroqTransport:
     provider = "groq"
 
-    def __init__(self, api_key: str, timeout: float = 35.0):
+    def __init__(self, api_key: str, timeout: float = 35.0, url: str = URL, provider: str = "groq"):
         self.api_key = api_key
         self.timeout = timeout
+        self.url = url
+        self.provider = provider
 
     def generate_json(self, *, system: str, user: str, json_schema: dict, model: str, temperature: float):
         if model not in _NO_SCHEMA_MODELS:
@@ -50,11 +53,12 @@ class GroqTransport:
 
     def _post(self, body: dict) -> httpx.Response:
         try:
-            return httpx.post(URL, json=body, timeout=self.timeout, headers={"Authorization": f"Bearer {self.api_key}"})
+            headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+            return httpx.post(self.url, json=body, timeout=self.timeout, headers=headers)
         except httpx.TimeoutException as exc:
-            raise TransientError("groq timeout", server_error=True) from exc
+            raise TransientError(f"{self.provider} timeout", server_error=True) from exc
         except httpx.HTTPError as exc:
-            raise TransientError(f"groq network error {type(exc).__name__}", server_error=True) from exc
+            raise TransientError(f"{self.provider} network error {type(exc).__name__}", server_error=True) from exc
 
     @staticmethod
     def _parse(r: httpx.Response) -> tuple[str, dict]:
@@ -78,6 +82,12 @@ class GroqTransport:
             raise TransientError("groq empty response")
         u = data.get("usage") or {}
         return text, {"tokens_in": u.get("prompt_tokens"), "tokens_out": u.get("completion_tokens")}
+
+
+def openai_compatible(base_url: str, api_key: str, timeout: float = 60.0) -> GroqTransport:
+    """A transport for any OpenAI-compatible server. base_url is the API root, e.g. https://api.openai.com/v1 or
+    http://localhost:11434/v1 (Ollama); an empty key is allowed for local servers."""
+    return GroqTransport(api_key, timeout=timeout, url=base_url.rstrip("/") + "/chat/completions", provider="openai")
 
 
 def _error_message(r: httpx.Response) -> str:

@@ -1,4 +1,8 @@
-# Local development only. Production uses Neon (see docs/DECISIONS.md D8).
+# Local development:   docker compose up -d db            (Postgres + pgvector on host :5433)
+# Self-hosted stack:   docker compose --profile full up --build
+#   -> web on http://localhost:3000, API on :8000, demo seeded from the frozen ledger (no AI key needed).
+#   Optional .env (repo root) adds AI keys or an OpenAI-compatible server (OPENAI_BASE_URL), e.g. a local Ollama.
+# The hosted demo uses Vercel + Neon instead (docs/DECISIONS.md D8).
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -15,6 +19,36 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+
+  api:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://baton:baton@db:5432/baton
+      APP_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    build:
+      context: apps/web
+      args:
+        API_ORIGIN: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   baton_pg:

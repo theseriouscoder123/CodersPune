@@ -28,7 +28,7 @@ from baton.config import get_settings
 
 T = TypeVar("T", bound=BaseModel)
 
-PROVIDERS = ("gemini", "groq")
+PROVIDERS = ("gemini", "groq", "openai")
 EXHAUSTED_TTL_S = 3600
 CALL_BUDGET_S = 40.0  # one structured() call, all retries included: fits inside a ~45 s pipeline slice  # retry a "daily quota" key/model after an hour (cheap: one call), serverless resets anyway
 
@@ -269,4 +269,8 @@ def get_llm() -> LLM:
         from baton.llm.groq import GroqTransport
 
         pools["groq"] = [GroqTransport(k) for k in keys["groq"]]
+    if s.openai_base_url.strip():  # any OpenAI-compatible server: OpenAI, Azure OpenAI v1, vLLM, a local Ollama
+        from baton.llm.groq import openai_compatible
+
+        pools["openai"] = [openai_compatible(s.openai_base_url, k) for k in (keys["openai"] or [""])]
     return LLM(pools, default_provider=s.llm_provider)
