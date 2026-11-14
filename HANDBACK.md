@@ -66,6 +66,18 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - Ask the handover: answers cite approved, permitted items only
 - Print / PDF and Markdown export (labelled history, key quotes)
 
+**Before and after the handover (new in Round 3)**
+- Knowledge risk per person (files maintained alone, open tasks, unanswered gaps, facts only they wrote down) and services with no named owner; start a handover from it
+- Knowledge-risk GitHub Action for any repository (same rules, from git history; job summary and JSON)
+- "Before the leaver leaves": the leaver's last day, a countdown and one ordered checklist that ticks itself off when answered or resolved
+- The successor's first week: Day 1 / Days 2–3 / rest of week 1, built only from what the successor sees, with progress from acknowledgements
+
+**Integrations**
+- Live Slack connector: reads channels the app was invited to; a private channel's members become its access list; token used once, never stored
+- Slack and Discord notifications for runs and approvals (names and a link only, never claim text)
+- Questions for the leaver opened as a pre-filled GitHub issue on the workspace's real repo; questions from restricted sources are left out
+- Self-hosting: one-command Docker Compose stack and any OpenAI-compatible model (OpenAI, Azure OpenAI, vLLM, local Ollama)
+
 **Teams and operations**
 - Per-visitor demo sandbox; persona switcher resolved server-side
 - Private invite links and locked identities for real teams

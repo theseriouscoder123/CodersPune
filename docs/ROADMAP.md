@@ -32,7 +32,7 @@ reconstruct → verify → review → approve → handover, plus the three Round
 | Sign-in with GitHub (OAuth), mapping GitHub users to members; invite links stay as a fallback | 1.5 weeks | Server-side identity from a session, not a header; isolation tests pass unchanged |
 | GitHub App instead of tokens: private repos refresh automatically (today their token is used once and dropped) | 1.5 weeks | A private repo re-runs Refresh without the user pasting a token |
 | Scheduled Refresh (nightly) with "changed since you approved" alerts to the reviewer | 1 week | A new PR comment shows up as a claim flagged for review the next day |
-| Live Slack connector (read selected channels, keep their membership as the access list) | 1.5 weeks | Channel membership drives visibility; leak sweep still 0 |
+| Slack slash command `/baton ask` and gap-interview questions delivered as Slack DMs (the read-only live connector already exists) | 1 week | A leaver answers in Slack and the answer becomes cited testimony |
 | Overdue tracking for successor questions, plus a readiness view per successor | 0.5 week | The reviewer sees acknowledged, open and overdue per person |
 
 **Risks:**
@@ -45,7 +45,7 @@ reconstruct → verify → review → approve → handover, plus the three Round
 |---|---|---|
 | Extraction quality on non-Gemini models (recall was 9–10/13 on Groq vs 13/13 on Gemini): better batching and retries, plus a small paid model budget for real teams | 2 weeks | Recall ≥ 12/13 on two providers |
 | Larger repos: history beyond about 60k characters per run, using embeddings to prioritise (`EMBEDDINGS=fastembed` seam exists) | 2 weeks | A 2,000-commit repo completes within the free time limits |
-| Knowledge-risk panel: files and services that only the leaver maintains, before a handover even starts | 1 week | Shown for the demo and one real repo |
+| Knowledge risk over time: weekly snapshots from the GitHub Action, trend per person | 1 week | A falling bus factor is visible before anyone resigns |
 
 **Risks:**
 - *Free-tier limits* (Vercel function time, Neon storage, AI quotas). Mitigation: the pipeline already works in bounded slices; move AI to a paid key per team when a team adopts it.

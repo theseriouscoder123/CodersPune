@@ -66,6 +66,10 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
   - Decision timeline: changed decision vs contradiction, stale open work, reviewer overrides.
   - Successor acknowledgement with questions tracked to closure, and withheld items re-rendered from the successor's accessible sources only.
   - One handover count on every screen, the admin can change source access, faster pages.
+  - **Knowledge risk:** who would take knowledge with them if they left (files only they maintain, open tasks, unanswered gaps), plus services with no named owner, by fixed rules, with "start a handover" from there. Also available as a **GitHub Action** for any repo.
+  - **Before the leaver leaves:** a countdown to the leaver's last day and one ordered checklist (their tasks, conflicts only they can settle, unanswered questions, files needing a walkthrough, successor questions).
+  - **The successor's first week:** the approved handover arranged into Day 1 / Days 2–3 / rest of week 1, each item with a reason.
+  - **Integrations:** live Slack connector (bot token used once; channel membership becomes the access list), Slack and Discord notifications, questions opened as a pre-filled GitHub issue (restricted questions left out), self-hosting with Docker and any OpenAI-compatible model.
 - **Teams:**
   - Private invite links per person, and locked identities, so nobody can view the workspace as someone else.
   - Optional email (Gmail SMTP) and Slack notifications.

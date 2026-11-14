@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { CoachBar } from "@/components/CoachBar";
 import { AccessEditor } from "@/components/workspace/AccessEditor";
+import { SlackImport } from "@/components/workspace/SlackImport";
 import { useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, ButtonLink, Card, EmptyState, PageHeader, SkeletonList } from "@/components/ui";
 import type { SourceInfo } from "@/lib/api";
@@ -92,7 +93,10 @@ export default function SourcesPage() {
 
       <PageHeader eyebrow="Connect" title="Connected sources"
         description={isReviewer ? "As the reviewer, you can see every source in this workspace." : `Only the sources ${ws.persona.name} is allowed to read are listed.`}
-        actions={total > 0 ? <span className="inline-flex items-center gap-1.5 rounded-full bg-strong px-3 py-1.5 text-xs font-semibold text-on-strong"><ShieldCheck className="h-3.5 w-3.5" /> {total} secrets removed in total</span> : undefined} />
+        actions={<>
+          {canEdit && <SlackImport wsId={ws.id} synthetic={!!ws.synthetic} onImported={reload} />}
+          {total > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-strong px-3 py-1.5 text-xs font-semibold text-on-strong"><ShieldCheck className="h-3.5 w-3.5" /> {total} secrets removed in total</span>}
+        </>} />
 
       <div className="mt-7">
         {error && <Alert tone="error">Couldn&apos;t load sources: {error}</Alert>}
