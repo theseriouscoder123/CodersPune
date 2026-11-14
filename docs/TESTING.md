@@ -44,7 +44,7 @@ The testers were fresh AI agents (Claude Sonnet) with no context from this proje
 |---|---|
 | G7 auth change classified (improvement #2) | `historical` (the later claim says "previously used"), never `contradiction`: **ok** |
 | G3 upload limit classified | `contradiction`: **ok** |
-| Stale open work | 4 items; the old "set up push reminders" task is flagged: **ok** |
+| Stale open work | 3 items; the old "set up push reminders" task is flagged: **ok**. A 4th (the sponsor-logo task) was wrongly flagged because its own rewrite looked like "a later update"; fixed (D59) and pinned by a test. |
 | Re-rendered claims (improvement #3) | **1/1** quote found, visible to Neha, no sponsor name or amount. Of the 4 withheld items that look like Neha's: 1 created, 1 already visible to her, 1 a different topic, 1 not stated in her sources. |
 
 ### Automated tests

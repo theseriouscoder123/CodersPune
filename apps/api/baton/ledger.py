@@ -194,7 +194,8 @@ def rebuild_relations(db: Session, workspace_id) -> dict:
                 la, lb = ordered(lite(a), lite(b))
                 add(by_id[uuid.UUID(la.id)], by_id[uuid.UUID(lb.id)], "contradiction", contradiction_signal(la, lb))
 
-    stale = stale_reasons([lite(c) for c in claims if c.review_state != "rejected" and not c.superseded_by])
+    # Re-rendered claims (improvement #3) restate a withheld claim; they are not updates, so they never make work stale.
+    stale = stale_reasons([lite(c) for c in claims if c.review_state != "rejected" and not c.superseded_by and not c.derived_from])
     for c in claims:
         override = (c.meta or {}).get("stale_override")
         reason = None if override == "still_open" else stale.get(str(c.id))

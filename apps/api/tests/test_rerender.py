@@ -156,3 +156,20 @@ def test_already_visible_fact_is_not_copied(world):
         db.rollback()
     finally:
         db.close()
+
+
+def test_rewrite_does_not_make_the_original_stale(world):
+    """A rewrite restates the withheld claim; the stale rules must not read it as 'a later update on the same item'."""
+    from baton.ledger import rebuild_relations
+
+    db = SessionLocal()
+    try:
+        logo, neha = _logo_and_neha(db, world["ws"])
+        out = rerender_claim(db, world["ws"], logo, neha, llm=FakeLLM())
+        assert out["status"] == "created"
+        rebuild_relations(db, world["ws"])
+        db.refresh(logo)
+        assert logo.stale_reason is None
+        db.rollback()
+    finally:
+        db.close()
