@@ -51,3 +51,16 @@ export function useApi<T>(path: string | null) {
   return { data, error: current?.error, status: current?.status, loading: !!path && !current && stale === undefined,
            refreshing: !current && stale !== undefined, reload };
 }
+
+
+/** A counter that goes up after every successful write anywhere in the app (api() fires "baton:changed"), so the
+ * sidebar counts and Getting started can refresh without a reload. */
+export function useChanges() {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const on = () => setN((x) => x + 1);
+    window.addEventListener("baton:changed", on);
+    return () => window.removeEventListener("baton:changed", on);
+  }, []);
+  return n;
+}

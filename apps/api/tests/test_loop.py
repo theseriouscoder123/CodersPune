@@ -329,3 +329,16 @@ def test_approval_note_pii_masked_for_successor_and_secrets_scrubbed(world):
     meera = c.get(f"/api/handovers/{hid}", headers=as_(p["meera"])).json()["note"]
     assert "rohan.personal@gmail.com" in meera  # the reviewer still sees PII
     assert "ghp_abcdefghijklmnopqrstuvwxyz0123456789" not in meera  # but secrets are never stored
+
+
+def test_search_snippet_stays_masked_when_the_query_hits_the_number(world):
+    """Blind security test: searching the digits wrapped them in highlight markers, which broke the phone pattern."""
+    c = client("visitor-one")
+    ws = world["s1"]
+    p = personas(c, ws)
+    for q in ("90000", "00000", "travelling"):
+        r = c.get(f"/api/workspaces/{ws}/search", params={"q": q}, headers=as_(p["rohan"])).json()
+        joined = " ".join(x["snippet"] for x in r["passages"])
+        assert "90000 00000" not in joined.replace("«", "").replace("»", ""), q
+    r = c.get(f"/api/workspaces/{ws}/search", params={"q": "90000"}, headers=as_(p["meera"])).json()
+    assert any("90000" in x["snippet"] for x in r["passages"])  # the reviewer still sees it

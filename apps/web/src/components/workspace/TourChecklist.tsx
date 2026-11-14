@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { api, type WorkspaceInfo } from "@/lib/api";
+import { useChanges } from "@/lib/useApi";
 
 type TourState = { reviewed: number; approved: boolean; successor_id: string | null };
 
@@ -39,6 +40,7 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
   const pathname = usePathname();
   const router = useRouter();
   const base = `baton:tour:${ws.id}`;
+  const changes = useChanges();
   const visited = useSyncExternalStore(subscribe, () => read(`${base}:visited`) ?? "", () => "");
   const hidden = useSyncExternalStore(subscribe, () => read(`${base}:hidden`) === "1", () => true);
   const [server, setServer] = useState<TourState | null>(null);
@@ -64,7 +66,7 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
     return () => {
       cancelled = true;
     };
-  }, [ws.id, pathname, ws.persona.id]);
+  }, [ws.id, pathname, ws.persona.id, changes]);
 
   if (ws.read_only) return null;
   const seen = new Set(visited.split(",").filter(Boolean));

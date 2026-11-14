@@ -60,7 +60,7 @@ export function AckControls({ hid, wsId, claimId, ack, canRespond, onChanged, ch
   };
 
   return (
-    <div className="flex items-start gap-2.5" data-testid="ack-controls">
+    <div className="flex flex-wrap items-start gap-x-2.5 gap-y-1 sm:flex-nowrap" data-testid="ack-controls">
       {canRespond ? (
         <button type="button" onClick={(e) => { e.stopPropagation(); void send("acknowledged"); }} disabled={!!busy} data-testid="ack-got-it"
           title={done ? "Acknowledged" : "Mark as got it"} aria-pressed={done}
@@ -69,7 +69,7 @@ export function AckControls({ hid, wsId, claimId, ack, canRespond, onChanged, ch
           <span className="sr-only">{done ? "Acknowledged" : "Got it"}</span>
         </button>
       ) : null}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-30px)]">
         {children}
         {ack?.changed_since && !state && (
           <p className="mt-1 inline-flex items-center gap-1 text-[12px] text-con"><RefreshCw className="h-3 w-3" /> Changed since you acknowledged it in version {ack.changed_since}</p>
@@ -98,11 +98,11 @@ export function AckControls({ hid, wsId, claimId, ack, canRespond, onChanged, ch
         )}
       </div>
       {canRespond && !asking && (
-        <div className="no-print flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100" onClick={(e) => e.stopPropagation()}>
+        <div className="no-print flex shrink-0 items-center gap-0.5 max-sm:ml-[24px] opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100" onClick={(e) => e.stopPropagation()}>
           <button type="button" onClick={() => setAsking(true)} disabled={!!busy} data-testid="ack-ask"
-            className="h-6 rounded px-1.5 text-[12px] font-medium text-fg-2 hover:bg-hover hover:text-fg">{state === "question" ? "Ask again" : "Ask a question"}</button>
+            className="h-8 rounded px-1.5 text-[12px] font-medium text-fg-2 hover:bg-hover hover:text-fg sm:h-6">{state === "question" ? "Ask again" : "Ask a question"}</button>
           <button type="button" onClick={() => void send("not_mine")} disabled={!!busy}
-            className={`h-6 rounded px-1.5 text-[12px] font-medium hover:bg-hover hover:text-fg ${state === "not_mine" ? "text-fg" : "text-fg-3"}`}>Not mine</button>
+            className={`h-8 rounded px-1.5 text-[12px] font-medium hover:bg-hover sm:h-6 hover:text-fg ${state === "not_mine" ? "text-fg" : "text-fg-3"}`}>Not mine</button>
         </div>
       )}
       {aside}

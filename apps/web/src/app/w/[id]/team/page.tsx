@@ -34,7 +34,7 @@ export default function TeamPage() {
   const [links, setLinks] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const confirmDialog = useConfirm();
-  if (!allowed) return <NotForPersona step="Team settings" />;
+  if (!allowed) return <NotForPersona step="Team settings" who="Only the reviewer and the workspace admin see this page." />;
   const t = team.data;
 
   async function invite(memberId: string, sendEmail = false) {

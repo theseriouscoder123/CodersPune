@@ -14,7 +14,7 @@ from sqlalchemy import select
 from baton.db.models import Claim, Job, Run, Workspace
 from baton.db.session import SessionLocal
 from baton.ledger import recompute_statuses
-from baton.pipeline import replan_conflicts
+from baton.pipeline import _n, replan_conflicts
 
 
 def main() -> None:
@@ -26,7 +26,7 @@ def main() -> None:
         run = db.scalars(select(Run).where(Run.workspace_id == ws_id).order_by(Run.created_at.desc())).first()
         if run:
             for j in db.scalars(select(Job).where(Job.run_id == run.id, Job.step == "conflicts")):
-                j.message, j.progress, j.total = f"{groups} conflicts, {sup} reversed decisions", groups, groups
+                j.message, j.progress, j.total = f"{_n(groups, 'conflict')}, {_n(sup, 'reversed decision')}", groups, groups
         counts = Counter(c.status for c in db.scalars(select(Claim).where(Claim.workspace_id == ws_id)))
         print(f"{ws_id}: {groups} conflicts, {sup} superseded, statuses {dict(counts)}")
 

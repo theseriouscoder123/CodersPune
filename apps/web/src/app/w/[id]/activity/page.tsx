@@ -37,7 +37,7 @@ export default function ActivityPage() {
   const allowed = ws.persona.roles.some((r) => r === "admin" || r === "reviewer");
   const data = useApi<{ entries: Entry[] }>(allowed ? `/workspaces/${ws.id}/activity` : null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
-  if (!allowed) return <NotForPersona step="The activity log" />;
+  if (!allowed) return <NotForPersona step="The activity log" who="Only the reviewer and the workspace admin see this page." />;
   const f = FILTERS.find((x) => x.key === filter)!;
   const entries = (data.data?.entries ?? []).filter((e) => !("match" in f) || f.match(e));
 

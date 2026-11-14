@@ -45,7 +45,10 @@ def latest_run(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db))
     run = db.scalars(select(Run).where(Run.workspace_id == ctx.workspace.id).order_by(Run.created_at.desc())).first()
     if run is None and ctx.workspace.sandbox_of:  # a sandbox shows the precomputed run of the template it was cloned from
         run = db.scalars(select(Run).where(Run.workspace_id == ctx.workspace.sandbox_of).order_by(Run.created_at.desc())).first()
-    return {"run": run_progress(run.id) if run else None}
+    if run is None:
+        return {"run": None}
+    # a sandbox shows its template's run, but never the template's id (it belongs to no visitor)
+    return {"run": {**run_progress(run.id), "workspace_id": str(ctx.workspace.id)}}
 
 
 def _run_ctx(db: Session, request: Request, run_id: uuid.UUID) -> Ctx:

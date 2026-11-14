@@ -86,7 +86,7 @@ export default function SourcesPage() {
 
       <PageHeader title="Connected sources"
         description={isReviewer
-          ? "Everything Baton may read for this handover, and who can see each one. A claim is only shown to someone who can see every source it cites. Switch person at the bottom left to see the difference."
+          ? "Everything Baton may read for this handover, and who can see each one. A claim is only shown to someone who can see every source it cites. Switch person at the bottom left (in the menu on a phone) to see the difference."
           : `Only the sources ${ws.persona.name} is allowed to read are listed. A claim is only shown to someone who can see every source it cites.`} />
 
       {total > 0 && (
@@ -134,6 +134,12 @@ export default function SourcesPage() {
         </section>
       )}
 
+      {!canLedger && !ws.persona.roles.includes("successor") ? (
+        <div className="mt-10 rounded-lg border border-line px-4 py-3 text-[13px]">
+          <p className="font-semibold text-fg">{ws.persona.name} has no part in this handover</p>
+          <p className="mt-0.5 text-[12.5px] text-fg-3">Members see only the sources they can read. Switch person at the bottom left (in the menu on a phone) to follow the handover as the reviewer or the successor.</p>
+        </div>
+      ) : (
       <div className="mt-10 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-accent-soft px-4 py-3">
         <ShieldCheck className="h-4 w-4 shrink-0 text-accent-ink" />
         <div className="min-w-0 flex-1">
@@ -142,6 +148,7 @@ export default function SourcesPage() {
         </div>
         <ButtonLink size="sm" href={canLedger ? `/w/${ws.id}/ledger` : `/w/${ws.id}/handover`}>{canLedger ? "See the ledger" : "Open my handover"} <ArrowRight /></ButtonLink>
       </div>
+      )}
     </div>
   );
 }

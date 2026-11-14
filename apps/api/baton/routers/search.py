@@ -67,7 +67,11 @@ def search(q: str = Query(min_length=2, max_length=120), ctx: Ctx = Depends(work
             .order_by(func.ts_rank(Chunk.tsv, tsq).desc()).limit(MAX_PASSAGES * 3)):
         if not can_view_acl(ctx.viewer, src.acl):
             continue
-        text = mask_pii(snippet) if mask else snippet
+        text = snippet
+        if mask:  # mask the plain text: highlight markers inside a number would otherwise break the PII patterns
+            plain = snippet.replace("«", "").replace("»", "")
+            masked = mask_pii(plain)
+            text = masked if masked != plain else snippet
         passages.append({"chunk_id": str(ch.id), "source": src.name, "source_type": src.type, "snippet": text,
                          "ref": source_ref(ch.kind, ch.location or {}, ch.occurred_at, src.name, ch.text, None)})
         if len(passages) >= MAX_PASSAGES:

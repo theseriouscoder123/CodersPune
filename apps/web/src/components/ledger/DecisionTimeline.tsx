@@ -117,20 +117,20 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
                   const isContra = rel.relation === "contradiction";
                   return (
                     <button key={rel.id + role} type="button" onClick={() => setOpen({ rel })} data-testid="relation-chip"
-                      className={`mt-2 flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left transition-colors hover:bg-hover ${isContra ? "border-con/30" : "border-line"}`}>
+                      className={`mt-2 flex w-full flex-wrap items-start gap-x-3 gap-y-1 rounded-md border sm:flex-nowrap px-3 py-2 text-left transition-colors hover:bg-hover ${isContra ? "border-con/30" : "border-line"}`}>
                       <span className={`mt-px shrink-0 rounded-[4px] px-1.5 text-[10.5px] font-semibold uppercase leading-[18px] tracking-wide ${isContra ? "bg-con-soft text-con" : "bg-hover text-fg-2"}`}>{x.tag}</span>
-                      <span className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-fg-2">{x.text}</span>
-                      <span className="shrink-0 text-[12px] text-fg-3">{rel.decided_by === "reviewer" ? <>by {rel.decided_by_name ?? "the reviewer"} <span>· reviewer</span></> : "by rule"}</span>
+                      <span className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-fg-2 max-sm:order-last max-sm:basis-full">{x.text}</span>
+                      <span className="shrink-0 text-[12px] text-fg-3 max-sm:ml-auto">{rel.decided_by === "reviewer" ? <>by {rel.decided_by_name ?? "the reviewer"} <span>· reviewer</span></> : "by rule"}</span>
                       <span className="shrink-0 text-[12px] font-medium text-accent-ink">{isContra ? "Why?" : canEdit ? "Change" : "Why?"}</span>
                     </button>
                   );
                 })}
                 {stale && (
                   <button type="button" onClick={() => setOpen({ stale })} data-testid="stale-chip"
-                    className="mt-2 flex w-full items-start gap-3 rounded-md border border-line px-3 py-2 text-left transition-colors hover:bg-hover">
+                    className="mt-2 flex w-full flex-wrap items-start gap-x-3 gap-y-1 rounded-md border sm:flex-nowrap border-line px-3 py-2 text-left transition-colors hover:bg-hover">
                     <span className="mt-px shrink-0 rounded-[4px] bg-hover px-1.5 text-[10.5px] font-semibold uppercase leading-[18px] tracking-wide text-fg-2">Probably done</span>
-                    <span className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-fg-2">{stale.stale_reason}</span>
-                    <span className="shrink-0 text-[12px] text-fg-3">by rule</span>
+                    <span className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-fg-2 max-sm:order-last max-sm:basis-full">{stale.stale_reason}</span>
+                    <span className="shrink-0 text-[12px] text-fg-3 max-sm:ml-auto">by rule</span>
                     <span className="shrink-0 text-[12px] font-medium text-accent-ink">Why?</span>
                   </button>
                 )}

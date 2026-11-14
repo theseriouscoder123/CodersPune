@@ -56,7 +56,7 @@ function PreviewInner() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  if (!isReviewer) return <NotForPersona step="The visibility preview" />;
+  if (!isReviewer) return <NotForPersona step="The visibility preview" who="Only the reviewer previews and approves the handover." />;
   if (!sel.loading && !handover) return <EmptyState title="No handover set up">This workspace has no successor yet.</EmptyState>;
   const name = handover?.successor ?? "the successor";
   const successor = ws.members.find((m) => m.id === handover?.successor_id);

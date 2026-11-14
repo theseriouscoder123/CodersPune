@@ -14,6 +14,7 @@ import { TryDemoButton } from "@/components/TryDemoButton";
 import { ButtonLink, Kbd, Spinner } from "@/components/ui";
 import { canSearch, SearchPalette } from "@/components/workspace/SearchPalette";
 import { TourChecklist } from "@/components/workspace/TourChecklist";
+import { useChanges } from "@/lib/useApi";
 import { api, ApiError, storePersona, type WorkspaceInfo } from "@/lib/api";
 
 type Ctx = { ws: WorkspaceInfo; personaVersion: number; switchPersona?: (id: string) => void };
@@ -124,7 +125,7 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
         {me && <Avatar m={me} size={24} />}
         <span className="min-w-0 flex-1 leading-tight">
           <span className="block truncate text-[13px] font-medium text-fg">{ws.persona.name}</span>
-          <span className="block truncate text-[11.5px] text-fg-3">Viewing as · {roleText}</span>
+          <span className="block truncate text-[11.5px] text-fg-3" title={`Viewing as ${roleText}`}>{roleText}</span>
         </span>
         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-3" />
       </button>
@@ -178,8 +179,18 @@ function Sidebar({ ws, nav, onSwitch, onReset, resetting }: { ws: WorkspaceInfo;
   const allowed = (who: string) => who === "all" || (who === "reviewer" ? isReviewer : roles.some((r) => ["reviewer", "admin", "leaver"].includes(r)));
   const activeKey = pathname.endsWith("/review/preview") ? "preview"
     : STEPS.find((s) => pathname.endsWith(`/${s.href}`) || pathname.includes(`/${s.href}/`) && s.key !== "review")?.key
-      ?? (pathname.includes("/runs/") ? "ledger" : pathname.endsWith("/first-week") ? "handover" : "");
+      ?? (pathname.includes("/runs/") ? "ledger" : pathname.endsWith("/first-week") ? "handover"
+        : pathname.endsWith("/leaving") ? "preview" : pathname.includes("/interview/") ? "review" : "");
   const activeIdx = STEPS.findIndex((s) => s.key === activeKey);
+  // A step is "done" by real progress, never by where you are: Verify keeps its open count until nothing is left.
+  const acks = nav?.handover?.acks;
+  const realDone: Record<string, boolean> = {
+    sources: (nav?.sources.visible ?? 0) > 0,
+    ledger: (nav?.claims ?? 0) > 0,
+    review: nav?.to_review === 0 && (nav?.claims ?? 0) > 0,
+    preview: !!nav?.handover?.version,
+    handover: !!acks && acks.total > 0 && acks.done === acks.total,
+  };
   const leaver = ws.members.find((m) => m.roles.includes("leaver"));
   const successor = ws.members.find((m) => m.roles.includes("successor"));
   const h = nav?.handover;
@@ -226,7 +237,7 @@ function Sidebar({ ws, nav, onSwitch, onReset, resetting }: { ws: WorkspaceInfo;
           {STEPS.map((s, i) => {
             const ok = allowed(s.who);
             const active = i === activeIdx;
-            const state = !ok ? "locked" : active ? "current" : i < activeIdx ? "done" : "todo";
+            const state = !ok ? "locked" : active ? "current" : realDone[s.key] ? "done" : "todo";
             const inner = (
               <>
                 <StepIcon state={state} />
@@ -317,7 +328,7 @@ function TopBar({ ws, onMenu }: { ws: WorkspaceInfo; onMenu: () => void }) {
   const title = PAGE_TITLES.find(([re]) => re.test(pathname))?.[1] ?? "";
   return (
     <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center gap-2 border-b border-line bg-bg/95 px-3 backdrop-blur sm:px-4">
-      <button type="button" onClick={onMenu} aria-label="Open navigation" className="grid h-7 w-7 place-items-center rounded-md text-fg-3 hover:bg-hover hover:text-fg lg:hidden">
+      <button type="button" onClick={onMenu} aria-label="Open navigation" className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-fg-3 hover:bg-hover hover:text-fg lg:hidden">
         <Menu className="h-4 w-4" />
       </button>
       <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px] max-sm:shrink-0">
@@ -325,7 +336,7 @@ function TopBar({ ws, onMenu }: { ws: WorkspaceInfo; onMenu: () => void }) {
         {leaver && successor && title && <span className="hidden text-fg-4 sm:inline">/</span>}
         {title && <span className="truncate font-medium text-fg">{title}</span>}
       </nav>
-      <div id="topbar-actions" className="ml-auto flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0" />
+      <div id="topbar-actions" className="ml-auto flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 max-sm:[&>*:not(:last-child)]:hidden" />
     </header>
   );
 }
@@ -351,6 +362,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
   useEffect(load, [load, personaVersion]);
 
   const personaId = result?.ws?.persona.id;
+  const changes = useChanges();
   useEffect(() => {
     if (!personaId) return;
     let cancelled = false;
@@ -358,7 +370,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
     return () => {
       cancelled = true;
     };
-  }, [workspaceId, personaId, pathname, personaVersion]);
+  }, [workspaceId, personaId, pathname, personaVersion, changes]);
 
   const here = `${pathname}|${personaVersion}`;
   const drawer = drawerAt === here;

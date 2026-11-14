@@ -33,7 +33,7 @@ export default function HealthPage() {
   const { ws } = useWorkspace();
   const allowed = ws.persona.roles.some((r) => r === "admin" || r === "reviewer");
   const { data, error, loading } = useApi<Health>(allowed ? `/workspaces/${ws.id}/pipeline-health` : null);
-  if (!allowed) return <NotForPersona step="Pipeline health" />;
+  if (!allowed) return <NotForPersona step="Pipeline health" who="Only the reviewer and the workspace admin see this page." />;
 
   return (
     <div>

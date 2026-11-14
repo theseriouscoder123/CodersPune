@@ -30,7 +30,7 @@ export default function RiskPage() {
   const { ws } = useWorkspace();
   const allowed = ws.persona.roles.some((r) => r === "admin" || r === "reviewer");
   const risk = useApi<Risk>(allowed ? `/workspaces/${ws.id}/risk` : null);
-  if (!allowed) return <NotForPersona step="Knowledge risk" />;
+  if (!allowed) return <NotForPersona step="Knowledge risk" who="Only the reviewer and the workspace admin see this page." />;
   const max = Math.max(1, ...(risk.data?.people.map((p) => p.score) ?? [1]));
   return (
     <div>

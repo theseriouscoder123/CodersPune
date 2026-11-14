@@ -229,6 +229,12 @@ function HandoverInner() {
 
           {hid && <div className="mt-5"><HandoverChanges handoverId={hid} version={v.version} /></div>}
           {hid && <div className="mt-5"><AskHandover handoverId={hid} workspaceId={ws.id} onOpenEvidence={openEvidence} /></div>}
+          {/* below xl the right rail is hidden, so its first-week link sits here in the flow (never floating over content) */}
+          {(isSuccessor || isReviewer) && hid && (
+            <Link href={`/w/${ws.id}/first-week?h=${hid}`} className="no-print mt-4 flex items-center gap-2 rounded-lg border border-line px-3.5 py-2.5 text-[13px] text-fg hover:bg-hover xl:hidden">
+              <CalendarDays className="h-4 w-4 text-fg-3" /> <span className="flex-1">{isSuccessor ? "Your first week" : `${v.successor}'s first week`}: the handover arranged by day</span><ArrowRight className="h-3.5 w-3.5 text-fg-3" />
+            </Link>
+          )}
           {acks.data && isReviewer && <ReviewerQuestions acks={acks.data} wsId={ws.id} onChanged={acks.reload} />}
 
           <div className="mt-10 space-y-10" data-testid="handover-sections" id="acks">
@@ -431,14 +437,7 @@ function HandoverInner() {
         </aside>
       </div>
 
-      {/* on narrower screens, the rail's progress and first-week link sit above the sections */}
-      <div className="no-print fixed bottom-4 right-4 z-20 xl:hidden">
-        {(isSuccessor || isReviewer) && hid && (
-          <ButtonLink size="sm" variant="secondary" href={`/w/${ws.id}/first-week?h=${hid}`} className="shadow-[var(--pop)]">
-            <CalendarDays /> First week
-          </ButtonLink>
-        )}
-      </div>
+
 
       <Drawer open={!!drawer} onClose={() => setDrawer(null)} label="Evidence">
         {drawer && (

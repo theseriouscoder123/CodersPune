@@ -103,6 +103,7 @@ export async function api<T>(path: string, opts: { workspaceId?: string; method?
     }
     throw new ApiError(res.status, detail);
   }
+  if (!isRead && typeof window !== "undefined") window.dispatchEvent(new Event("baton:changed"));
   return res.json() as Promise<T>;
 }
 

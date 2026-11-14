@@ -26,7 +26,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={push}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 left-4 right-4 z-[60] flex flex-col items-start gap-2 sm:right-auto" aria-live="polite">
+      <div className="pointer-events-none fixed bottom-16 left-4 right-4 z-[60] lg:bottom-4 lg:left-[252px] flex flex-col items-start gap-2 sm:right-auto" aria-live="polite">
         {items.map((t) => {
           const Icon = ICON[t.tone];
           return (

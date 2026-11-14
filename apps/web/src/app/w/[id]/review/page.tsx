@@ -150,12 +150,17 @@ function Review() {
   const isReviewer = ws.persona.roles.includes("reviewer");
   const successor = ws.members.find((m) => m.roles.includes("successor"))?.name ?? "the successor";
   const leaver = ws.members.find((m) => m.roles.includes("leaver"))?.name ?? "the leaver";
-  const groups = GROUP_ORDER.map((s) => [s, claimsAll.filter((c) => c.status === s)] as const).filter(([, xs]) => xs.length > 0);
+  // Promoted claims get their own group: they are reviewer-confirmed without source evidence, never "Verified" by the rules.
+  const isProm = (c: ClaimSummary) => !!c.flags?.reviewer_confirmed_without_evidence;
+  const groups = GROUP_ORDER.flatMap((s) => [
+    [s, claimsAll.filter((c) => c.status === s && !isProm(c)), false] as const,
+    [s, claimsAll.filter((c) => c.status === s && isProm(c)), true] as const,
+  ]).filter(([, xs]) => xs.length > 0);
   const idx = claimsAll.findIndex((c) => c.id === currentId);
   const typeOptions = Object.entries(ledger.data?.type_counts ?? {}).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="flex h-[calc(100vh-48px)] min-h-[560px] flex-col lg:flex-row">
+    <div className="flex flex-col lg:h-[calc(100vh-48px)] lg:min-h-[560px] lg:flex-row">
       <TopbarActions>
         {progress && progress.total > 0 && (
           <div className="hidden items-center gap-2 md:flex" data-testid="review-progress" title={progress.supported_unconfirmed ? `${progress.supported_unconfirmed} supported claims await confirmation` : undefined}>
@@ -232,19 +237,20 @@ function Review() {
           )}
         </div>
 
-        <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-6 pt-1 max-lg:max-h-[46vh]" data-testid="claim-list">
+        <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-6 pt-0 max-lg:max-h-[52vh]" data-testid="claim-list">
           {ledger.loading && <div className="p-2"><SkeletonList rows={6} /></div>}
           {ledger.error && <div className="p-2"><Alert tone="error">{ledger.error}</Alert></div>}
           {ledger.data && claimsAll.length === 0 && <div className="p-2"><EmptyState icon={<Inbox />} title="Nothing here">No claims match this view.</EmptyState></div>}
-          {groups.map(([s, xs]) => {
+          {groups.map(([s, xs, prom]) => {
             const confirmed = xs.filter((c) => c.review_state === "confirmed").length;
             return (
-              <div key={s}>
+              <div key={`${s}${prom ? "-promoted" : ""}`}>
                 <div className="sticky top-0 z-[1] flex h-8 items-center gap-2 bg-bg px-2.5 text-[12.5px] font-semibold text-fg">
-                  <StatusIcon status={s} size={13} /> {STATUS_META[s].label} <span className="font-normal text-fg-3">{xs.length}</span>
+                  {prom ? <StatusChip status={s} promoted iconOnly /> : <StatusIcon status={s} size={13} />} {prom ? "Reviewer-confirmed" : STATUS_META[s].label} <span className="font-normal text-fg-3">{xs.length}</span>
                   <span className="h-px flex-1 bg-line" aria-hidden />
                   {s === "missing" && isReviewer && tab !== "missing" && <button type="button" onClick={() => setParam("tab", "missing")} className="text-[12px] font-medium text-accent-ink hover:underline">Ask {leaver}</button>}
-                  {(s === "supported" || s === "verified") && confirmed > 0 && <span className="text-[12px] font-normal text-fg-3">{confirmed} confirmed</span>}
+                  {prom && <span className="text-[12px] font-normal text-fg-3">No source evidence</span>}
+                  {!prom && (s === "supported" || s === "verified") && confirmed > 0 && <span className="text-[12px] font-normal text-fg-3">{confirmed} confirmed</span>}
                   {s === "inferred" && <span className="text-[12px] font-normal text-fg-3">Hidden from {successor}</span>}
                 </div>
                 <ul>
@@ -577,7 +583,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
       </div>
 
       {/* body */}
-      <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="scroll-quiet lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain">
         <div className="mx-auto max-w-[880px] px-5 py-5 sm:px-7">
           <div className="flex flex-wrap items-center gap-2">
             <StatusChip status={c.status as Status} promoted={!!c.flags?.reviewer_confirmed_without_evidence} size="md" />
@@ -588,7 +594,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
           </div>
           <h1 className="mt-2.5 text-[20px] font-semibold leading-7 tracking-[-0.015em] text-fg">{c.text}</h1>
           <p className="mt-1.5 text-[13px] leading-5 text-fg-3" data-testid="status-reason">
-            <span className={`font-medium ${m.text}`}>Why {m.label.toLowerCase()}:</span> {c.status_reason}
+            <span className={`font-medium ${m.text}`}>Why {c.flags?.reviewer_confirmed_without_evidence ? "reviewer-confirmed" : m.label.toLowerCase()}:</span> {c.status_reason}
           </p>
 
           {c.source_changed && (
