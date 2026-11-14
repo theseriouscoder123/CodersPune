@@ -175,7 +175,7 @@ Unchanged from Round 2 except where noted.
 
 **Backend:** Python 3.12, FastAPI 0.162, Pydantic 2.14, SQLAlchemy 2.1, Alembic 1.20, psycopg 3.3 (LGPL-3.0), pgvector 0.5, httpx 0.28, rapidfuzz 3.14, pypdf 7.0, python-multipart; pytest, ruff, uv.
 
-**Frontend:** Next.js 16.4, React 19.3, Tailwind CSS 4.3, TypeScript 5, lucide-react (ISC), Playwright 1.56, @axe-core/playwright (MPL-2.0). Fonts: Fraunces, Geist, Geist Mono (OFL).
+**Frontend:** Next.js 16.4, React 19.3, Tailwind CSS 4.3, TypeScript 5, lucide-react (ISC), Playwright 1.56, @axe-core/playwright (MPL-2.0). Fonts: Inter, JetBrains Mono (OFL).
 
 **AI models:**
 - Google Gemini API: `gemini-3.5-flash` (extraction), `gemini-3.5-flash-lite` (verification, coverage, Ask, rewrites), `gemini-3.1-flash-lite` (fallback).

@@ -12,18 +12,18 @@ see, with the unknowns clearly marked.
 - **API health:** https://baton-lac.vercel.app/api/health
 - **Repo:** https://github.com/theseriouscoder123/CodersPune
 
-![Successor handover](docs/screenshots/10-handover-neha.png)
+![Verify: a conflicting claim, its rule checks and the two quotes that disagree, side by side](docs/screenshots/06-conflict.png)
 
 ## 60-second tour
 
-The demo is a fictional student-club project. Meera reviews, Rohan is leaving, Neha takes over. Switch person with **Viewing as** (top right).
+The demo is a fictional student-club project. Meera reviews, Rohan is leaving, Neha takes over. Switch person with the switcher at the bottom of the sidebar (in the menu on a phone). The sidebar walks the five steps with live counts.
 
-1. Click **Try the demo**. You get your own copy of a fictional student-club project ("Campus Events App"), so nothing you do affects anyone else. A **Demo tour** checklist in the corner tracks the six steps and takes you to the next one.
+1. Click **Try the demo**. You get your own copy of a fictional student-club project ("Campus Events App"), so nothing you do affects anyone else. A **Getting started** box in the sidebar tracks six steps and takes you to the next one.
 2. **Connect:** 4 sources and who can read each. `#core-team` is restricted, and 2 planted fake secrets were removed before storage.
-3. **Reconstruct:** the ledger with counts by status, and a decision timeline in which a reversed decision shows as superseded, not as a contradiction.
-4. **Verify:** open any claim to see the exact quote highlighted in its source and *why* it got its status. Confirm, edit, reject or promote it. Resolve the 5 MB vs 2 MB conflict. The **Missing** tab turns unknowns into questions for the leaver (copy, GitHub issue, or email).
+3. **Reconstruct:** the ledger with counts by status and type, and a decision timeline that tells a changed decision apart from a contradiction.
+4. **Verify:** open any claim to see the rule checks behind its status and the exact quote highlighted in its source, with line numbers. Confirm, edit, reject or promote it. Resolve the 5 MB vs 2 MB conflict. The **Missing** tab turns unknowns into questions for the leaver (copy, GitHub issue, or email).
 5. **Review:** preview exactly what Neha (the successor) will see. The sponsor deal from `#core-team` is withheld, with the reason. Approve v1.
-6. **Handover:** switch to **Neha** (top right). Her plan has Start here, owners, decisions, risks, dependencies and **Unresolved**. Every item opens its evidence. You can also **ask the handover** a question and get an answer that cites approved items only.
+6. **Handover:** switch to **Neha** (bottom of the sidebar). Her plan has Start here, owners, decisions, risks, dependencies and **Unresolved**. Every item opens its evidence. You can also **ask the handover** a question and get an answer that cites approved items only.
 
 **New in Round 3, the three improvements:**
 - **Gap interview (#1):** on **Verify** (Missing tab), *Prepare questions for the leaver* builds questions from the Missing and Conflicting items. Switch to **Rohan** to answer them. Each answer becomes a cited **leaver testimony** source that can never be wider in access than the items it answers.
@@ -70,9 +70,11 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
   - **Before the leaver leaves:** a countdown to the leaver's last day and one ordered checklist (their tasks, conflicts only they can settle, unanswered questions, files needing a walkthrough, successor questions).
   - **The successor's first week:** the approved handover arranged into Day 1 / Days 2–3 / rest of week 1, each item with a reason.
   - **Integrations:** live Slack connector (bot token used once; channel membership becomes the access list), Slack and Discord notifications, questions opened as a pre-filled GitHub issue (restricted questions left out), self-hosting with Docker and any OpenAI-compatible model.
+  - **Guided access setup** when creating a workspace (who can read what, with warnings and one-click fixes), and runs you can **cancel and resume**, with a plain explanation when the free AI quota stops one.
+  - **Redesigned interface** in light and dark: a sidebar with the five steps and live, permission-filtered counts, a two-pane Verify inspector, and the handover as a document. It works on phones.
 - **Teams:**
   - Private invite links per person, and locked identities, so nobody can view the workspace as someone else.
-  - Optional email (Gmail SMTP) and Slack notifications.
+  - Optional email (Gmail SMTP), Slack and Discord notifications.
   - Workspace JSON export and deletion.
 - **Operations:**
   - Abuse limits and daily clean-up of old demo copies; a pipeline-health page.
@@ -81,10 +83,11 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
 
 ## Testing
 
-| Measure | Result (14 Nov 2026) |
+| Measure | Result (15 Nov 2026) |
 |---|---|
-| API tests | **215 passed**, real Postgres |
-| End-to-end and accessibility, **against production** | **18/18 passed**, including every Round 3 journey; axe: 0 serious violations |
+| API tests | **234 passed**, real Postgres |
+| End-to-end and accessibility, **against production** | **21/21 passed**, including every Round 3 journey; axe: 0 serious violations in light and dark; no sideways scroll on phones |
+| Blind agent tests on production | A first-time judge, a phone user and a permission prober (no project context) all finished the loop; their findings are fixed (D69) |
 | Citation precision (target ≥ 90%) | **9/10**; claim recall 13/13, status accuracy 13/13 |
 | Permission safety (target 0) | **0 leaks** in 179 successor requests across all 29 GET routes |
 | Successor readiness (simulated blind testers) | **10/10 in about 14 s with Baton** vs 10/10 in about 37 s from raw sources (12 files) |
@@ -157,10 +160,10 @@ time limit. Hosting is entirely free tier (DECISIONS D8). More detail: [`docs/AR
   kit or template; components and visual design were written for this project.
 - **Libraries/assets:**
   - icons from `lucide-react` (ISC);
-  - fonts Fraunces, Geist and Geist Mono (SIL OFL) via `next/font/google`;
+  - fonts Inter and JetBrains Mono (SIL OFL) via `next/font/google`;
   - testing with Playwright (Apache-2.0) and axe-core (MPL-2.0).
   - Full list with versions in `HANDBACK.md` §5.
 - **AI models:** Google Gemini (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`) via the Gemini API, with Groq-hosted `openai/gpt-oss-120b` and `openai/gpt-oss-20b` as fallbacks.
-- **Services:** Vercel (hosting), Neon (Postgres), GitHub REST API; Gmail SMTP and Slack webhooks only if configured.
+- **Services:** Vercel (hosting), Neon (Postgres), GitHub REST API; Gmail SMTP, Slack (webhooks and the Web API for the connector) and Discord webhooks only if configured.
 - **Data:** all demo data is **synthetic**, written for this project. No real club or workplace data is used.
 - **Build windows:** no code was written outside the official windows (Round 2: from Sun 8 Nov 2026, 10:00 IST; Round 3: Fri 13 Nov 23:59 to Mon 16 Nov 23:59 IST). Planning documents in `docs/` predate the code, which the rules permit. Round 3 builds on our own Round 2 code.
