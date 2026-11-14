@@ -371,9 +371,10 @@ def _notify_approved(db: Session, h: Handover, version: int, approver: str) -> l
                 lines=[f"“{title}” in {ws.name} is now visible to {succ.display_name if succ else 'your successor'}.",
                        "If you can, answer the open questions so the unresolved list gets shorter."],
                 link=link, link_label="See the handover").as_dict()})
-        out.append({"to": "Slack", **notify.send_slack(
-            db, ws, event="handover_approved", title=f"Handover approved: {title} (v{version})",
-            lines=[f"Approved by {approver}", f"Workspace: {ws.name}"], link=link).as_dict()})
+        for res in notify.send_chat(
+                db, ws, event="handover_approved", title=f"Handover approved: {title} (v{version})",
+                lines=[f"Approved by {approver}", f"Workspace: {ws.name}"], link=link):
+            out.append({"to": res.channel.capitalize(), **res.as_dict()})
         db.commit()
         return [o for o in out if o["status"] != "skipped" or o["channel"] == "email"]
     except Exception:  # noqa: BLE001 - approval already committed; a notification problem must not surface as an error

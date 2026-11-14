@@ -281,7 +281,7 @@ function ClaimRow({ c, active, onClick, selectable, checked, onToggle }:
   );
 }
 
-type QuestionsOut = { markdown: string; questions: unknown[]; leaver: string; issue_title: string; issue_body: string };
+type QuestionsOut = { markdown: string; questions: unknown[]; leaver: string; issue_title: string; issue_body: string; issue_left_out?: number; issue_url?: string | null };
 
 /** Missing and conflicting items become a gap interview for the leaver (Round 3, improvement #1). The old export
  * options stay as quiet secondary actions. */
@@ -299,11 +299,21 @@ function QuestionsBar({ workspaceId, readOnly }: { workspaceId: string; readOnly
     toast(`Copied ${r.questions.length} questions for ${r.leaver} as Markdown`);
   };
   const copyIssue = async () => {
+    // Open the tab inside the click (pop-up blockers), then point it at the pre-filled issue once we know the URL.
+    const tab = window.open("about:blank", "_blank");
     const r = await get();
+    const leftOut = r.issue_left_out ? ` ${r.issue_left_out} restricted question${r.issue_left_out === 1 ? " was" : "s were"} left out, because issues can be public.` : "";
+    if (r.issue_url && tab) {
+      tab.opener = null;
+      tab.location.href = r.issue_url;
+      toast(`Opened a pre-filled issue on GitHub. Review it and click Submit there.${leftOut}`);
+      return;
+    }
+    tab?.close();
     await navigator.clipboard.writeText(`# ${r.issue_title}
 
 ${r.issue_body}`).catch(() => undefined);
-    toast("Copied as a GitHub issue (title + checklist). Paste it into a new issue.");
+    toast(`Copied as a GitHub issue (title + checklist). Paste it into a new issue.${leftOut}`);
   };
   const download = async () => {
     const r = await get();

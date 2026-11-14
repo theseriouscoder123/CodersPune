@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Copy, Download, Link2, Lock, Mail, RefreshCw, Send, ShieldCheck, Slack, Trash2, Unlock, UserX } from "lucide-react";
+import { Bell, Copy, Download, Link2, Lock, Mail, MessageSquare, RefreshCw, Send, ShieldCheck, Slack, Trash2, Unlock, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -19,6 +19,7 @@ type Team = {
   notifications?: {
     email: { configured: boolean; from: string | null };
     slack: { set: boolean; hint: string };
+    discord?: { set: boolean; hint: string };
     recent: { channel: string; event: string; recipient: string | null; status: string; detail: string | null; at: string }[];
   };
 };
@@ -192,28 +193,13 @@ function MemberEmail({ wsId, member, onSaved }: { wsId: string; member: Team["me
 function NotificationsCard({ wsId, n, canManage, onChanged }:
   { wsId: string; n: NonNullable<Team["notifications"]>; canManage: boolean; onChanged: () => void }) {
   const toast = useToast();
-  const [hook, setHook] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
-  async function saveHook(value: string | null) {
-    setBusy("hook");
-    try {
-      await api(`/workspaces/${wsId}/notify`, { workspaceId: wsId, method: "PUT", body: { slack_webhook: value } });
-      toast(value ? "Slack webhook saved" : "Slack webhook removed");
-      setHook("");
-      onChanged();
-    } catch (e) {
-      toast(e instanceof Error ? e.message : String(e), "error");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function test(channel: "email" | "slack") {
+  async function test(channel: "email" | "slack" | "discord") {
     setBusy(channel);
     try {
       const r = await api<SendResult>(`/workspaces/${wsId}/notify/test`, { workspaceId: wsId, method: "POST", body: { channel } });
-      toast(r.status === "sent" ? (channel === "email" ? "Test email sent to your address" : "Test message posted to Slack") : r.detail,
+      toast(r.status === "sent" ? (channel === "email" ? "Test email sent to your address" : `Test message posted to ${channel === "slack" ? "Slack" : "Discord"}`) : r.detail,
         r.status === "sent" ? "success" : "error");
       onChanged();
     } catch (e) {
@@ -233,7 +219,7 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-xl border border-line bg-paper/50 p-4">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-ink"><Mail className="h-4 w-4" /> Email</p>
           {n.email.configured ? (
@@ -245,26 +231,8 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
             <Button size="sm" variant="secondary" className="mt-3" loading={busy === "email"} onClick={() => test("email")}><Send className="h-3.5 w-3.5" /> Send me a test</Button>
           )}
         </div>
-        <div className="rounded-xl border border-line bg-paper/50 p-4">
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink"><Slack className="h-4 w-4" /> Slack</p>
-          <p className="mt-1 text-xs text-muted">
-            {n.slack.set ? <>Posting to <code className="font-mono">{n.slack.hint}</code> when a run finishes and when a handover is approved.</>
-              : <>Paste a Slack <a className="underline underline-offset-2" href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noreferrer">incoming webhook</a> to post run results and approvals to a channel.</>}
-          </p>
-          {canManage && (
-            <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (hook.trim()) void saveHook(hook.trim()); }}>
-              <input value={hook} onChange={(e) => setHook(e.target.value)} placeholder="https://hooks.slack.com/services/…" aria-label="Slack webhook URL"
-                className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2.5 font-mono text-xs outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
-              <Button size="sm" variant="secondary" type="submit" loading={busy === "hook"} disabled={!hook.trim()}>Save</Button>
-            </form>
-          )}
-          {canManage && n.slack.set && (
-            <div className="mt-2 flex gap-2">
-              <Button size="sm" variant="secondary" loading={busy === "slack"} onClick={() => test("slack")}><Send className="h-3.5 w-3.5" /> Test</Button>
-              <Button size="sm" variant="ghost" disabled={busy === "hook"} onClick={() => saveHook(null)}>Remove</Button>
-            </div>
-          )}
-        </div>
+        <ChatHook wsId={wsId} kind="slack" status={n.slack} canManage={canManage} busy={busy} onTest={() => test("slack")} onChanged={onChanged} />
+        <ChatHook wsId={wsId} kind="discord" status={n.discord ?? { set: false, hint: "" }} canManage={canManage} busy={busy} onTest={() => test("discord")} onChanged={onChanged} />
       </div>
 
       {n.recent.length > 0 && (
@@ -337,5 +305,55 @@ function DataCard() {
         </div>
       </Modal>
     </Card>
+  );
+}
+
+const HOOKS = {
+  slack: { label: "Slack", field: "slack_webhook", placeholder: "https://hooks.slack.com/services/…", docs: "https://api.slack.com/messaging/webhooks", what: "incoming webhook" },
+  discord: { label: "Discord", field: "discord_webhook", placeholder: "https://discord.com/api/webhooks/…", docs: "https://support.discord.com/hc/en-us/articles/228383668", what: "channel webhook" },
+} as const;
+
+/** A chat channel that receives run results and approvals (names and a link only, never claim text). */
+function ChatHook({ wsId, kind, status, canManage, busy, onTest, onChanged }: {
+  wsId: string; kind: keyof typeof HOOKS; status: { set: boolean; hint: string }; canManage: boolean; busy: string | null; onTest: () => void; onChanged: () => void;
+}) {
+  const toast = useToast();
+  const h = HOOKS[kind];
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  async function save(v: string | null) {
+    setSaving(true);
+    try {
+      await api(`/workspaces/${wsId}/notify`, { workspaceId: wsId, method: "PUT", body: { [h.field]: v ?? "" } });
+      toast(v ? `${h.label} webhook saved` : `${h.label} webhook removed`);
+      setValue("");
+      onChanged();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <div className="rounded-xl border border-line bg-paper/50 p-4" data-testid={`hook-${kind}`}>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">{kind === "slack" ? <Slack className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />} {h.label}</p>
+      <p className="mt-1 text-xs text-muted">
+        {status.set ? <>Posting to <code className="font-mono">{status.hint}</code> when a run finishes and when a handover is approved.</>
+          : <>Paste a {h.label} <a className="underline underline-offset-2" href={h.docs} target="_blank" rel="noreferrer">{h.what}</a> to post run results and approvals to a channel.</>}
+      </p>
+      {canManage && (
+        <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (value.trim()) void save(value.trim()); }}>
+          <input value={value} onChange={(e) => setValue(e.target.value)} placeholder={h.placeholder} aria-label={`${h.label} webhook URL`}
+            className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2.5 font-mono text-xs outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
+          <Button size="sm" variant="secondary" type="submit" loading={saving} disabled={!value.trim()}>Save</Button>
+        </form>
+      )}
+      {canManage && status.set && (
+        <div className="mt-2 flex gap-2">
+          <Button size="sm" variant="secondary" loading={busy === kind} onClick={onTest}><Send className="h-3.5 w-3.5" /> Test</Button>
+          <Button size="sm" variant="ghost" disabled={saving} onClick={() => void save(null)}>Remove</Button>
+        </div>
+      )}
+    </div>
   );
 }

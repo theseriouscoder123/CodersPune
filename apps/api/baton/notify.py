@@ -36,6 +36,7 @@ SMTP_TIMEOUT_S = 8
 SLACK_TIMEOUT_S = 5
 
 SLACK_WEBHOOK_RE = re.compile(r"^https://hooks\.slack\.com/(services|workflows|triggers)/[A-Za-z0-9_/\-]{10,200}$")
+DISCORD_WEBHOOK_RE = re.compile(r"^https://(discord|discordapp)\.com/api/webhooks/\d{5,30}/[A-Za-z0-9_\-]{20,120}$")
 EMAIL_RE = re.compile(r"^[^@\s<>\"']{1,64}@[A-Za-z0-9.\-]{1,190}\.[A-Za-z]{2,24}$")
 
 
@@ -57,6 +58,14 @@ def valid_email(addr: str | None) -> bool:
 
 def valid_slack_webhook(url: str | None) -> bool:
     return bool(url) and bool(SLACK_WEBHOOK_RE.match(url.strip()))
+
+
+def valid_discord_webhook(url: str | None) -> bool:
+    return bool(url) and bool(DISCORD_WEBHOOK_RE.match(url.strip()))
+
+
+def mask_discord(url: str) -> str:
+    return f"discord.com/…{url.strip()[-4:]}" if url else ""
 
 
 def mask_email(addr: str) -> str:
@@ -186,6 +195,42 @@ def send_slack(db: Session, ws: Workspace, *, event: str, title: str, lines: lis
     except Exception as exc:  # noqa: BLE001 - notifications must never break the action
         res = Result("slack", "failed", f"{type(exc).__name__}: could not post")
     return _log(db, ws.id, "slack", event, mask_webhook(url), res)
+
+
+def send_discord(db: Session, ws: Workspace, *, event: str, title: str, lines: list[str], link: str | None = None,
+                 webhook: str | None = None) -> Result:
+    """Same events and limits as Slack. Only discord.com webhook URLs (no SSRF), and mentions are disabled so a
+    message can never ping @everyone or a role."""
+    url = (webhook or (ws.notify or {}).get("discord_webhook") or "").strip()
+    if not url:
+        return Result("discord", "skipped", "No Discord webhook set for this workspace.")
+    if not valid_discord_webhook(url):
+        return Result("discord", "skipped", "The Discord webhook URL isn't a discord.com webhook URL.")
+    if ws.is_demo_template:
+        return Result("discord", "skipped", "The shared demo template never posts to Discord.")
+    if _count(db, datetime.now(UTC) - timedelta(hours=1), "discord", ws.id) >= SLACK_PER_WORKSPACE_PER_HOUR:
+        return _log(db, ws.id, "discord", event, mask_discord(url), Result("discord", "skipped", "Hourly Discord limit reached."))
+    s = get_settings()
+    full = f"{s.app_url.rstrip('/')}{link}" if link and link.startswith("/") else link
+    embed = {"title": title[:250], "description": "\n".join(f"• {line}" for line in lines)[:3500], "color": 0xD97706,
+             "footer": {"text": f"Baton · {ws.name}"[:200]}}
+    if full:
+        embed["url"] = full
+    try:
+        r = httpx.post(url, json={"embeds": [embed], "allowed_mentions": {"parse": []}}, timeout=SLACK_TIMEOUT_S,
+                       follow_redirects=False)
+        if r.status_code >= 400:
+            raise RuntimeError(f"discord {r.status_code}")
+        res = Result("discord", "sent")
+    except Exception as exc:  # noqa: BLE001 - notifications must never break the action
+        res = Result("discord", "failed", f"{type(exc).__name__}: could not post")
+    return _log(db, ws.id, "discord", event, mask_discord(url), res)
+
+
+def send_chat(db: Session, ws: Workspace, *, event: str, title: str, lines: list[str], link: str | None = None) -> list[Result]:
+    """Every chat channel the workspace has set up (Slack and/or Discord)."""
+    return [send_slack(db, ws, event=event, title=title, lines=lines, link=link),
+            send_discord(db, ws, event=event, title=title, lines=lines, link=link)]
 
 
 def _slack_escape(s: str) -> str:

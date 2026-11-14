@@ -53,8 +53,10 @@ def team(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> di
                 "email": m.email if ctx.is_admin else (notify.mask_email(m.email) if m.email else None)}
                for m in db.scalars(select(Member).where(Member.workspace_id == ws.id).order_by(Member.created_at))]
     hook = (ws.notify or {}).get("slack_webhook") or ""
+    dhook = (ws.notify or {}).get("discord_webhook") or ""
     return {"identity_mode": ws.identity_mode, "members": members, "can_manage": ctx.is_admin and ctx.can_write,
             "notifications": {"email": notify.email_status(), "slack": {"set": bool(hook), "hint": notify.mask_webhook(hook)},
+                              "discord": {"set": bool(dhook), "hint": notify.mask_discord(dhook)},
                               "recent": notify.recent(db, ws.id)}}
 
 
@@ -79,29 +81,43 @@ def set_member_email(member_id: uuid.UUID, body: EmailIn, ctx: Ctx = Depends(wor
 
 class SlackIn(BaseModel):
     slack_webhook: str | None = Field(default=None, max_length=300)
+    discord_webhook: str | None = Field(default=None, max_length=300)
 
 
 @router.put("/workspaces/{workspace_id}/notify")
 def set_notify(body: SlackIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
     _require_admin_writer(ctx)
-    url = (body.slack_webhook or "").strip()
-    if url and not notify.valid_slack_webhook(url):
-        raise HTTPException(422, "Paste a Slack incoming-webhook URL (it starts with https://hooks.slack.com/).")
     ws = ctx.workspace
-    ws.notify = {**(ws.notify or {}), "slack_webhook": url or None}
+    fields = body.model_fields_set
+    cur = dict(ws.notify or {})
+    if "slack_webhook" in fields:
+        url = (body.slack_webhook or "").strip()
+        if url and not notify.valid_slack_webhook(url):
+            raise HTTPException(422, "Paste a Slack incoming-webhook URL (it starts with https://hooks.slack.com/).")
+        cur["slack_webhook"] = url or None
+    if "discord_webhook" in fields:
+        durl = (body.discord_webhook or "").strip()
+        if durl and not notify.valid_discord_webhook(durl):
+            raise HTTPException(422, "Paste a Discord webhook URL (it starts with https://discord.com/api/webhooks/).")
+        cur["discord_webhook"] = durl or None
+    ws.notify = cur
     db.commit()
-    return {"slack": {"set": bool(url), "hint": notify.mask_webhook(url)}}
+    s, d = cur.get("slack_webhook") or "", cur.get("discord_webhook") or ""
+    return {"slack": {"set": bool(s), "hint": notify.mask_webhook(s)}, "discord": {"set": bool(d), "hint": notify.mask_discord(d)}}
 
 
 class TestIn(BaseModel):
-    channel: Literal["email", "slack"]
+    channel: Literal["email", "slack", "discord"]
 
 
 @router.post("/workspaces/{workspace_id}/notify/test")
 def test_notify(body: TestIn, ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_db)) -> dict:
     _require_admin_writer(ctx)
     ws = ctx.workspace
-    if body.channel == "slack":
+    if body.channel == "discord":
+        res = notify.send_discord(db, ws, event="test", title="Baton is connected",
+                                  lines=[f"Handover notifications for “{ws.name}” will appear here."], link=f"/w/{ws.id}/ledger")
+    elif body.channel == "slack":
         res = notify.send_slack(db, ws, event="test", title="Baton is connected",
                                 lines=[f"Handover notifications for “{ws.name}” will appear here."], link=f"/w/{ws.id}/ledger")
     else:

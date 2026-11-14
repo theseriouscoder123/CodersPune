@@ -172,7 +172,7 @@ def _notify_run_once(run_id) -> None:
             else:
                 title = f"Pipeline run failed: {ws.name}"
                 lines = [(run.error or "Unknown error")[:200], "Open the run page for details; you can re-run it."]
-            notify.send_slack(db, ws, event=f"run_{run.status}", title=title, lines=lines, link=link)
+            notify.send_chat(db, ws, event=f"run_{run.status}", title=title, lines=lines, link=link)
             rid = db.scalar(select(Membership.member_id).where(Membership.workspace_id == ws.id,
                                                                Membership.role == "reviewer").limit(1))
             reviewer = db.get(Member, rid) if rid else None

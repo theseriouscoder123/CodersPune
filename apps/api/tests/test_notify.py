@@ -143,3 +143,42 @@ def test_template_never_sends(outbox, email_on):
 def test_member_roles_present(ws):
     with SessionLocal() as db:  # sanity: the fixture has a leaver for the questions endpoint
         assert db.scalar(select(Membership).where(Membership.workspace_id == ws, Membership.role == "leaver")) is not None
+
+
+DISCORD = "https://discord.com/api/webhooks/123456789012345678/AbCdEfGhIjKlMnOpQrStUvWxYz_0123456789-abcd"
+
+
+def test_discord_validation_and_masking():
+    assert notify.valid_discord_webhook(DISCORD)
+    assert notify.valid_discord_webhook(DISCORD.replace("discord.com", "discordapp.com"))
+    for bad in ("http://discord.com/api/webhooks/123456/abcdefghijklmnopqrstuvwxyz", "https://discord.com.evil.io/api/webhooks/123456/abcdefghijklmnopqrstuvwxyz",
+                "https://169.254.169.254/latest", "https://discord.com/api/webhooks/abc/def", DISCORD + "/../../x"):
+        assert not notify.valid_discord_webhook(bad), bad
+    assert notify.mask_discord(DISCORD) == "discord.com/…abcd"
+
+
+def test_discord_channel_end_to_end(ws, outbox, monkeypatch):
+    posted = []
+
+    def fake_post(url, json, timeout, follow_redirects):
+        import httpx
+        posted.append((url, json))
+        return httpx.Response(204, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(notify.httpx, "post", fake_post)
+    c = owner()
+    assert c.put(f"/api/workspaces/{ws}/notify", json={"discord_webhook": "https://evil.example/hook"}).status_code == 422
+    r = c.put(f"/api/workspaces/{ws}/notify", json={"discord_webhook": DISCORD})
+    assert r.status_code == 200 and r.json()["discord"]["hint"] == "discord.com/…abcd"
+    assert r.json()["slack"]["set"] is True  # setting Discord leaves the Slack webhook alone
+    assert DISCORD not in c.get(f"/api/workspaces/{ws}/team").text
+    assert c.post(f"/api/workspaces/{ws}/notify/test", json={"channel": "discord"}).json()["status"] == "sent"
+    url, payload = posted[-1]
+    assert url == DISCORD and payload["allowed_mentions"] == {"parse": []} and payload["embeds"][0]["title"] == "Baton is connected"
+    # approval notices go to every chat channel, with no claim text
+    m = members(c, ws)
+    hid = c.get(f"/api/workspaces/{ws}/handover", headers={"X-Baton-Persona": m["meera"]}).json()["handover"]["id"]
+    out = c.post(f"/api/handovers/{hid}/approve", headers={"X-Baton-Persona": m["meera"]}, json={}).json()["notified"]
+    assert any(o["channel"] == "discord" and o["status"] == "sent" for o in out)
+    assert "TechNova" not in str(posted[-1][1])
+    assert c.put(f"/api/workspaces/{ws}/notify", json={"discord_webhook": ""}).json()["discord"]["set"] is False
