@@ -11,7 +11,7 @@ type Channel = { id: string; name: string; private: boolean; imported: boolean }
 type Imported = { source_id: string; name: string; private: boolean; messages: number; chunks: number; access: string; unmatched: string[]; secrets_removed: number };
 
 /** Live Slack connector: the bot token is used for these two requests and never stored. */
-export function SlackImport({ wsId, synthetic, onImported }: { wsId: string; synthetic: boolean; onImported: () => void }) {
+export function SlackImport({ wsId, synthetic, onImported, tile = false }: { wsId: string; synthetic: boolean; onImported: () => void; tile?: boolean }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState("");
@@ -57,7 +57,14 @@ export function SlackImport({ wsId, synthetic, onImported }: { wsId: string; syn
 
   return (
     <>
-      <Button variant="secondary" onClick={() => { reset(); setOpen(true); }} data-testid="slack-import-open"><Slack className="h-4 w-4" /> Import from Slack</Button>
+      {tile ? (
+        <button type="button" onClick={() => { reset(); setOpen(true); }} className="flex h-full w-full flex-col rounded-lg border border-line p-3.5 text-left transition-colors hover:bg-hover">
+          <span className="flex items-center gap-2 text-[13px] font-semibold text-fg"><Hash className="h-3.5 w-3.5" /> Slack, live</span>
+          <span className="mt-1 text-[12.5px] leading-[18px] text-fg-3">Pick channels with a bot token, used once. Channel membership becomes the access list.</span>
+        </button>
+      ) : (
+        <Button size="sm" variant="secondary" onClick={() => { reset(); setOpen(true); }} data-testid="slack-import-open"><Slack /> Import from Slack</Button>
+      )}
       <Modal open={open} onClose={() => setOpen(false)} label="Import from Slack">
         <h2 className="font-display flex items-center gap-2 text-xl font-semibold text-ink"><Slack className="h-5 w-5" /> Import from Slack</h2>
         {synthetic ? (
