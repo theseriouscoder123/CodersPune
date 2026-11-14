@@ -28,7 +28,7 @@ from baton.db.models import (
     Source,
 )
 from baton.ingest.fixtures import DEMO_DIR
-from baton.ledger import rebuild_relations, recompute_statuses
+from baton.ledger import merge_duplicates, rebuild_relations, recompute_statuses
 
 SNAPSHOT = DEMO_DIR / "frozen_ledger.json"
 
@@ -116,6 +116,7 @@ def import_snapshot(db: Session, workspace_id, path: Path = SNAPSHOT) -> dict:
     if leaver and successor:
         db.add(Handover(workspace_id=workspace_id, leaver_member_id=leaver, successor_member_id=successor))
     db.flush()
+    merge_duplicates(db, workspace_id)  # fix F3
     recompute_statuses(db, workspace_id)
     rebuild_relations(db, workspace_id)  # improvement #2: relation signals + stale open work, no LLM
     if missing_chunks:

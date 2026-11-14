@@ -85,6 +85,63 @@ def as_uuid(v) -> uuid.UUID:
     return v if isinstance(v, uuid.UUID) else uuid.UUID(str(v))
 
 
+def merge_duplicates(db: Session, workspace_id) -> int:
+    """Fix F3: merge near-identical claims (rules in reconstruct/duplicates.py). Evidence moves to the survivor, links
+    are re-pointed, and each merge leaves an audit row. Claims a person has touched are never deleted."""
+    from sqlalchemy import delete, update
+
+    from baton.db.models import Acknowledgement, AuditEvent, ClaimRelation, InterviewQuestion, ReviewEvent
+    from baton.reconstruct.duplicates import D, find_duplicates
+
+    claims = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == workspace_id))
+              if c.status != "rejected" and not c.superseded_by]
+    if len(claims) < 2:
+        return 0
+    ids = [c.id for c in claims]
+    touched = set(db.scalars(select(ReviewEvent.claim_id).where(ReviewEvent.claim_id.in_(ids))))
+    touched |= set(db.scalars(select(Acknowledgement.claim_id).where(Acknowledgement.claim_id.in_(ids))))
+    for a, b in db.execute(select(ClaimRelation.from_claim_id, ClaimRelation.to_claim_id)
+                           .where(ClaimRelation.decided_by == "reviewer", ClaimRelation.from_claim_id.in_(ids))):
+        touched |= {a, b}
+    import json
+
+    from baton.projection import claim_sources
+
+    cited = claim_sources(db, ids)
+    access = {cid: frozenset(json.dumps(acl, sort_keys=True) for _, _, acl in rows) for cid, rows in cited.items()}
+    pairs = find_duplicates([
+        D(c.id, c.type, c.subject_key, c.text, reviewed=c.review_state != "none", access=access.get(c.id, frozenset()),
+          locked=bool(c.conflict_group_id) or c.origin in ("checklist", "testimony") or bool(c.derived_from)
+          or (c.review_state == "none" and c.id in touched))
+        for c in claims])
+    by_id = {c.id: c for c in claims}
+    merged = 0
+    for keep_id, drop_id in pairs:
+        if drop_id in touched:
+            continue
+        keep, drop = by_id[keep_id], by_id[drop_id]
+        have = {(e.chunk_id, e.quote) for e in db.scalars(select(Evidence).where(Evidence.claim_id == keep_id))}
+        for e in list(db.scalars(select(Evidence).where(Evidence.claim_id == drop_id))):
+            if (e.chunk_id, e.quote) in have:
+                db.delete(e)
+            else:
+                e.claim_id = keep_id
+                have.add((e.chunk_id, e.quote))
+        for col in (Claim.superseded_by, Claim.derived_from):
+            db.execute(update(Claim).where(col == drop_id).values({col.key: keep_id}))
+        db.execute(update(InterviewQuestion).where(InterviewQuestion.claim_id == drop_id).values(claim_id=keep_id))
+        db.execute(delete(ClaimRelation).where((ClaimRelation.from_claim_id == drop_id) | (ClaimRelation.to_claim_id == drop_id)))
+        db.add(AuditEvent(workspace_id=workspace_id, actor_member_id=None, actor_role="system", action="duplicate_merged",
+                          target=str(keep_id), before={"text": drop.text, "subject_key": drop.subject_key},
+                          after={"text": keep.text, "subject_key": keep.subject_key}))
+        db.flush()
+        db.delete(drop)
+        merged += 1
+    if merged:
+        db.flush()
+    return merged
+
+
 def rebuild_relations(db: Session, workspace_id) -> dict:
     """Round 3 improvement #2: record WHY claims relate (reversal / historical / contradiction) and mark stale open work.
     Deterministic, no LLM. Reviewer decisions (decided_by='reviewer', meta.stale_override) are never overwritten."""

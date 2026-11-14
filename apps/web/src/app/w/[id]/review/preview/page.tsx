@@ -10,12 +10,12 @@ import { HandoverPicker, useHandoverSelection } from "@/components/workspace/Han
 import { NotForPersona } from "@/components/workspace/NotForPersona";
 import { Avatar, useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, Button, ButtonLink, Card, EmptyState, Modal, PageHeader, SkeletonList } from "@/components/ui";
-import { api, storePersona, type HandoverRef, type Status } from "@/lib/api";
+import { api, storePersona, type HandoverCounts, type HandoverRef, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
-type Item = { id: string; type_label: string; text: string; status: Status; section: string; source_refs: string[]; reason?: string;
+type Item = { id: string; type_label: string; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
   matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean };
-type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean;
+type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
 
 const SECTION_NAMES: Record<string, string> = {
@@ -72,6 +72,7 @@ function PreviewInner() {
     }
   }
 
+  const counts = pv.data?.counts;
   const grouped = (items: Item[]) => ORDER.map((k) => [k, items.filter((i) => i.section === k)] as const).filter(([, xs]) => xs.length);
 
   return (
@@ -107,10 +108,16 @@ function PreviewInner() {
           <span className="grid h-10 w-10 place-items-center rounded-full bg-verified-soft text-verified"><ShieldCheck className="h-5 w-5" /></span>
           <h2 className="font-display text-xl font-semibold text-ink">Approve version {nextVersion} for {name}?</h2>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 text-center">
-          <div className="rounded-xl bg-verified-soft p-3"><p className="font-display text-2xl font-semibold text-verified">{pv.data?.visible.length ?? 0}</p><p className="text-xs text-verified">items shared</p></div>
-          <div className="rounded-xl bg-missing-soft p-3"><p className="font-display text-2xl font-semibold text-missing">{pv.data?.withheld.length ?? 0}</p><p className="text-xs text-missing">withheld (restricted)</p></div>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center" data-testid="approve-counts">
+          <div className="rounded-xl bg-verified-soft p-3"><p className="font-display text-2xl font-semibold text-verified">{counts?.current ?? 0}</p><p className="text-xs text-verified">items shared</p></div>
+          <div className="rounded-xl bg-paper-2 p-3"><p className="font-display text-2xl font-semibold text-ink-2">{counts?.history ?? 0}</p><p className="text-xs text-muted">earlier decisions, as history</p></div>
+          <div className="rounded-xl bg-missing-soft p-3"><p className="font-display text-2xl font-semibold text-missing">{counts?.withheld ?? 0}</p><p className="text-xs text-missing">withheld (restricted)</p></div>
         </div>
+        {!!counts?.unconfirmed && (
+          <p className="mt-2 text-xs text-muted" data-testid="approve-unconfirmed">
+            {counts.unconfirmed} of the {counts.current} shared items passed the AI quote check but no person has confirmed them. {name} will see them marked that way.
+          </p>
+        )}
         {pv.data?.warnings && (pv.data.warnings.unresolved_conflicts > 0 || pv.data.warnings.unreviewed > 0 || (pv.data.warnings.source_changed ?? 0) > 0) && (
           <div className="mt-4 space-y-1 rounded-xl border border-amber/30 bg-amber-soft/70 p-3 text-xs text-amber-ink" data-testid="approve-warnings">
             <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-3.5 w-3.5" /> Before you approve</p>
@@ -137,15 +144,19 @@ function PreviewInner() {
       {pv.data && (
         <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
           <section>
-            <h2 className="flex items-center gap-2 font-semibold text-ink"><Eye className="h-4 w-4 text-verified" /> {name} will see <span className="text-muted">({pv.data.visible.length})</span></h2>
+            <h2 className="flex items-center gap-2 font-semibold text-ink"><Eye className="h-4 w-4 text-verified" /> {name} will see <span className="text-muted">({counts ? `${counts.current}${counts.history ? ` + ${counts.history} as history` : ""}` : pv.data.visible.length})</span></h2>
             <div className="stagger mt-3 space-y-5">
               {grouped(pv.data.visible).map(([sec, items]) => (
                 <div key={sec}>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{SECTION_NAMES[sec]} · {items.length}</p>
                   <ul className="mt-2 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
                     {items.map((it) => (
-                      <li key={it.id} className="flex items-start gap-3 px-4 py-2.5 text-sm">
-                        <StatusChip status={it.status} /><span className="text-ink">{it.text}</span>
+                      <li key={it.id} className={`flex items-start gap-3 px-4 py-2.5 text-sm ${it.history ? "opacity-70" : ""}`}>
+                        <StatusChip status={it.status} />
+                        <span className={it.history ? "text-muted" : "text-ink"}>
+                          {it.history && <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider">{it.history === "stale" ? "Probably done ·" : "Superseded ·"}</span>}
+                          {it.text}
+                        </span>
                       </li>
                     ))}
                   </ul>

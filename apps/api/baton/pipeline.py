@@ -30,7 +30,7 @@ from baton.db.models import (
     Workspace,
 )
 from baton.db.session import SessionLocal
-from baton.ledger import rebuild_relations, recompute_statuses
+from baton.ledger import merge_duplicates, rebuild_relations, recompute_statuses
 from baton.llm.base import LLMError, LLMNotConfigured, get_llm
 from baton.llm.prompts import COVER_SYSTEM, CoverResult
 from baton.reconstruct.checklist import build_checklist
@@ -734,11 +734,12 @@ def step_conflicts(run_id, job_id, workspace_id, deadline) -> bool:
 
 def step_status(run_id, job_id, workspace_id, deadline) -> bool:
     with SessionLocal.begin() as db:
+        merged = merge_duplicates(db, workspace_id)  # fix F3: same fact under two subject keys
         n = recompute_statuses(db, workspace_id)
         rebuild_relations(db, workspace_id)  # stale rules use the fresh statuses
         j = db.get(Job, job_id)
         j.progress = j.total = n
-        j.message = f"{_n(n, 'claim')} graded by deterministic rules"
+        j.message = f"{_n(n, 'claim')} graded by deterministic rules" + (f" ({_n(merged, 'duplicate')} merged)" if merged else "")
     return True
 
 

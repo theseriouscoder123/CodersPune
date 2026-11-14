@@ -377,6 +377,7 @@ function ClaimPanel({ id, onChanged, onReviewed }: { id: string; onChanged: () =
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [resolving, setResolving] = useState<{ key: string; label: string } | null>(null);
   const isReviewer = ws.persona.roles.includes("reviewer");
   const isLeaver = ws.persona.roles.includes("leaver");
   const writable = !ws.read_only;
@@ -418,15 +419,18 @@ function ClaimPanel({ id, onChanged, onReviewed }: { id: string; onChanged: () =
     }
   }
 
-  async function resolve(body: Record<string, unknown>, msg: string) {
+  // F11: the choice shows at once (with a spinner) while the server re-grades the group; on failure it reverts.
+  async function resolve(body: Record<string, unknown>, msg: string, pending: { key: string; label: string }) {
     setBusy(true);
     setErr(null);
+    setResolving(pending);
     try {
       await api(`/conflicts/${c.conflict!.id}/resolve`, { workspaceId: ws.id, method: "POST", body });
-      toast(msg);
+      toast(msg); // the toast lives in the shell, so it still shows if the reviewer has moved on
       detail.reload();
       onChanged();
     } catch (e) {
+      setResolving(null);
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
@@ -471,7 +475,12 @@ function ClaimPanel({ id, onChanged, onReviewed }: { id: string; onChanged: () =
           </div>
         )}
 
-        {c.conflict && !c.conflict.resolved && (
+        {c.conflict && !c.conflict.resolved && resolving && (
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-verified/25 bg-verified-soft/60 p-4 text-sm text-verified" role="status" data-testid="resolving">
+            <Spinner /> {resolving.label}. Re-grading the claims…
+          </div>
+        )}
+        {c.conflict && !c.conflict.resolved && !resolving && (
           <div className="mt-4 rounded-xl border border-conflicting/25 bg-conflicting-soft/60 p-4">
             <p className="text-sm font-semibold text-conflicting">Sources disagree. Which is current?</p>
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -479,7 +488,8 @@ function ClaimPanel({ id, onChanged, onReviewed }: { id: string; onChanged: () =
                 <div key={o.id} className="flex flex-col justify-between gap-3 rounded-xl border border-line bg-card p-3">
                   <p className="text-sm text-ink">{o.text}</p>
                   {isReviewer && writable && (
-                    <Button size="sm" variant="secondary" disabled={busy} onClick={() => resolve({ winner_claim_id: o.id }, "Marked as current; the other is superseded")}>
+                    <Button size="sm" variant="secondary" disabled={busy} onClick={() => resolve({ winner_claim_id: o.id }, "Marked as current; the other is superseded",
+                      { key: o.id, label: `Marking “${o.text.length > 60 ? `${o.text.slice(0, 60)}…` : o.text}” as current` })}>
                       <Check className="h-3.5 w-3.5" /> This one is current
                     </Button>
                   )}
@@ -487,7 +497,7 @@ function ClaimPanel({ id, onChanged, onReviewed }: { id: string; onChanged: () =
               ))}
             </div>
             {isReviewer && writable && (
-              <Button size="sm" variant="ghost" className="mt-2" disabled={busy} onClick={() => resolve({ keep_as_risk: true, note: "Unclear which is current" }, "Kept both as an open risk")}>
+              <Button size="sm" variant="ghost" className="mt-2" disabled={busy} onClick={() => resolve({ keep_as_risk: true, note: "Unclear which is current" }, "Kept both as an open risk", { key: "risk", label: "Keeping both as an open risk" })}>
                 Keep both as an open risk
               </Button>
             )}

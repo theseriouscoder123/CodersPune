@@ -168,6 +168,9 @@ export type RunInfo = { id: string; status: string; error: string | null; starte
 
 export type HandoverRef = { id: string; name: string; leaver: string; successor: string; leaver_id: string; successor_id: string; scope: string; show_restricted_stubs: boolean; latest_version: number | null };
 
+/** One server-side count used by every screen (fix F1). withheld is null when the successor isn't told. */
+export type HandoverCounts = { current: number; history: number; withheld: number | null; unconfirmed: number };
+
 export type HandoverItem = {
   stale?: boolean;
   stale_reason?: string | null;
@@ -199,4 +202,5 @@ export type HandoverView =
       note: string | null;
       sections: { key: string; title: string; help: string; items: HandoverItem[] }[];
       withheld_count: number | null;
+      counts?: HandoverCounts;
     };

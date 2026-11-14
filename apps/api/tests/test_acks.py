@@ -122,3 +122,26 @@ def test_carry_over_and_reset_on_change(world):
     assert got["items"][push].get("state") is None and got["items"][push].get("changed_since") == 1  # acknowledged in v1
     assert got["counts"]["changed"] == 1
     assert got["items"][admin]["state"] == "question"  # unchanged item keeps its (closed) question
+
+
+def test_reliability_matrix(world):
+    """docs/07 §5 for acknowledgements: friendly string errors, overlong input, HTML kept as literal text, secrets
+    scrubbed, unknown ids, and a question that is re-sent (retry) still leaves one row."""
+    c, ws, p, hid = _setup(world)
+    ids = _ids(world)
+    admin = ids["Neha will re"]
+    url = f"/api/handovers/{hid}/acks"
+    r = c.get(url, headers=h(p["kabir"]))
+    assert r.status_code == 403 and isinstance(r.json()["detail"], str) and len(r.json()["detail"]) > 10
+    assert c.put(f"{url}/{admin}", headers=h(p["neha"]), json={"state": "question", "note": "x" * 501}).status_code == 422
+    assert c.put(f"{url}/{admin}", headers=h(p["neha"]), json={"state": "maybe"}).status_code == 422
+    assert c.put(f"{url}/00000000-0000-0000-0000-000000000000", headers=h(p["neha"]), json={"state": "acknowledged"}).status_code == 404
+    note = "<script>alert(1)</script> token ghp_abcdefghijklmnopqrstuvwxyz0123456789 ok?"
+    for _ in range(2):  # retry after a timeout
+        assert c.put(f"{url}/{admin}", headers=h(p["neha"]), json={"state": "question", "note": note}).status_code == 200
+    item = c.get(url, headers=h(p["neha"])).json()["items"][admin]
+    assert "<script>alert(1)</script>" in item["note"]  # stored as text; React renders it escaped
+    assert "ghp_abcdefghijklmnopqrstuvwxyz0123456789" not in item["note"]  # secrets scrubbed before storage
+    meera = c.get(url, headers=h(p["meera"])).json()
+    assert sum(1 for q in meera["questions"] if q["claim_id"] == admin and q["state"] == "question") == 1
+    assert c.post("/api/acks/00000000-0000-0000-0000-000000000000/answer", headers=h(p["meera"]), json={"answer": "hi"}).status_code == 404

@@ -129,6 +129,14 @@ function HandoverInner() {
                 <p className="mt-2 text-sm text-muted" data-testid="handover-meta">
                   Approved by <b className="text-ink-2">{v.approved_by}</b> on {fmtDate(v.approved_at)}{v.note ? ` · “${v.note}”` : ""} · viewing as {ws.persona.name}
                 </p>
+                {v.counts && (
+                  <p className="mt-1 text-xs text-muted" data-testid="handover-counts">
+                    <b className="text-ink-2">{v.counts.current}</b> item{v.counts.current === 1 ? "" : "s"}
+                    {v.counts.history > 0 && <> · {v.counts.history} earlier decision{v.counts.history === 1 ? "" : "s"} kept as history</>}
+                    {!!v.counts.withheld && <> · {v.counts.withheld} restricted</>}
+                    {v.counts.unconfirmed > 0 && <> · {v.counts.unconfirmed} AI-checked, not yet confirmed by a person</>}
+                  </p>
+                )}
               </div>
               <div className="no-print flex flex-wrap gap-2">
                 <Button variant="secondary" onClick={() => window.print()} data-testid="print"><Printer className="h-4 w-4" /> Print / Save as PDF</Button>
@@ -183,6 +191,7 @@ function HandoverInner() {
                         )}
                         {it.stale && it.stale_reason && <p className="mt-1 text-xs text-muted" data-testid="stale-reason">{it.stale_reason}</p>}
                         {it.flags?.reviewer_confirmed_without_evidence && <p className="mt-1 text-xs text-muted">Reviewer-confirmed (no source evidence)</p>}
+                        {it.status === "supported" && !it.history && <p className="mt-1 text-[11px] text-muted" data-testid="unconfirmed">AI-checked against the quote, not yet confirmed by a person</p>}
                         {it.status === "missing" && <p className="mt-1.5 text-xs font-medium text-missing">No source answers this. Ask {v.leaver} or {reviewer?.name ?? "the reviewer"}.</p>}
                         {it.evidence.length > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); openEvidence(it); }} data-testid="source-ref"
@@ -207,7 +216,7 @@ function HandoverInner() {
               <div className="mt-3 overflow-x-auto rounded-2xl border border-line bg-card">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-paper/60 text-xs uppercase tracking-wider text-muted">
-                    <tr><th className="px-4 py-2.5">Version</th><th className="px-4">Approved by</th><th className="px-4">When</th><th className="px-4">Items</th><th className="px-4">Change</th><th className="px-4">Note</th></tr>
+                    <tr><th className="px-4 py-2.5">Version</th><th className="px-4">Approved by</th><th className="px-4">When</th><th className="px-4" title="Current items the successor can see in that version; earlier decisions kept as history are not counted">Items for {v.successor}</th><th className="px-4">Change</th><th className="px-4">Note</th></tr>
                   </thead>
                   <tbody className="divide-y divide-line">
                     {versions.data.versions.map((x) => (

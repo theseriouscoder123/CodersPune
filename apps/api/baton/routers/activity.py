@@ -78,13 +78,15 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             label, what = "Tried to rewrite a withheld item from the successor's sources", (a.after or {}).get("status")
         elif a.action == "relation_override":
             label, what = "Changed how two claims relate", f"{(a.before or {}).get('relation', '?')} → {(a.after or {}).get('relation', '?')}"
+        elif a.action == "duplicate_merged":  # claim text left out: it may come from a source this viewer can't read
+            label, what = "Merged two near-identical claims (evidence kept together)", None
         elif a.action == "stale_override":
             label, what = ("Marked open work as still open" if (a.after or {}).get("still_open") else "Let Baton flag open work as stale"), None
         else:
             label, what = a.action.replace("_", " ").capitalize(), a.target
         out.append({"at": a.created_at.isoformat(), "kind": "audit", "action": a.action, "label": label,
-                    "actor": names.get(a.actor_member_id, "Someone"), "role": a.actor_role, "claim_id": None,
-                    "claim": what, "claim_type": None, "note": pii(a.note), "before": None})
+                    "actor": "Baton (rules)" if a.actor_role == "system" else names.get(a.actor_member_id, "Someone"),
+                    "role": a.actor_role, "claim_id": None, "claim": what, "claim_type": None, "note": pii(a.note), "before": None})
     out.sort(key=lambda e: e["at"], reverse=True)
     return out[:MAX_ROWS]
 

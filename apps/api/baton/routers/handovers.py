@@ -21,10 +21,10 @@ from baton.auth import Ctx, _roles, resolve_ctx, workspace_ctx
 from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Source, Workspace
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii, scrub
-from baton.reconstruct.relations import start_here_rank
-from baton.reconstruct.rerender import looks_like_theirs
 from baton.ledger import evidence_rows, ref_for
 from baton.projection import claim_sources, visible, withheld_reason
+from baton.reconstruct.relations import start_here_rank
+from baton.reconstruct.rerender import looks_like_theirs
 from baton.routers.claims import TYPE_LABELS, evidence_payload
 
 router = APIRouter(prefix="/api", tags=["Handovers"])
@@ -73,6 +73,71 @@ def eligible_for_successor(c: Claim) -> bool:
     if ((c.meta or {}).get("flags") or {}).get("answered"):
         return False  # a Missing item the leaver answered: the testimony claim ships instead
     return True
+
+
+def handover_items(db: Session, h: Handover) -> list[dict]:
+    """What an approval would snapshot right now: eligible claims in scope, plus reversed decisions kept as history.
+    The preview, the approval and every count are built from this one list, so the numbers agree (fix F1)."""
+    claims = list(db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id)))
+    by_id = {c.id: c for c in claims}
+    ev = evidence_rows(db, [c.id for c in claims])
+    kws = scope_keywords(h.scope)
+    items = []
+    for c in claims:
+        superseded_history = c.superseded_by is not None and c.type == "decision" and c.status != "rejected"
+        if not (eligible_for_successor(c) or superseded_history):
+            continue
+        if not in_scope(c, ev.get(c.id, []), kws):
+            continue
+        items.append({
+            "claim_id": str(c.id), "type": c.type, "text": c.text, "status": c.status, "status_reason": c.status_reason,
+            "flags": (c.meta or {}).get("flags", {}), "occurred_at": c.occurred_at.isoformat() if c.occurred_at else None,
+            "superseded_by": str(c.superseded_by) if c.superseded_by and c.superseded_by in by_id else None,
+            "stale_reason": c.stale_reason, "review_state": c.review_state,
+            "evidence": [{"evidence_id": str(e.id), "chunk_id": str(ch.id), "ref": ref_for(e, ch, s)} for e, ch, s in ev.get(c.id, [])],
+        })
+    return items
+
+
+def place(it: dict, successor_name: str | None) -> tuple[str, int | None, str | None]:
+    """(section, start-here rank, history kind) for one item. The same rules for the preview and the real view."""
+    if it.get("superseded_by"):
+        return "decisions", None, "superseded"
+    if it.get("stale_reason"):  # improvement #2: overtaken open work is history, not a next step
+        return "decisions", None, "stale"
+    key = _section(it)
+    if key == "start_here":
+        rank = start_here_rank(it["text"], successor_name)
+        return ("owners" if rank == 2 else "start_here"), rank, None  # someone else's task goes under owners
+    return key, None, None
+
+
+def chunk_acls(db: Session, items: list[dict]) -> dict:
+    ids = [uuid.UUID(e["chunk_id"]) for it in items for e in it["evidence"]]
+    if not ids:
+        return {}
+    return {cid: acl for cid, acl in db.execute(select(Chunk.id, Source.acl).join(Source, Source.id == Chunk.source_id)
+                                                .where(Chunk.id.in_(ids)))}
+
+
+def item_visible(viewer: Viewer, it: dict, acls: dict) -> bool:
+    """Trust rule 5 at read time: every cited source must be visible to this viewer."""
+    return all(can_view_acl(viewer, acls.get(uuid.UUID(e["chunk_id"]))) for e in it["evidence"])
+
+
+def count_items(items: list[dict], viewer: Viewer, acls: dict) -> dict:
+    """The one handover count used by every screen: current items, history (reversed or overtaken) and withheld."""
+    out = {"current": 0, "history": 0, "withheld": 0, "unconfirmed": 0}
+    for it in items:
+        if not item_visible(viewer, it, acls):
+            out["withheld"] += 1
+        elif it.get("superseded_by") or it.get("stale_reason"):
+            out["history"] += 1
+        else:
+            out["current"] += 1
+            if it.get("status") == "supported":  # AI-checked against a quote, but no person has confirmed it (F2)
+                out["unconfirmed"] += 1
+    return out
 
 
 def _handover(db: Session, request: Request, handover_id: uuid.UUID) -> tuple[Handover, Ctx]:
@@ -152,35 +217,34 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
     if target is None or target.workspace_id != h.workspace_id:
         raise HTTPException(404, "Member not found")
     tv = _viewer_for(db, target.id, h.workspace_id)
-    claims = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id)) if eligible_for_successor(c)]
-    ev = evidence_rows(db, [c.id for c in claims])
-    kws = scope_keywords(h.scope)
-    claims = [c for c in claims if in_scope(c, ev.get(c.id, []), kws)]
-    cited = claim_sources(db, [c.id for c in claims])
+    items = handover_items(db, h)
+    acls = chunk_acls(db, items)
+    ids = [uuid.UUID(it["claim_id"]) for it in items]
+    by_id = {c.id: c for c in db.scalars(select(Claim).where(Claim.id.in_(ids)))} if ids else {}
+    cited = claim_sources(db, ids)
     derived_by = {d.derived_from: d for d in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id,
                                                                             Claim.derived_from.is_not(None)))}
     shown, withheld = [], []
-    for c in claims:
-        item = {"id": str(c.id), "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
-                "status": c.status, "section": None, "source_refs": list(dict.fromkeys(ref_for(*r) for r in ev.get(c.id, [])))}
-        # Same placement rules as the successor's real view (_project), so the preview is exact.
-        item["section"] = "decisions" if c.stale_reason else _section(item)
-        if item["section"] == "start_here":
-            item["rank"] = start_here_rank(c.text, target.display_name)
-            if item["rank"] == 2:
-                item["section"] = "owners"
+    for it in items:
+        c = by_id[uuid.UUID(it["claim_id"])]
+        section, rank, history = place(it, target.display_name)  # same rules as the successor's real view (_project)
+        item = {"id": it["claim_id"], "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
+                "status": c.status, "section": section, "history": history,
+                "source_refs": list(dict.fromkeys(e["ref"] for e in it["evidence"]))}
+        if rank is not None:
+            item["rank"] = rank
         if c.stale_reason:
             item["stale_reason"] = c.stale_reason
-        if visible(tv, cited.get(c.id, [])):
+        if item_visible(tv, it, acls):
             shown.append(item)
         else:
-            derived = derived_by.get(c.id)
+            derived = derived_by.get(c.id) if not history else None
             withheld.append({**item, "reason": withheld_reason(db, h.workspace_id, tv, cited.get(c.id, [])),
-                             "matters": looks_like_theirs(c.text, target.display_name),
+                             "matters": None if history else looks_like_theirs(c.text, target.display_name),
                              "rerendered": {"id": str(derived.id), "text": derived.text, "status": derived.status,
                                             "visible": visible(tv, claim_sources(db, [derived.id]).get(derived.id, []))} if derived else None,
                              "rerender_tried": bool((c.meta or {}).get("rerender_none"))})
-    shown.sort(key=lambda it: (it.get("rank", 1), it["type"] != "next_action"))
+    shown.sort(key=lambda it: (bool(it["history"]), it.get("rank", 1), it["type"] != "next_action"))
     hidden_inferred = sum(1 for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
                           if c.status == "inferred" and not c.superseded_by)
     all_live = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
@@ -191,7 +255,8 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
         "missing": sum(1 for c in all_live if c.status == "missing"),
         "source_changed": sum(1 for c in all_live if (c.meta or {}).get("source_changed")),
     }
-    return {"member": {"id": str(target.id), "name": target.display_name}, "scope": kws, "visible": shown, "withheld": withheld,
+    return {"member": {"id": str(target.id), "name": target.display_name}, "scope": scope_keywords(h.scope),
+            "visible": shown, "withheld": withheld, "counts": count_items(items, tv, acls),
             "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings}
 
 
@@ -211,31 +276,16 @@ def approve(handover_id: uuid.UUID, body: ApproveIn, request: Request, db: Sessi
     db.execute(select(Handover.id).where(Handover.id == h.id).with_for_update())
     if body.show_restricted_stubs is not None:
         h.show_restricted_stubs = body.show_restricted_stubs
-    claims = list(db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id)))
-    by_id = {c.id: c for c in claims}
-    ev = evidence_rows(db, [c.id for c in claims])
-    items = []
-    kws = scope_keywords(h.scope)
-    for c in claims:
-        superseded_history = c.superseded_by is not None and c.type == "decision" and c.status != "rejected"
-        if not (eligible_for_successor(c) or superseded_history):
-            continue
-        if not in_scope(c, ev.get(c.id, []), kws):
-            continue
-        items.append({
-            "claim_id": str(c.id), "type": c.type, "text": c.text, "status": c.status, "status_reason": c.status_reason,
-            "flags": (c.meta or {}).get("flags", {}), "occurred_at": c.occurred_at.isoformat() if c.occurred_at else None,
-            "superseded_by": str(c.superseded_by) if c.superseded_by and c.superseded_by in by_id else None,
-            "stale_reason": c.stale_reason,
-            "evidence": [{"evidence_id": str(e.id), "chunk_id": str(ch.id), "ref": ref_for(e, ch, s)} for e, ch, s in ev.get(c.id, [])],
-        })
-    n = (db.scalar(select(func.max(HandoverVersion.version)).where(HandoverVersion.handover_id == h.id)) or 0) + 1
+    items = handover_items(db, h)
+    counts = count_items(items, _viewer_for(db, h.successor_member_id, h.workspace_id), chunk_acls(db, items)) \
+        if h.successor_member_id else None
+    n =(db.scalar(select(func.max(HandoverVersion.version)).where(HandoverVersion.handover_id == h.id)) or 0) + 1
     v = HandoverVersion(handover_id=h.id, version=n, approved_by=ctx.member.id, approved_at=datetime.now(UTC),
                         note=scrub(body.note)[0] if body.note else None, snapshot={"items": items})
     db.add(v)
     db.commit()
     notified = _notify_approved(db, h, n, ctx.member.display_name)
-    return {"version": n, "items": len(items), "notified": notified}
+    return {"version": n, "items": len(items), "counts": counts, "notified": notified}
 
 
 def _notify_approved(db: Session, h: Handover, version: int, approver: str) -> list[dict]:
@@ -285,9 +335,7 @@ def _latest(db: Session, h: Handover, version: int | None) -> HandoverVersion | 
 
 def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask: bool) -> dict:
     items = v.snapshot.get("items", [])
-    chunk_ids = [uuid.UUID(e["chunk_id"]) for it in items for e in it["evidence"]]
-    acls = {cid: acl for cid, acl in db.execute(select(Chunk.id, Source.acl).join(Source, Source.id == Chunk.source_id)
-                                                .where(Chunk.id.in_(chunk_ids)))} if chunk_ids else {}
+    acls = chunk_acls(db, items)
     texts = {it["claim_id"]: it["text"] for it in items}
     when = {it["claim_id"]: it.get("occurred_at") for it in items}
     succ = db.get(Member, h.successor_member_id) if h.successor_member_id else None
@@ -295,8 +343,7 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
     sections = {key: [] for key, _, _ in SECTIONS}
     stubs = 0
     for it in items:
-        ok = all(can_view_acl(viewer, acls.get(uuid.UUID(e["chunk_id"]))) for e in it["evidence"])
-        if not ok:
+        if not item_visible(viewer, it, acls):
             stubs += 1
             if h.show_restricted_stubs:
                 sections["unresolved"].append({"restricted": True, "text": "Restricted item. Ask the reviewer."})
@@ -307,22 +354,18 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
         out = {**it, "text": mask_pii(it["text"]) if mask else it["text"],
                "type_label": TYPE_LABELS.get(it["type"], it["type"]),
                "superseded_by_text": texts.get(it["superseded_by"]) if it.get("superseded_by") else None}
-        if it.get("superseded_by"):
+        out.pop("review_state", None)
+        key, rank, history = place(it, succ_name)
+        if history:
             out["history"] = True
+        if history == "superseded":
             out["superseded_on"] = when.get(it["superseded_by"])
-            sections["decisions"].append(out)
-        elif it.get("stale_reason"):  # improvement #2: overtaken open work is history, not a next step
-            out["history"] = True
+        elif history == "stale":
             out["stale"] = True
             out["stale_reason"] = mask_pii(it["stale_reason"]) if mask else it["stale_reason"]
-            sections["decisions"].append(out)
-        else:
-            key = _section(it)
-            if key == "start_here":
-                out["rank"] = start_here_rank(out["text"], succ_name)
-                if out["rank"] == 2:
-                    key = "owners"  # someone else's task: who's doing what, not the successor's next step
-            sections[key].append(out)
+        if rank is not None:
+            out["rank"] = rank
+        sections[key].append(out)
     # Start with concrete next actions, newest first; then unfinished work. Other sections newest first.
     sections["start_here"].sort(key=lambda it: (it.get("rank", 1), it["type"] != "next_action", -_ts(it.get("occurred_at"))))
     for key in ("owners", "decisions", "risks", "dependencies"):
@@ -334,6 +377,8 @@ def _project(db: Session, h: Handover, v: HandoverVersion, viewer: Viewer, mask:
         "note": (mask_pii(v.note) if mask and v.note else v.note),  # reviewer notes follow the same PII rule as claims
         "sections": [{"key": k, "title": t, "help": hp, "items": sections[k]} for k, t, hp in SECTIONS],
         "withheld_count": stubs if h.show_restricted_stubs else None,
+        # The same count the preview and the approve dialog showed; withheld is only revealed when stubs are on.
+        "counts": {**(c := count_items(items, viewer, acls)), "withheld": c["withheld"] if h.show_restricted_stubs or not mask else None},
     }
 
 
@@ -391,11 +436,14 @@ def versions(handover_id: uuid.UUID, request: Request, db: Session = Depends(get
         raise HTTPException(403, "Only the reviewer can see version history")
     names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == h.workspace_id))}
     vs = list(db.scalars(select(HandoverVersion).where(HandoverVersion.handover_id == h.id).order_by(HandoverVersion.version)))
+    sv = _viewer_for(db, h.successor_member_id, h.workspace_id) if h.successor_member_id else ctx.viewer
     out, prev = [], set()
     for v in vs:
-        ids = {it["claim_id"] for it in v.snapshot.get("items", [])}
+        items = v.snapshot.get("items", [])
+        ids = {it["claim_id"] for it in items}
+        counts = count_items(items, sv, chunk_acls(db, items))  # what the successor gets from this version, as everywhere else
         out.append({"version": v.version, "approved_by": names.get(v.approved_by), "approved_at": v.approved_at.isoformat(),
-                    "note": v.note, "items": len(ids), "added": len(ids - prev), "removed": len(prev - ids)})
+                    "note": v.note, "items": counts["current"], "counts": counts, "added": len(ids - prev), "removed": len(prev - ids)})
         prev = ids
     return {"versions": list(reversed(out))}
 

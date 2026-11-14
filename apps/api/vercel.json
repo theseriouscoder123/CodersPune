@@ -1,3 +1,4 @@
 {
+  "regions": ["cle1"],
   "crons": [{ "path": "/api/maintenance/gc", "schedule": "30 21 * * *" }]
 }
