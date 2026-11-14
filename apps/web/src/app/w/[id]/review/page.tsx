@@ -618,10 +618,24 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
               {c.status === "missing" ? "No source covers this. It goes on the list of questions for the leaver." : "No evidence was cited."}
             </p>
           ) : (
-            <div className={`mt-2 grid gap-3 ${openConflict ? "md:grid-cols-2" : "grid-cols-1"}`}>
-              {c.evidence.map((e) => <EvidenceCard key={e.id} e={e} tag={openConflict && c.value ? `says ${c.value}` : null} />)}
-              {openConflict && others.map((o) => <OtherEvidence key={o.id} id={o.id} value={o.value} />)}
-            </div>
+            openConflict ? (
+              <div className="mt-2 grid items-start gap-3 md:grid-cols-2">
+                <div className="min-w-0 space-y-2">
+                  <p className="text-[12px] font-medium text-fg-3"><span className="font-mono">{clm(c.number) ?? "This claim"}</span> · this claim</p>
+                  {c.evidence.map((e) => <EvidenceCard key={e.id} e={e} tag={c.value ? `says ${c.value}` : null} />)}
+                </div>
+                {others.map((o) => (
+                  <div key={o.id} className="min-w-0 space-y-2">
+                    <p className="text-[12px] font-medium text-fg-3"><span className="font-mono">{clm(o.number) ?? "Other claim"}</span> · the claim it disagrees with</p>
+                    <OtherEvidence id={o.id} value={o.value} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-2 grid grid-cols-1 gap-3">
+                {c.evidence.map((e) => <EvidenceCard key={e.id} e={e} tag={null} />)}
+              </div>
+            )
           )}
 
           {/* resolve (conflicts only) */}

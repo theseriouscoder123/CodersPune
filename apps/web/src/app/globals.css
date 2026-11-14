@@ -295,3 +295,12 @@ body {
   a { text-decoration: none; }
   @page { margin: 16mm; }
 }
+
+/* Theme-specific images (the landing screenshot): one of each pair is shown. */
+.only-dark { display: none; }
+:root[data-theme="dark"] .only-dark { display: block; }
+:root[data-theme="dark"] .only-light { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .only-dark { display: block; }
+  :root:not([data-theme="light"]) .only-light { display: none; }
+}
