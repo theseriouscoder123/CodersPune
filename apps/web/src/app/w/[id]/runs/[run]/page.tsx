@@ -112,9 +112,9 @@ export default function RunPage() {
         actions={history ? <ButtonLink href={`/w/${ws.id}/ledger`} variant="secondary">Back to the ledger</ButtonLink> : undefined} />
 
       <Card className="mt-6 p-5">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-fg">{history ? (info?.status === "done" ? "Completed" : "Stopped") : info?.status === "done" ? "Done. Opening the ledger…" : info?.status === "failed" ? "Stopped" : info ? "Working…" : "Loading…"}</span>
-          <span className="font-mono text-xs text-fg-3">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</span>
+          <span className="font-mono text-[12px] text-fg-3">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-sunk">
           <div className={`h-full rounded-full transition-all duration-700 ${info?.status === "failed" ? "bg-mis" : "bg-accent"}`} style={{ width: `${Math.max(pct, 4)}%` }} />
@@ -132,7 +132,7 @@ export default function RunPage() {
             )}
             <ButtonLink href={`/w/${ws.id}/ledger`} variant="secondary" size="sm">Back to the ledger</ButtonLink>
           </div>
-          <p className="mt-2 text-xs opacity-80">Finished steps are kept, so a retry doesn&apos;t repeat work that already succeeded.</p>
+          <p className="mt-2 text-[12px] opacity-80">Finished steps are kept, so a retry doesn&apos;t repeat work that already succeeded.</p>
         </Alert>
       )}
 
@@ -146,21 +146,21 @@ export default function RunPage() {
                   <span className={`grid h-7 w-7 place-items-center rounded-full ${s.status === "done" ? "bg-ver text-white" : s.status === "failed" ? "bg-mis text-white" : running ? "bg-accent-soft text-accent-ink" : "bg-bg-sunk text-fg-3"}`}>
                     {s.status === "done" ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : s.status === "failed" ? <X className="h-3.5 w-3.5" /> : running ? <Spinner className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                   </span>
-                  <span className={`text-sm font-medium ${s.status === "pending" ? "text-fg-3" : "text-fg"}`}>{s.label}</span>
+                  <span className={`text-[13px] font-medium ${s.status === "pending" ? "text-fg-3" : "text-fg"}`}>{s.label}</span>
                 </span>
-                {s.total > 0 && <span className="font-mono text-xs text-fg-3">{s.progress}/{s.total}</span>}
+                {s.total > 0 && <span className="font-mono text-[12px] text-fg-3">{s.progress}/{s.total}</span>}
               </div>
-              {s.message && s.status !== "pending" && <p className="mt-1.5 pl-10 text-xs text-fg-3">{s.message}</p>}
+              {s.message && s.status !== "pending" && <p className="mt-1.5 pl-10 text-[12px] text-fg-3">{s.message}</p>}
               {running && s.total > 0 && (
                 <div className="ml-10 mt-2 h-1.5 overflow-hidden rounded-full bg-bg-sunk"><div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${Math.round((100 * s.progress) / s.total)}%` }} /></div>
               )}
               {s.errors.length > 0 && (
-                <p className="mt-2 flex items-start gap-1.5 pl-10 text-xs text-con"><AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" /> {s.errors.length} issue(s), the run continues: {s.errors[s.errors.length - 1]}</p>
+                <p className="mt-2 flex items-start gap-1.5 pl-10 text-[12px] text-con"><AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" /> {s.errors.length} issue(s), the run continues: {s.errors[s.errors.length - 1]}</p>
               )}
             </li>
           );
         })}
-        {!info && <li className="flex items-center gap-2 text-sm text-fg-3"><Spinner /> Loading the run…</li>}
+        {!info && <li className="flex items-center gap-2 text-[13px] text-fg-3"><Spinner /> Loading the run…</li>}
       </ol>
     </div>
   );

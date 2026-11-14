@@ -64,17 +64,17 @@ export function AccessEditor({ workspaceId, sourceId, open, onClose, onSaved }: 
   return (
     <Modal open={open} onClose={onClose} label="Change who can access this source">
       <div data-testid="access-editor">
-        <p className="flex items-center gap-2 text-lg font-semibold text-fg"><KeyRound className="h-4 w-4 text-accent-ink" /> Who can read {view?.source.name ?? "this source"}?</p>
-        <p className="mt-1 text-sm text-fg-3">Reviewers always see every source. A claim is shown to someone only if they can read every source it cites.</p>
+        <p className="flex items-center gap-2 text-[15px] font-semibold text-fg"><KeyRound className="h-4 w-4 text-accent-ink" /> Who can read {view?.source.name ?? "this source"}?</p>
+        <p className="mt-1 text-[13px] text-fg-3">Reviewers always see every source. A claim is shown to someone only if they can read every source it cites.</p>
         {error && <div className="mt-3"><Alert tone="error">{error}</Alert></div>}
         {!view && !error && <div className="flex justify-center py-8"><Spinner className="h-5 w-5 text-fg-3" /></div>}
         {view && (
           <>
             <fieldset className="mt-4">
-              <legend className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">By role</legend>
+              <legend className="text-[12px] font-medium text-fg-3">By role</legend>
               <div className="mt-2 space-y-1.5">
                 {view.grantable_roles.map((r) => (
-                  <label key={r} className="flex items-center gap-2 text-sm text-fg">
+                  <label key={r} className="flex items-center gap-2 text-[13px] text-fg">
                     <input type="checkbox" checked={roles.includes(r)} onChange={() => toggle(roles, setRoles, r)}
                       disabled={r !== "all_members" && r !== "reviewer" && everyone} className="h-4 w-4 accent-[var(--color-amber)]" />
                     {ROLE_LABELS[r] ?? r}
@@ -83,10 +83,10 @@ export function AccessEditor({ workspaceId, sourceId, open, onClose, onSaved }: 
               </div>
             </fieldset>
             <fieldset className="mt-4" disabled={everyone}>
-              <legend className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">Specific people</legend>
+              <legend className="text-[12px] font-medium text-fg-3">Specific people</legend>
               <div className="mt-2 grid grid-cols-2 gap-1.5">
                 {view.members.map((m) => (
-                  <label key={m.id} className={`flex items-center gap-2 text-sm ${everyone ? "text-fg-3" : "text-fg"}`}>
+                  <label key={m.id} className={`flex items-center gap-2 text-[13px] ${everyone ? "text-fg-3" : "text-fg"}`}>
                     <input type="checkbox" checked={everyone || members.includes(m.id)} onChange={() => toggle(members, setMembers, m.id)}
                       className="h-4 w-4 accent-[var(--color-amber)]" />
                     {m.name}
@@ -94,12 +94,12 @@ export function AccessEditor({ workspaceId, sourceId, open, onClose, onSaved }: 
                 ))}
               </div>
             </fieldset>
-            <label className="mt-4 block text-sm">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">Reason (shown in the activity log)</span>
+            <label className="mt-4 block text-[13px]">
+              <span className="text-[12px] font-medium text-fg-3">Reason (shown in the activity log)</span>
               <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="e.g. Neha now owns the sponsor tasks"
-                className="mt-1 h-10 w-full rounded-lg border border-line bg-bg-side px-3 text-sm outline-none focus:border-accent" />
+                className="mt-1 h-8 w-full rounded-md border border-line bg-bg-side px-3 text-[13px] outline-none focus:border-accent" />
             </label>
-            <p className="mt-4 flex items-start gap-2 rounded-lg bg-con-soft px-3 py-2 text-xs text-con">
+            <p className="mt-4 flex items-start gap-2 rounded-lg bg-con-soft px-3 py-2 text-[12px] text-con">
               <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" />
               Takes effect immediately, including in handovers that are already approved. Removing someone hides these items from them at once.
             </p>

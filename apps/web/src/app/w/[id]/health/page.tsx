@@ -20,7 +20,7 @@ const PURPOSE: Record<string, string> = { extract: "Claim extraction", verify: "
 function Stat({ icon, label, value, tone = "" }: { icon: React.ReactNode; label: string; value: React.ReactNode; tone?: string }) {
   return (
     <Card className="p-4">
-      <p className="flex items-center gap-1.5 text-xs text-fg-3">{icon} {label}</p>
+      <p className="flex items-center gap-1.5 text-[12px] text-fg-3">{icon} {label}</p>
       <p className={`mt-1 text-3xl font-semibold ${tone || "text-fg"}`}>{value}</p>
     </Card>
   );
@@ -53,7 +53,7 @@ export default function HealthPage() {
 
           <Card className="mt-5 p-5">
             <p className="font-semibold text-fg">Configuration</p>
-            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm text-fg-2">
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-fg-2">
               <span>Providers: {data.config.configured ? <Pill className="ml-1 text-ver">configured</Pill> : <Pill className="ml-1 text-mis">not configured</Pill>}
                 {Object.entries(data.config.keys ?? {}).filter(([, n]) => n > 0).map(([p, n]) => (
                   <Pill key={p} className="ml-1">{p} · {n} key{n === 1 ? "" : "s"}</Pill>
@@ -61,26 +61,26 @@ export default function HealthPage() {
               <span>Extraction chain: {data.config.extract_models.map((m) => <Pill key={m} className="ml-1 font-mono">{m}</Pill>)}</span>
               <span>Verifier chain: {data.config.verify_models.map((m) => <Pill key={m} className="ml-1 font-mono">{m}</Pill>)}</span>
             </div>
-            <p className="mt-2 text-xs text-fg-3">Calls rotate across each provider&apos;s keys; a rate-limited key hands over to the next one, and when every key for a model is out the next model in the chain takes over. Failed calls are retried with backoff; a batch that still fails is reported, never silently dropped.</p>
+            <p className="mt-2 text-[12px] text-fg-3">Calls rotate across each provider&apos;s keys; a rate-limited key hands over to the next one, and when every key for a model is out the next model in the chain takes over. Failed calls are retried with backoff; a batch that still fails is reported, never silently dropped.</p>
           </Card>
 
-          <h2 className="mt-8 text-xl font-semibold text-fg">Calls by purpose and model</h2>
+          <h2 className="mt-8 text-[16px] font-semibold text-fg">Calls by purpose and model</h2>
           <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-bg">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-bg-side/60 text-xs uppercase tracking-wider text-fg-3">
+            <table className="w-full text-left text-[13px]">
+              <thead className="bg-bg-side/60 text-[12px] text-fg-3">
                 <tr><th className="px-4 py-2.5">Purpose</th><th className="px-4">Model</th><th className="px-4">Calls</th><th className="px-4">OK</th><th className="px-4">Failed</th><th className="px-4">Top errors</th><th className="px-4">Latency p50 / p95</th><th className="px-4">Tokens in / out</th></tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {data.by_model.map((r) => (
                   <tr key={r.purpose + r.model}>
                     <td className="px-4 py-2.5 font-medium text-fg">{PURPOSE[r.purpose] ?? r.purpose}</td>
-                    <td className="px-4 font-mono text-xs">{r.model}</td>
+                    <td className="px-4 font-mono text-[12px]">{r.model}</td>
                     <td className="px-4">{r.calls}</td>
                     <td className="px-4 text-ver">{r.ok}</td>
                     <td className={`px-4 ${r.failed ? "text-con" : "text-fg-3"}`}>{r.failed}</td>
-                    <td className="px-4 text-xs text-fg-3">{Object.entries(r.errors).map(([k, n]) => `${k} ×${n}`).join(", ") || "–"}</td>
-                    <td className="px-4 font-mono text-xs">{fmtMs(r.p50_ms)} / {fmtMs(r.p95_ms)}</td>
-                    <td className="px-4 font-mono text-xs">{r.tokens_in.toLocaleString()} / {r.tokens_out.toLocaleString()}</td>
+                    <td className="px-4 text-[12px] text-fg-3">{Object.entries(r.errors).map(([k, n]) => `${k} ×${n}`).join(", ") || "–"}</td>
+                    <td className="px-4 font-mono text-[12px]">{fmtMs(r.p50_ms)} / {fmtMs(r.p95_ms)}</td>
+                    <td className="px-4 font-mono text-[12px]">{r.tokens_in.toLocaleString()} / {r.tokens_out.toLocaleString()}</td>
                   </tr>
                 ))}
                 {data.by_model.length === 0 && <tr><td colSpan={8} className="px-4 py-6 text-center text-fg-3">No AI calls recorded for this workspace{ws.synthetic ? " (the demo was computed in advance)" : ""}.</td></tr>}
@@ -88,20 +88,20 @@ export default function HealthPage() {
             </table>
           </div>
 
-          <h2 className="mt-8 text-xl font-semibold text-fg">Recent runs</h2>
+          <h2 className="mt-8 text-[16px] font-semibold text-fg">Recent runs</h2>
           <div className="stagger mt-3 space-y-3">
             {data.runs.map((r) => (
               <Card key={r.id} className="p-4">
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${r.status === "done" ? "bg-ver-soft text-ver" : r.status === "failed" ? "bg-mis-soft text-mis" : "bg-accent-soft text-accent-ink"}`}>
+                <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${r.status === "done" ? "bg-ver-soft text-ver" : r.status === "failed" ? "bg-mis-soft text-mis" : "bg-accent-soft text-accent-ink"}`}>
                     {r.status === "done" ? <Check className="h-3 w-3" /> : r.status === "failed" ? <X className="h-3 w-3" /> : <Clock className="h-3 w-3" />} {r.status}
                   </span>
                   <Pill>{r.frozen ? "precomputed demo" : r.mode === "refresh" ? "refresh" : "full run"}</Pill>
                   {r.inherited && <Pill>from the demo template</Pill>}
                   <span className="text-fg-3">{r.started_at?.slice(0, 16).replace("T", " ")} · {fmtDur(r.duration_s)}</span>
                 </div>
-                {r.error && <p className="mt-2 text-sm text-mis">{r.error}</p>}
-                <ol className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
+                {r.error && <p className="mt-2 text-[13px] text-mis">{r.error}</p>}
+                <ol className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-[12px] sm:grid-cols-2">
                   {r.steps.map((s) => (
                     <li key={s.step} className="flex gap-2">
                       <span className={s.status === "done" ? "text-ver" : s.status === "failed" ? "text-mis" : "text-fg-3"}>{s.status === "done" ? "✓" : s.status === "failed" ? "✕" : "○"}</span>

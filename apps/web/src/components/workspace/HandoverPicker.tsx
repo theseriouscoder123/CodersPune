@@ -93,7 +93,7 @@ export function HandoverPicker({ handovers, selected, onCreated }: { handovers: 
           </div>
           <label className="block"><span className="font-medium text-fg">Scope (optional)</span>
             <input className={`${field} mt-1`} value={form.scope} onChange={(e) => setForm({ ...form, scope: e.target.value })} placeholder="e.g. payments, src/billing/, stripe" />
-            <span className="mt-1 block text-xs text-fg-3">Comma-separated keywords or paths. Only claims whose topic, text or evidence files match are included. Leave empty for the whole project.</span></label>
+            <span className="mt-1 block text-[12px] text-fg-3">Comma-separated keywords or paths. Only claims whose topic, text or evidence files match are included. Leave empty for the whole project.</span></label>
         </div>
         {err && <Alert tone="error" className="mt-3">{err}</Alert>}
         <div className="mt-5 flex justify-end gap-2">

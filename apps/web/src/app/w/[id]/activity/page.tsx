@@ -57,7 +57,7 @@ export default function ActivityPage() {
       <div className="mt-5 flex flex-wrap gap-1.5" role="tablist">
         {FILTERS.map((x) => (
           <button key={x.key} role="tab" aria-selected={filter === x.key} onClick={() => setFilter(x.key)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${filter === x.key ? "bg-fg text-bg ring-fg" : "bg-bg text-fg-2 ring-line hover:ring-fg/25"}`}>
+            className={`rounded-full px-3 py-1 text-[12px] font-medium ring-1 transition ${filter === x.key ? "bg-fg text-bg ring-fg" : "bg-bg text-fg-2 ring-line hover:ring-fg/25"}`}>
             {x.label}
           </button>
         ))}
@@ -74,12 +74,12 @@ export default function ActivityPage() {
               <li key={i} className="flex gap-3 px-4 py-3.5">
                 <span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full ${TONE[e.action] ?? "bg-bg-sunk text-fg-2"}`}>{ICONS[e.action] ?? <Pencil className="h-3.5 w-3.5" />}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-fg"><b>{e.actor}</b> <span className="text-fg-3">({e.role})</span> · {e.label}</p>
-                  <p className="mt-0.5 text-sm text-fg-2">{e.claim}</p>
-                  {e.before && <p className="mt-0.5 text-xs text-fg-3">Before: <span className="line-through">{e.before}</span></p>}
-                  {e.note && <p className="mt-1 rounded-lg bg-bg-side px-2.5 py-1.5 text-xs text-fg-2">“{e.note}”</p>}
+                  <p className="text-[13px] text-fg"><b>{e.actor}</b> <span className="text-fg-3">({e.role})</span> · {e.label}</p>
+                  <p className="mt-0.5 text-[13px] text-fg-2">{e.claim}</p>
+                  {e.before && <p className="mt-0.5 text-[12px] text-fg-3">Before: <span className="line-through">{e.before}</span></p>}
+                  {e.note && <p className="mt-1 rounded-lg bg-bg-side px-2.5 py-1.5 text-[12px] text-fg-2">“{e.note}”</p>}
                 </div>
-                <time className="shrink-0 text-xs text-fg-3" dateTime={e.at} title={new Date(e.at).toLocaleString()}>{new Date(e.at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time>
+                <time className="shrink-0 text-[12px] text-fg-3" dateTime={e.at} title={new Date(e.at).toLocaleString()}>{new Date(e.at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time>
               </li>
             ))}
           </ol>

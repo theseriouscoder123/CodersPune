@@ -26,7 +26,7 @@ export function HandoverChanges({ handoverId, version }: { handoverId: string; v
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent-soft text-accent-ink"><GitCompareArrows className="h-4 w-4" /></span>
         <span className="flex-1">
           <span className="block font-semibold text-fg">What changed since version {d.previous}</span>
-          <span className="block text-xs text-fg-3">
+          <span className="block text-[12px] text-fg-3">
             {total === 0 ? "Nothing you can see changed." : (
               <>{d.added.length} added · {d.changed.length} updated · {d.removed.length} removed</>
             )}
@@ -49,17 +49,17 @@ function Group({ title, icon, tone, items, struck }: { title: string; icon: Reac
   if (!items.length) return null;
   return (
     <div>
-      <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${tone}`}>{icon} {title} ({items.length})</p>
+      <p className={`flex items-center gap-1.5 text-[12px] font-semibold ${tone}`}>{icon} {title} ({items.length})</p>
       <ul className="mt-2 space-y-2">
         {items.map((it) => (
           <li key={it.claim_id} className="rounded-lg border border-line bg-bg-side/40 px-3.5 py-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <StatusChip status={it.status} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">{it.type_label} · {it.section}</span>
+              <span className="text-[12px] font-medium text-fg-3">{it.type_label} · {it.section}</span>
               {it.was_status && <span className="text-[11px] text-fg-3">was {it.was_status}</span>}
             </div>
-            <p className={`mt-1 text-sm text-fg ${struck ? "line-through decoration-line-2" : ""}`}>{it.text}</p>
-            {it.was_text && <p className="mt-1 text-xs text-fg-3">Before: <span className="line-through">{it.was_text}</span></p>}
+            <p className={`mt-1 text-[13px] text-fg ${struck ? "line-through decoration-line-2" : ""}`}>{it.text}</p>
+            {it.was_text && <p className="mt-1 text-[12px] text-fg-3">Before: <span className="line-through">{it.was_text}</span></p>}
           </li>
         ))}
       </ul>

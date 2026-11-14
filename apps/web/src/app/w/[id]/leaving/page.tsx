@@ -53,7 +53,7 @@ function LeavingInner() {
         <>
           <Countdown d={d} hid={h.id} open={open} onChanged={data.reload} />
           <ol className="mt-6 space-y-2" data-testid="leaving-items">
-            {d.items.length === 0 && <li><Card className="p-5 text-sm text-fg-3">Nothing depends on {d.leaver} alone. Nice.</Card></li>}
+            {d.items.length === 0 && <li><Card className="p-5 text-[13px] text-fg-3">Nothing depends on {d.leaver} alone. Nice.</Card></li>}
             {d.items.map((it, i) => <Row key={it.key} it={it} n={i + 1} hid={h.id} canMark={d.can_mark} onChanged={data.reload} wsId={ws.id} />)}
           </ol>
         </>
@@ -87,8 +87,8 @@ function Countdown({ d, hid, open, onChanged }: { d: Leaving; hid: string; open:
       <div className="flex flex-wrap items-center gap-4">
         <span className={`grid h-12 w-12 place-items-center rounded-lg ${past && open ? "bg-mis-soft text-mis" : "bg-accent-soft text-accent-ink"}`}><CalendarClock className="h-6 w-6" /></span>
         <div className="min-w-0 flex-1">
-          <p className="text-2xl font-semibold text-fg">{headline}</p>
-          <p className="text-sm text-fg-3">
+          <p className="text-[22px] font-semibold text-fg">{headline}</p>
+          <p className="text-[13px] text-fg-3">
             {d.leaves_on && !past ? `Last day ${fmt(d.leaves_on)}. ` : ""}
             {open ? `${open} of ${d.counts.total} still open${past ? `; these now need another owner, or ${d.leaver} on a call.` : "."}` : "Everything is done."}
           </p>
@@ -97,7 +97,7 @@ function Countdown({ d, hid, open, onChanged }: { d: Leaving; hid: string; open:
         {editing && (
           <div className="flex items-center gap-2">
             <input type="date" value={value} onChange={(e) => setValue(e.target.value)} aria-label="Last day"
-              className="h-9 rounded-lg border border-line bg-bg px-3 text-sm text-fg" />
+              className="h-8 rounded-md border border-line bg-bg px-3 text-[13px] text-fg" />
             <Button size="sm" onClick={() => void save()}>Save</Button>
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
           </div>
@@ -106,7 +106,7 @@ function Countdown({ d, hid, open, onChanged }: { d: Leaving; hid: string; open:
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-bg-sunk" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Done before the last day">
         <div className="h-full bg-ver transition-all" style={{ width: `${pct}%` }} />
       </div>
-      <p className="mt-1.5 text-xs text-fg-3">{d.counts.done} of {d.counts.total} done</p>
+      <p className="mt-1.5 text-[12px] text-fg-3">{d.counts.done} of {d.counts.total} done</p>
     </Card>
   );
 }
@@ -134,14 +134,14 @@ function Row({ it, n, hid, canMark, onChanged, wsId }: { it: Item; n: number; hi
           {it.done && <Check className="h-4 w-4" />}
         </button>
       ) : (
-        <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${it.done ? "bg-ver text-white" : "bg-bg-sunk text-fg-3"}`}>{it.done ? <Check className="h-4 w-4" /> : n}</span>
+        <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-semibold ${it.done ? "bg-ver text-white" : "bg-bg-sunk text-fg-3"}`}>{it.done ? <Check className="h-4 w-4" /> : n}</span>
       )}
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-fg-3"><k.Icon className="h-3.5 w-3.5" /> {k.label}{it.done ? " · done" : ""}</p>
+        <p className="flex items-center gap-1.5 text-[12px] font-medium text-fg-3"><k.Icon className="h-3.5 w-3.5" /> {k.label}{it.done ? " · done" : ""}</p>
         <p className="mt-1 text-[15px] leading-snug text-fg">{it.title}</p>
-        <p className="mt-0.5 text-xs text-fg-3">{it.detail}{it.done && it.marked_by ? ` Ticked off by ${it.marked_by}.` : ""}</p>
+        <p className="mt-0.5 text-[12px] text-fg-3">{it.detail}{it.done && it.marked_by ? ` Ticked off by ${it.marked_by}.` : ""}</p>
       </div>
-      {it.link && <Link href={it.link} className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-xs font-medium text-ver hover:underline">Open <ArrowRight className="h-3.5 w-3.5" /></Link>}
+      {it.link && <Link href={it.link} className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-[12px] font-medium text-ver hover:underline">Open <ArrowRight className="h-3.5 w-3.5" /></Link>}
     </li>
   );
 }

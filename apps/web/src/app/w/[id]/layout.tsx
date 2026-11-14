@@ -7,10 +7,10 @@ import { WorkspaceShellFromParams } from "@/components/workspace/WorkspaceShellF
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-fg-3">
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 text-[13px] text-fg-3">
         <span>Opening workspace…</span>
         {/* Pure CSS (no JS needed): if the app's scripts never load, e.g. mid-deploy, offer a way out after 8 s. */}
-        <a href="" className="reveal-late rounded-lg px-3 py-1.5 text-xs font-medium text-fg underline underline-offset-2">Taking a while? Reload the page</a>
+        <a href="" className="reveal-late rounded-lg px-3 py-1.5 text-[12px] font-medium text-fg underline underline-offset-2">Taking a while? Reload the page</a>
       </div>
     }>
       <WorkspaceShellFromParams>{children}</WorkspaceShellFromParams>

@@ -31,17 +31,17 @@ export function JoinClient() {
         <div className="flex justify-center"><Logo /></div>
         {state.error ? (
           <>
-            <p className="mt-6 text-xl font-semibold text-fg">This link doesn&apos;t work</p>
-            <p className="mt-2 text-sm text-fg-3">{state.error}</p>
+            <p className="mt-6 text-[16px] font-semibold text-fg">This link doesn&apos;t work</p>
+            <p className="mt-2 text-[13px] text-fg-3">{state.error}</p>
             <ButtonLink href="/" variant="secondary" className="mt-6">Go to the start page</ButtonLink>
           </>
         ) : state.name ? (
           <>
-            <p className="mt-6 text-xl font-semibold text-fg">Welcome, {state.name}</p>
-            <p className="mt-2 text-sm text-fg-3">Taking you to your handover…</p>
+            <p className="mt-6 text-[16px] font-semibold text-fg">Welcome, {state.name}</p>
+            <p className="mt-2 text-[13px] text-fg-3">Taking you to your handover…</p>
           </>
         ) : (
-          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-fg-3"><Spinner /> Checking your invite…</p>
+          <p className="mt-6 flex items-center justify-center gap-2 text-[13px] text-fg-3"><Spinner /> Checking your invite…</p>
         )}
       </div>
     </div>
