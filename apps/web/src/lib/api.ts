@@ -110,6 +110,8 @@ export type Status = "verified" | "supported" | "inferred" | "conflicting" | "mi
 
 export type ClaimSummary = {
   id: string;
+  /** short display id (CLM-019), by creation order in the workspace */
+  number?: number | null;
   type: string;
   type_label: string;
   text: string;
@@ -146,7 +148,7 @@ export type EvidenceInfo = {
   kind: string;
   author: string | null;
   occurred_at: string | null;
-  excerpt: { before: string; match: string; after: string; truncated_start: boolean; truncated_end: boolean };
+  excerpt: { before: string; match: string; after: string; truncated_start: boolean; truncated_end: boolean; line_start?: number | null };
 };
 
 export type ClaimDetail = ClaimSummary & {

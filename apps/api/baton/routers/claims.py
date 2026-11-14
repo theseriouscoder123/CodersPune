@@ -40,9 +40,16 @@ def _require_ledger_access(ctx: Ctx) -> None:
         raise HTTPException(403, "The ledger is visible to the reviewer and the leaver. The successor sees the approved handover.")
 
 
-def claim_summary(c: Claim, refs: list[str]) -> dict:
+def claim_numbers(db: Session, workspace_id) -> dict:
+    """Short display IDs (CLM-019): each claim's position by creation order in the workspace. Counted over all claims,
+    so a number never depends on who is looking. Links still use the real id."""
+    rows = db.execute(select(Claim.id).where(Claim.workspace_id == workspace_id).order_by(Claim.created_at, Claim.id))
+    return {cid: i for i, (cid,) in enumerate(rows, start=1)}
+
+
+def claim_summary(c: Claim, refs: list[str], number: int | None = None) -> dict:
     return {
-        "id": str(c.id), "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
+        "id": str(c.id), "number": number, "type": c.type, "type_label": TYPE_LABELS.get(c.type, c.type), "text": c.text,
         "status": c.status, "status_reason": c.status_reason, "origin": c.origin, "review_state": c.review_state,
         "subject_key": c.subject_key, "value": c.value, "stated": c.stated,
         "occurred_at": c.occurred_at.isoformat() if c.occurred_at else None,
@@ -100,7 +107,8 @@ def list_claims(tab: str = "all", status: str | None = None, type: str | None = 
     order = {"conflicting": 0, "missing": 1, "inferred": 2, "supported": 3, "verified": 4, "rejected": 5}
     rows.sort(key=lambda c: (order.get(c.status or "", 9), c.type, c.text))
     reviewed = sum(1 for c in live if c.review_state != "none")
-    return {"claims": [claim_summary(c, refs.get(c.id, [])) for c in rows], "status_counts": counts,
+    nums = claim_numbers(db, ctx.workspace.id)
+    return {"claims": [claim_summary(c, refs.get(c.id, []), nums.get(c.id)) for c in rows], "status_counts": counts,
             "type_counts": type_counts, "tab_counts": tab_counts,
             "progress": {"reviewed": reviewed, "total": len(live),
                          "supported_unconfirmed": sum(1 for c in live if c.status == "supported" and c.review_state == "none"),
@@ -134,8 +142,17 @@ def evidence_payload(ev: Evidence, ch: Chunk, src: Source, names: dict, mask: bo
         "location": ch.location, "kind": ch.kind, "author": ch.author,
         "occurred_at": ch.occurred_at.isoformat() if ch.occurred_at else None,
         "excerpt": {"before": tx(before), "match": tx(hit), "after": tx(after),
-                    "truncated_start": a > 0, "truncated_end": b < len(ch.text)},
+                    "truncated_start": a > 0, "truncated_end": b < len(ch.text), "line_start": _excerpt_line(ch, a)},
     }
+
+
+def _excerpt_line(ch: Chunk, offset: int) -> int | None:
+    """The source line the excerpt starts on, when the chunk knows its lines (files and notes); None for chat."""
+    loc = ch.location or {}
+    if not isinstance(loc.get("line_start"), int):
+        return None
+    n = loc["line_start"] + ch.text.count("\n", 0, offset) - int(loc.get("prefix_lines", 0) or 0)
+    return n if n >= 1 else None
 
 
 @router.get("/claims/{claim_id}")
@@ -145,14 +162,15 @@ def get_claim(claim_id: uuid.UUID, request: Request, db: Session = Depends(get_d
         raise HTTPException(404, "Claim not found")
     names = {str(m.id): m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == c.workspace_id))}
     rows = evidence_rows(db, [c.id]).get(c.id, [])
-    detail = claim_summary(c, list(dict.fromkeys(ref_for(*r) for r in rows)))
+    nums = claim_numbers(db, c.workspace_id)
+    detail = claim_summary(c, list(dict.fromkeys(ref_for(*r) for r in rows)), nums.get(c.id))
     detail["evidence"] = [evidence_payload(e, ch, s, names, mask=not ctx.is_reviewer) for e, ch, s in rows]
     if c.conflict_group_id:
         others = [o for o in db.scalars(select(Claim).where(Claim.conflict_group_id == c.conflict_group_id, Claim.id != c.id))]
         cited = claim_sources(db, [o.id for o in others])
         g = db.get(ConflictGroup, c.conflict_group_id)
         detail["conflict"] = {"id": str(g.id), "resolved": g.resolved, "resolution": g.resolution,
-                              "others": [claim_summary(o, []) for o in others if visible(ctx.viewer, cited.get(o.id, []))]}
+                              "others": [claim_summary(o, [], nums.get(o.id)) for o in others if visible(ctx.viewer, cited.get(o.id, []))]}
     if c.superseded_by:
         newer = db.get(Claim, c.superseded_by)
         detail["superseded_by_text"] = newer.text if newer else None
