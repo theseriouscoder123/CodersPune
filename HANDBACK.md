@@ -1,212 +1,207 @@
-# HANDBACK — Baton Round 2
+# HANDBACK — Baton Round 3 (The Finish)
 
-Written by Claude Code at feature freeze, 10 Nov 2026 (~00:30 IST). Everything here was checked against the running
-production system or the test suite; where something does not work or was not done, it says so.
+Written by Claude Code on 14 Nov 2026 (IST) and checked against production, the test suite and a clean clone. Where
+something is not done, estimated or simulated, it says so. Arch uses this file, `docs/DECISIONS.md`, `docs/TESTING.md`,
+`docs/ARCHITECTURE.md`, `docs/ROADMAP.md` and `docs/screenshots/` for the final PDF and the submission form.
 
 ## 1. Links
-- Live app: https://baton-lac.vercel.app   (demo path: **Try the demo**, no sign-up)
-- Repo: https://github.com/theseriouscoder123/CodersPune   (public: **yes**, checked unauthenticated)
+
+- Live app: https://baton-lac.vercel.app (click **Try the demo**; no sign-up)
+- Repo: https://github.com/theseriouscoder123/CodersPune (public)
 - API health: https://baton-lac.vercel.app/api/health
-- API (direct): https://baton-api-peach.vercel.app (the web app proxies `/api/*` to it, so the browser sees one origin)
+- API (direct): https://baton-api-peach.vercel.app (the web app proxies `/api/*` to it)
 
-## 2. Final judge tour
-Exact path that works on production (the e2e test drives the same path):
+## 2. Judge tour (works on production; the e2e suite drives the same paths)
 
-1. Landing → **Try the demo**. Opens the visitor's own sandbox on **Connect**: 4 sources (GitHub repo, meeting notes, `#dev`, `#core-team`). `#core-team` is labelled visible to reviewers, Kabir and Rohan, and the page shows "2 secrets removed in total". A **Demo tour** checklist (bottom right) tracks the six steps.
-2. **Reconstruct:** counts by status (demo: 0 verified, 58 supported, 4 inferred, 2 conflicting, 4 missing; 68 live claims), counts by type, decision timeline (the Supabase → Firebase Auth reversal shows as superseded), "How this ledger was built" run log.
-3. **Verify** (as Meera, reviewer):
-   - Open the FCM claim (G1): evidence from PR #88 highlighted, "Why supported: Quote found in PR #88 (match 100) · verifier: supports". Confirm → Verified.
-   - **Conflicts** tab: G3 (5 MB in notes vs 2 MB in `upload.ts:41`). Pick one or keep both as an open risk.
-   - **Missing** tab: G5 and G14 plus two more checklist items. Copy questions for the leaver (Markdown, GitHub issue, or email if configured).
-4. **Review** (`Preview what Neha will see`): 54 items shared, 10 withheld with the reason "cites #core-team" (the sponsor deal G8 among them), and 4 inferred claims not shared. Approve v1; the dialog warns about unresolved conflicts and unreviewed claims first.
-5. **Handover:**
-   - Persona switcher → **Neha**: Start here (G12, G4 …), Who owns what (G2), Key decisions (G1, G7), Risks and conflicts (G3, G13, G10), Dependencies, **Unresolved** (G5, G14 …).
-   - No TechNova or ₹40,000 anywhere. Phone numbers masked.
-   - Any source ref opens the evidence drawer.
-   - **Ask the handover** answers with numbered citations to approved items.
+1. **Try the demo** opens your own copy of the synthetic "Campus Events App" on **Connect**: 4 sources with their access lists, `#core-team` restricted, and 2 fake secrets removed.
+2. **Reconstruct:** counts by status and type. The **decision timeline** shows "Describes an earlier state" on the Supabase line, a contradiction on the upload limit, and "Probably done or parked" on Rohan's old push-reminder task. Click a label to see why, and override it.
+3. **Verify** (as Meera): open a claim to see the highlighted quote and why it has its status. On the **Missing** or **Conflicts** tab, **Prepare questions for the leaver** starts the gap interview. Switch to **Rohan** to answer it; the answers become cited leaver testimony.
+4. **Review:** what Neha will see, with counts (**52 shared · 4 earlier decisions as history · 10 withheld**). The sponsor deal is withheld with the reason. "Neha needs to add the TechNova logo…" is flagged *Looks like Neha's own work* and already has a rewrite from #dev that Neha can read. Approve v1.
+5. **Handover** as **Neha**: Start here, owners, decisions (with "Earlier decision, since changed"), risks, dependencies, Unresolved. She marks items *Got it*, *Ask a question* or *Not mine*. As Meera, answer her question in place; as Neha, close it.
 
-Differences from docs/04 §6:
-- The steps are pages in a stepper (Connect / Reconstruct / Verify / Review / Handover), not tabs on one screen.
-- G6 (leaderboard) is phrased "on hold / empty skeleton behind a flag", so it is Supported rather than Inferred. The spec accepts both.
+## 3. Complete feature list (one per line)
 
-## 3. Feature status
-| Feature (Round 1 plan name) | Status | Notes (what works, limits) |
-|---|---|---|
-| Source connectors | **done** | GitHub public, or private via a read-only token used once and never stored (README/docs, commits + per-file commit stats, PRs, issues, review comments, CODEOWNERS, CI workflows, `.env.example`, manifests). Notes: Markdown, text, PDF and **Word .docx** (new). Chat: Slack and **Discord** exports. The demo GitHub source is a GitHub-API-shaped synthetic fixture through the same normaliser (D5). |
-| Access tagging | **done** | Every source and chunk carries an access list. Default deny. Checked in the server on every read; a claim is visible only if all cited sources are. A 40-endpoint isolation test covers it. |
-| Secret scrubbing | **done** | Keys, tokens and passwords replaced before storage and before any model call; per-source scrub report. PII (phones, emails) masked for non-reviewers. |
-| Claim extraction | **done** | Typed claims with exact quotes, chunk ids and timestamps via JSON-schema structured output. Batches never mix access groups. One retry on invalid JSON, then the batch fails visibly. |
-| Expected-knowledge checklist | **done** | From open PRs/issues by the leaver, env keys, workflows, files mostly maintained by the leaver. Uncovered items become Missing. |
-| Verification and status rules | **done** | Quote match (≥ 90) as a hard gate, isolated LLM verifier, five statuses from the pure `status.py`. `VERIFIER=nli` option not used (no RAM on Vercel; D8). |
-| Review workspace | **done** | Evidence panel; edit (re-verifies), confirm, reject, promote-with-note; conflict resolution. Versions and approval. New: bulk actions, shortcuts, progress meter, pre-approval warnings, search, activity log, Undo on confirm/reject, auto-advance to the next unreviewed claim, copy-a-link to a claim (D45). |
-| Role-filtered handover | **done** | Successor view (Start here, owners, decisions, risks, dependencies, unresolved); Markdown export; print/PDF. New: scoped multiple handovers, version changelog, Ask the handover. |
-| Gap interview | **deferred-R3 (#1)** | R2 has the manual precursor: copyable / GitHub-issue / emailable "Questions for the leaver". `sources.type` already allows `testimony`. |
-| Conflict and supersession timeline | **partial (R2 basics) / deferred-R3 (#2)** | R2: deterministic conflict detection by value class, reversal language → superseded, read-only decision timeline. R3: interactive timeline and a richer reversal-vs-contradiction model. |
-| Acknowledgement and visibility preview | **preview done in R2; acknowledgement deferred-R3 (#3)** | The reviewer's visibility preview (withheld items and why) was pulled into R2 because the core loop needs it. The `acknowledgements` table exists; no UI yet. |
-| Auth (R1: login) | **changed** | No OAuth. Persona switcher for the demo, plus per-member private invite links and **locked identities** for real teams (D1, D20). |
-| *New:* Re-run modes | done | Refresh keeps all review work; stale evidence follows edited text or flags the claim (D19, D27). |
-| *New:* Teams and notifications | done | Invite links, optional Gmail SMTP email and Slack webhooks (off by default; D29), workspace export and delete (D34). |
-| *New:* Operations | done | Abuse limits, daily sandbox clean-up cron, pipeline-health page, AI key pools with Gemini → Groq fallback (D26), security headers, timeouts, row locks (D24, D28, D35–D39). |
-| *New:* Getting-started checklist, accessibility | done | D30, D33 (axe: 0 WCAG 2.1 AA violations). |
+**Connect**
+- Connect a public GitHub repo (README, docs, commits with per-file stats, PRs, issues, review comments, CODEOWNERS, workflows, `.env.example`, manifests)
+- Connect a private GitHub repo with a read-only token that is used once and never stored
+- Upload notes as Markdown, text, PDF or Word (.docx)
+- Import Slack and Discord chat exports
+- An access list on every source (default deny), shown on Connect
+- Change a source's access list after creation (admin, audited, effective immediately everywhere)
+- Secrets scrubbed before storage and before any AI call, with a per-source scrub report
 
-## 4. Planted scenario results (production demo ledger)
-| G-id | Produced? | Status shown | Correct? | Note |
-|---|---|---|---|---|
-| G1 | yes | supported (→ verified on confirm) | yes | FCM replaced OneSignal; cites PR #88 + `notifications.ts` |
-| G2 | yes | supported | yes | Rohan 31 of 33 commits on `deploy.yml` (commit-stats chunk) |
-| G3 | yes | conflicting | yes | 2 MB (`upload.ts:41`) vs 5 MB (notes 2 Apr) |
-| G4 | yes | supported | yes | PR #142 waiting for Dr. Rao |
-| G5 | yes | missing | yes | Firebase owner/billing unknown (checklist) |
-| G6 | yes | supported | yes (status) / citation miss | "Empty skeleton behind a feature flag" cites PR #126, not the issue #120 comment the golden ledger expects |
-| G7 | yes | supported; Jan Supabase claim superseded | yes | Not flagged as a conflict |
-| G8 | yes | supported, **withheld from Neha** | yes | Visible to Meera, Rohan and Kabir only |
-| G9 | n/a (no claim) | 2 redactions | yes | Neither fake key exists anywhere in the DB |
-| G10 | yes | supported | yes | Recurring Wi-Fi upload timeouts; compress client-side |
-| G11 | yes | supported | yes | Cloudinary |
-| G12 | yes | supported | yes | Vercel transfer to Neha before 15 Nov |
-| G13 | yes | supported | yes | No tests for the RSVP flow |
-| G14 | yes | missing | yes | Issue #131 status unknown |
-| G15 | n/a (no claim) | phone masked | yes | Masked for everyone except the reviewer |
+**Reconstruct**
+- Typed claims (decision, ownership, open work, next action, risk, recurring issue, dependency, contact, open question) with exact quotes
+- Expected-knowledge checklist from the repo; uncovered items become Missing
+- Resumable, checkpointed pipeline with a live run page
+- Re-run modes: Refresh keeps all review work; evidence follows edited source text or flags "source changed"
+- Duplicate claims merged by rules, only when access is identical (audited)
+- **Decision timeline (#2):** reversal vs earlier state vs contradiction, each with its deciding signal, filters and a "why" drawer
+- **Stale open work (#2):** overtaken tasks flagged "Probably done or parked" with the reason; the reviewer can keep them open
+- Reviewer override of how two claims relate (audited, survives re-runs)
 
-Eval totals: claim recall 13/13, status accuracy 13/13, citation precision 9/10, permission leaks 0, secret leaks 0.
+**Verify and review**
+- Five statuses from a pure rules function: verified, supported, inferred, conflicting, missing
+- Quote check (≥ 90 fuzzy match) as a hard gate; separate isolated AI verifier
+- Evidence panel with the quote highlighted in its source, and "why this status"
+- Confirm, edit (re-verified), reject, promote with a note; resolve conflicts (resolving counts as a review)
+- Bulk actions, keyboard shortcuts, Undo, auto-advance, a progress meter, copy-link to a claim
+- Ctrl+K search over claims and sources; an activity log with CSV export
+- **Gap interview (#1):** questions from Missing and Conflicting items, editable, sent to the leaver (or answered on their behalf, labelled so)
+- **Leaver testimony (#1):** answers become a cited source whose access is never wider than the items answered; conflict picks propose a resolution
+- Copy, GitHub-issue or .md export of open questions
 
-## 5. Stack, services and disclosures (with versions and licences)
-**Backend (Python 3.12):**
+**Handover**
+- Visibility preview: exactly what the successor will see, what is withheld and why
+- One count for every screen: shared, history and withheld
+- **Withheld items that look like the successor's own work, flagged (#3)**, with rewrite or change-access actions
+- **Re-rendering a withheld item from the successor's accessible sources only (#3)**, quote-checked, verified and approved before sharing
+- Versioned approvals with notes; "what changed since vN"; version history
+- Successor view: Start here (their own tasks first), owners, decisions with history, risks, dependencies, Unresolved
+- "Not yet confirmed by a person" marker on AI-checked items
+- **Successor acknowledgement (#3):** Got it / Ask a question / Not mine per item, per version, with progress
+- **Questions tracked to closure (#3):** the reviewer answers in place and the successor closes; responses carry over or reset between versions
+- Several scoped handovers per project
+- Ask the handover: answers cite approved, permitted items only
+- Print / PDF and Markdown export (labelled history, key quotes)
 
-| Library | Version | Licence |
-|---|---|---|
-| FastAPI | 0.162.2 | MIT |
-| Pydantic | 2.14.3 | MIT |
-| pydantic-settings | 2.16.2 | MIT |
-| SQLAlchemy | 2.1.8 | MIT |
-| Alembic | 1.20.1 | MIT |
-| psycopg | 3.3.8 | LGPL-3.0 |
-| pgvector (Python) | 0.5.1 | MIT |
-| httpx | 0.28.1 | BSD-3 |
-| rapidfuzz | 3.14.6 | MIT |
-| pypdf | 7.0.0 | BSD-3 |
-| python-multipart | 0.0.33 | Apache-2.0 |
-| uvicorn (local dev) | 0.54.0 | BSD-3 |
+**Teams and operations**
+- Per-visitor demo sandbox; persona switcher resolved server-side
+- Private invite links and locked identities for real teams
+- Optional email (Gmail SMTP) and Slack notifications
+- Workspace JSON export and deletion
+- Abuse limits, daily clean-up, pipeline-health page
+- AI key pools with Gemini → Groq fallback
+- Security headers, timeouts, row locks; WCAG 2.1 AA checked in light and dark
 
-**Dev tooling:** pytest (MIT), ruff (MIT), uv (MIT/Apache-2.0).
+## 4. Improvements completed since Round 2
 
-**Frontend:**
+**The three named improvements**
 
-| Library | Version | Licence |
-|---|---|---|
-| Next.js | 16.4.5 | MIT |
-| React / React DOM | 19.3.0 | MIT |
-| Tailwind CSS | 4.3.5 | MIT |
-| TypeScript | 5 | Apache-2.0 |
-| lucide-react | 0.460.0 | ISC |
-| ESLint + eslint-config-next | 9 / 16.4.5 | MIT |
-| Playwright | 1.56.1 | Apache-2.0 |
-| @axe-core/playwright | 4.10.2 | MPL-2.0 |
+| # | As named in Round 2 | Delivered | Decision |
+|---|---|---|---|
+| 1 | Gap interview: targeted questions from Missing and Conflicting items; answers become a cited "leaver testimony" source | **Done.** Reviewer drafts, edits and sends; the leaver answers on their own page; testimony source with intersected access; testimony claims with explicit status rules; conflict picks propose a resolution; the successor sees testimony only after approval. No AI needed. | D50 |
+| 2 | Conflict and supersession timeline: reversed decision vs genuine contradiction; interactive timeline | **Done.** Pure relation rules with recorded signals, date sanity, stale open work, reviewer overrides that survive re-runs, an interactive timeline, and the successor sees history and "changed on". No AI. | D52 |
+| 3 | Successor acknowledgement and visibility diff with re-rendering | **Done**, except a person-to-person diff screen (see §10). Acknowledgement per version with carry-over and reset; questions answered and closed; withheld-but-theirs warnings; re-rendering from accessible sources only, with a test that pins what the AI receives. | D53, D54, D59 |
 
-**Fonts:** Fraunces, Geist, Geist Mono (SIL OFL).
+**Round 2 tester findings fixed (F1–F15 in `docs/07_ROUND3_PLAN.md`)**
+- One count for every screen (F1)
+- "Not confirmed by a person" marker, and resolving a conflict counts as a review (F2)
+- Duplicate merge (F3)
+- Start here without stale or other people's tasks (F4)
+- No duplicate citations (F5)
+- Reviewer named in the successor's "Ask" line (F6)
+- Clickable cards and section pills (F7)
+- Word-prefix search (F8)
+- No persona-switch 403s (F9)
+- Locked-step tooltips (F10)
+- Instant conflict-resolve feedback (F11)
+- Faster pages (F12)
+- Full-height evidence panel (F13)
+- Gap interview entry point (F14)
+- Successor wording for conflicts (F15)
+
+**Other**
+- Admin can change source access (D48)
+- History labelled instead of struck through, and key quotes in the export (D59)
+- API moved next to the database (D58)
+- A broken decisions table fixed
+
+## 5. Architecture and implementation summary
+
+See `docs/ARCHITECTURE.md` (as built, with a diagram). In short:
+- **Web:** Next.js 16 on Vercel, proxying `/api/*` to FastAPI on Vercel Python Functions (region `cle1`).
+- **Database:** Neon Postgres 16 with pgvector and full-text search; 23 tables over migrations 0001–0006.
+- **Pipeline:** a resumable 9-step pipeline driven by polling.
+- **Trust core:** `status.py`, `acl.py`, `quote_match.py` and `scrubber.py`, all pure and unit-tested.
+- **AI** proposes claims, verifies them separately, and rewrites withheld items. It never decides statuses, relations, permissions or interview answers.
+
+## 6. Testing details
+
+From `docs/TESTING.md` §Round 3, all produced on 14 Nov 2026:
+- **API tests:** 214 passed, 0 failed (real Postgres).
+- **Production e2e:** 17/17 passed, covering the judge flow, interview, timeline, acknowledgements and rewrites, and counts across screens, plus axe accessibility in light and dark.
+- **Citation eval** (production demo ledger):
+  - recall 13/13, status accuracy 13/13, citation precision 9/10 (target ≥ 90% met);
+  - 0 permission leaks, 0 secret leaks;
+  - Round 3 checks: relations correct for G3 and G7, stale work flagged, re-rendered claim 1/1 clean.
+- **Permission sweep:** every GET route as the successor, for every id in an approved full demo copy: 0 leaks in 179 requests.
+- **Successor readiness (simulated, 6 blind AI testers):**
+  - with Baton: 10/10 in about 14 s, opening 1–2 files;
+  - raw sources: 10/10 in about 37 s, opening 12 files;
+  - the first Baton run scored 9/10 and led to two fixes (D59).
+  - Not real people; limits stated in TESTING.
+- **Leaver effort:** **estimate** about 10–15 min for the 5-question demo interview. Not measured with a person.
+- **Performance** (production, from India): warm API calls 0.4–0.55 s; hard loads 1.5–2.0 s; revisiting a step about 0.1 s.
+- **Clean clone:** README setup verified with no AI key: migrations, frozen demo, eval, API, web build and demo sandbox.
+- **Reliability matrix:** for every new screen (bad input, HTML, repeats, wrong persona, AI down, empty, phone). See TESTING.
+
+## 7. Roadmap
+
+See `docs/ROADMAP.md`.
+- **Phase 1 (17 Nov – 20 Dec 2026):** real user sessions and one real DevClub handover.
+- **Phase 2 (Jan – Feb 2027):** GitHub sign-in, GitHub App for private repos, scheduled Refresh, a live Slack connector, overdue question tracking.
+- **Phase 3 (Mar – Apr 2027):** extraction quality across models, a person-to-person diff, larger repos, a knowledge-risk panel.
+
+Each phase has effort estimates, exit tests and risks with mitigations.
+
+## 8. Stack, services and disclosures
+
+Unchanged from Round 2 except where noted.
+
+**Backend:** Python 3.12, FastAPI 0.162, Pydantic 2.14, SQLAlchemy 2.1, Alembic 1.20, psycopg 3.3 (LGPL-3.0), pgvector 0.5, httpx 0.28, rapidfuzz 3.14, pypdf 7.0, python-multipart; pytest, ruff, uv.
+
+**Frontend:** Next.js 16.4, React 19.3, Tailwind CSS 4.3, TypeScript 5, lucide-react (ISC), Playwright 1.56, @axe-core/playwright (MPL-2.0). Fonts: Fraunces, Geist, Geist Mono (OFL).
 
 **AI models:**
+- Google Gemini API: `gemini-3.5-flash` (extraction), `gemini-3.5-flash-lite` (verification, coverage, Ask, rewrites), `gemini-3.1-flash-lite` (fallback).
+- Groq: `openai/gpt-oss-120b` and `openai/gpt-oss-20b` (fallbacks).
+- Blind testers for the readiness study: Claude Sonnet via Claude Code (testing only, not in the product).
 
-| Provider | Model id | Purpose |
-|---|---|---|
-| Google Gemini API | `gemini-3.5-flash` | Extraction (demo ledger) |
-| Google Gemini API | `gemini-3.5-flash-lite` | Isolated verification, checklist coverage, Ask |
-| Google Gemini API | `gemini-3.1-flash-lite` | Fallback |
-| Groq | `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | Fallbacks for extraction (120b) and verification/Ask (20b); not used for the demo ledger |
+**Services:**
+- Vercel: 2 projects, Hobby; the API is in region `cle1` since 14 Nov.
+- Neon Postgres: free, us-east-2.
+- GitHub REST API.
+- Optional: Gmail SMTP, Slack webhooks.
 
-Calls are REST with JSON-schema output (no SDK). Production holds key pools of 3 Gemini and 2 Groq keys. Calls rotate across keys and fall back across providers (D26).
+**Data:** the synthetic "Campus Events App" dataset written for this project. One #dev message was added in Round 3 (D55, documented in `docs/04_DEMO_DATA.md`).
 
-Production chains:
-- Extraction: `gemini-3.5-flash` → `gpt-oss-120b` → `gemini-3.1-flash-lite` → `gemini-3.5-flash-lite`.
-- Verification/Ask: `gemini-3.5-flash-lite` → `gpt-oss-20b` → `gemini-3.1-flash-lite` → `gpt-oss-120b`.
+**Scaffolding:** `create-next-app`; no UI kit.
 
-All five keys were checked live on 10 Nov, including structured extraction on both Groq models with verbatim quotes.
+**AI coding assistance:** Claude Code (Anthropic) wrote the code under Arch's direction.
 
-**External services:**
-- Vercel: two projects, Hobby plan; Next.js + Python Functions, with a daily cron.
-- Neon Postgres: free plan, pooled endpoint, pgvector, full-text search.
-- GitHub REST API (read-only token).
-- Optional: Gmail SMTP, Slack incoming webhooks.
+## 9. Changes from the plan
 
-**Datasets:** synthetic "Campus Events App" dataset written for this project (`demo/`: GitHub-shaped fixture, meeting notes,
-Slack export, `golden_ledger.json`). Public repos used during testing: `pallets/itsdangerous`, `pallets/markupsafe` (D17).
+Round 3 deviations are D47–D59 in `docs/DECISIONS.md`:
+- **No demo video** (not required) (D47).
+- **Access-list editing added** (D48).
+- **Testimony status rules** (D50).
+- **Count, duplicate and speed fixes** (D56–D58).
+- **Changes from the readiness test** (D59).
 
-**Templates and generators:** `create-next-app` for `apps/web`. No UI kit or template (shadcn/ui was allowed but not used).
+The successor-readiness measurement uses simulated testers rather than the 35 user tests the Round 1 PDF planned.
 
-**AI coding assistance:** Claude Code (Anthropic) wrote most of the code under Arch's direction.
+## 10. Not done, estimated or limited (honest)
 
-## 6. Architecture as built
-```mermaid
-flowchart LR
-  B[Browser] --> W[Next.js 16 on Vercel]
-  W -- "/api/* rewrite (same origin)" --> A[FastAPI on Vercel Python Functions]
-  A --> P[(Neon Postgres: pgvector + tsvector)]
-  A --> L[Gemini / Groq: JSON-schema output, key pools, fallback]
-  A --> G[GitHub REST]
-  A -. optional .-> N[Gmail SMTP / Slack webhooks]
-  subgraph Pipeline [resumable, checkpointed slices of about 45 s]
-    I[ingest + scrub + ACL tag] --> C[checklist] --> X[extract per-ACL batches] --> V[cover] --> M[quote match] --> F[isolated verify] --> K[conflicts] --> S[status.py] --> H[handover]
-  end
-  A --- Pipeline
-```
+- **Person-to-person visibility diff screen:** not built (Round 3 cut list item 2). The preview shows the successor's view and withheld items, and the version changelog shows changes after the permission filter.
+- **Real people:** none have tested Round 3 yet. The readiness numbers come from simulated AI testers, and leaver effort is an estimate. The product logs real interview durations automatically.
+- **Email delivery of the interview link:** uses the existing optional Gmail SMTP path. Copying the link is the default.
+- **Live re-rendering on custom workspaces:** works but uses the AI (rate-limited, with a clear message when the quota is out). The demo's rewrites are precomputed.
+- **Live AI depends on free quotas**, and extraction recall is lower on the Groq fallback (9–10/13 in Round 2 runs). The demo never calls the AI.
+- **No real sign-in:** a persona switcher for the demo, plus invite links for real teams. Sources are snapshots; private repos can't auto-refresh.
+- **A deploy drops in-flight requests.** Runs resume on the next poll. No deploys after the freeze.
+- **Keys to rotate after the hackathon:** Neon password, 4 Gemini keys, 2 Groq keys, the GitHub token, the Gmail app password.
 
-Differences from docs/02:
-- Hosting is Vercel + Neon, with no Docker in production (D8).
-- The pipeline is advanced by the run page's polling (`POST /runs/{id}/advance`) instead of background workers.
-- The demo template is seeded from a frozen, eval-checked ledger (D15) and cloned per visitor (~1 s).
-- Added tables: `llm_calls`, `member_invites`, `member_bindings`, `notifications` (migrations 0002–0005).
-- Added row locks, per-transaction timeouts and hot-path indexes.
+## 11. Role and contribution
 
-## 7. Testing
-- **Unit and integration:** 173 passed, 0 failed (`apps/api/tests`, real Postgres). They cover:
-  - the trust core (status, quote match, scrubber, ACL, reconstruction rules);
-  - end-to-end permissions, a 40-endpoint isolation sweep and concurrency;
-  - the pipeline, re-runs and stale evidence;
-  - LLM routing and prompt safety;
-  - limits, security headers and notifications.
-- **Eval, four runs:**
-  - Production demo ledger (Gemini 3.5 Flash): recall 13/13, status accuracy 13/13, citation precision 9/10.
-  - Three live runs on 10 Nov, with extraction on Groq `gpt-oss-120b` because Gemini was over quota or returning 503s: recall 9/13, 9/13 and 10/13. Status accuracy always equalled recall, so no produced claim was mis-graded.
-  - Misses trace to extraction batches that failed on Groq's per-minute limit. A retry added during testing raised recall from 9 to 10.
-  - **0 permission leaks and 0 secret leaks in all four runs.**
-  - Details: `docs/TESTING.md` §2.
-- **Custom repos on production:** `pallets/markupsafe` (75 claims) and `sindresorhus/slugify` with a Word note (85 claims) both completed. The slugify run first exposed a Unicode bug in the quote matcher, which was fixed, and the run was then resumed from the failed step.
-- **Security assessment:** every real secret value was searched in git history, the tree, the web bundle and 25 live production responses: 0 leaks. Planted-secret tests cover the error paths (D40).
-- **Cold start:** demo ready in 4.7 s on a fast network and 3.4 s on slow 3G; claims list in 3.0 s.
-- **E2E:** Playwright against production, **13/13 passed** on 10 Nov 2026: judge flow, search, checklist, phone layout, plus axe accessibility audits with 0 violations.
-- **Known failures:** none open. One e2e run right after a deploy stalled on a page whose scripts didn't load; a re-run passed (see §9).
+Arch writes this in his own words (form rule). Facts he can use:
+- Team LoneWolf is one person.
+- Arch set the product direction and the trust rules, chose the scope, approved the Round 3 plan, made the calls on cuts and deviations, held all accounts and keys, ran the reviews of each milestone, and submits.
+- Claude Code wrote the code, tests and documents under his direction.
 
-Full details: `docs/TESTING.md`.
+## 12. Commit-history facts
 
-## 8. Changes from the Round 1 plan
-Full list in `docs/DECISIONS.md` (D1–D45). The main ones:
-- **Hosting:** free-tier Vercel + Neon with a resumable pipeline (D8).
-- **No login:** persona switcher, then invite links and locked identities (D1, D20).
-- **LLM:** Gemini with fallback chains, key pools and Groq (D11, D16, D26).
-- **Demo:** a frozen, precomputed demo ledger (D15).
-- **Earlier than planned:** the visibility preview, built in R2.
-- **Added beyond the plan:** Ask, scoped handovers, re-run modes, stale-evidence handling, search, activity log, changelog, notifications, export/delete, accessibility and hardening (D19–D45).
-
-## 9. Known issues and limitations (honest)
-- **Live AI depends on free quotas.** These are now spread over 3 Gemini and 2 Groq keys with automatic fallback, which is much more headroom, but still finite. The precomputed demo never needs the AI.
-- **Extraction quality depends on the model.** With Gemini over quota or overloaded, Groq-based runs found 9–10 of 13 planted claims instead of 13. Safety held in every run. The demo ledger is precomputed with Gemini.
-- **A deploy drops in-flight requests**, for example a running pipeline slice. Runs resume on the next poll, but deploys should be avoided while judges are on the site.
-- **Ask quality varies with the model.** It sometimes calls a well-covered question "partial", for example "Why did we leave OneSignal?", because the ledger states the move but not every reason.
-- **Email and Slack are untested against real services.** They are built and tested with fake transports only. They stay off until SMTP settings or a webhook are added.
-- **Deploy-moment glitch:** a page loaded during a deploy can stall while old and new assets mix. Mitigations: a CSS-only "Reload" hint after 8 s, and no deploys while judges are on the site.
-- **One unexplained 58 s request** was seen on production. It wasn't reproducible, and the free plan kept no logs. Timeouts and a client retry now bound it.
-- **Private repos can't be refreshed automatically**, because their token is never stored.
-- **Large custom repos** read at most about 60k characters of history per run, prioritised (D17). Very old history may be skipped; the UI says so.
-- **Secrets pasted during development:** Arch should rotate the Neon password, all 3 Gemini keys, both Groq keys and the GitHub token after the hackathon.
-
-## 10. Round 3 readiness
-| Improvement | Seams already in place | Rough effort |
-|---|---|---|
-| #1 Gap interview with cited testimony | `sources.type` allows `testimony`. Questions are generated per claim and are already permission-filtered for the leaver (the email path). A notification channel exists. | 1.5–2 days: answer form/link for the leaver, testimony source + chunks, re-run status for answered claims |
-| #2 Conflict and supersession timeline | `claims.superseded_by`, `subject_key`, `conflict_groups` with resolution; the timeline endpoint exists; deterministic reversal and historical rules. | 1.5 days: interactive timeline UI, explicit "reversed vs contradicts" classification with evidence for each |
-| #3 Acknowledgement and visibility diff with re-rendering | The `acknowledgements` table exists. Per-viewer projection and the version changelog exist. The visibility preview is done. | 2 days: per-item acknowledge/track to closure, and re-rendering withheld claims from accessible sources only (needs a constrained re-extraction per viewer) |
-
-## 11. Commit-history facts
-- First commit: **2026-11-08 16:40:42 +05:30** (`ea1e64d`, planning docs and repo basics), after the window opened (Sun 8 Nov 2026 10:00 IST).
-- Commits at freeze: 69 (including this handback refresh); see `git log`. History is never squashed. Each states what changed; AI-assisted commits carry a Claude co-author line.
-- No code written before the build window was imported. The planning documents in `docs/` (written before the window) are not code.
+- Round 2's last commit: `2772dae`, 2026-11-11 09:11 IST. No commits between then and the Round 3 window.
+- Round 3's first commit: `f5c56ae`, **2026-11-14 00:06 IST** (the plan), 7 minutes after the window opened. The first code followed at 00:15 (`5f5c51a`).
+- 85 commits in total at the time of writing, 14 of them in Round 3, plus this documentation commit. History is never squashed.
+- No code was written outside the build windows; Round 3 builds on our own Round 2 code.

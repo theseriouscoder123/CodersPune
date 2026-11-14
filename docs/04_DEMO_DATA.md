@@ -26,7 +26,7 @@ six-month internship. **Neha** (2nd-year member) takes over. **Meera** (club coo
 |---|---|---|---|
 | `devclub/campus-events-app` | fixture (GitHub-shaped JSON) | all members | README, `docs/setup.md`, `.env.example`, `.github/workflows/deploy.yml`, `src/lib/upload.ts`, `package.json`, ~60 commits, ~12 PRs with comments, ~15 issues |
 | Meeting notes | upload (3 × .md) | all members | `2026-02-10-kickoff.md`, `2026-04-02-fest-prep.md`, `2026-10-28-handover-sync.md` |
-| `#dev` | chat_export (Slack JSON) | all members | ~120 messages, Jan–Nov 2026 |
+| `#dev` | chat_export (Slack JSON) | all members | ~70 messages, Jan–Nov 2026 (one added in Round 3, see §4) |
 | `#core-team` | chat_export (Slack JSON) | **reviewer + Kabir + Rohan only** (Neha excluded) | ~25 messages, incl. sponsor details |
 
 Fixture format: mirror the GitHub REST shapes (`repo.json`, `commits.json` with `files[]`, `pulls.json`,
@@ -54,6 +54,14 @@ the same normaliser as the live GitHub connector. Locations get pseudo-permalink
 | G13 | risk | The RSVP flow has no automated tests | PR #142 review comment by Neha: "there are no tests for the RSVP flow at all" | supported |
 | G14 | open_work | Issue #131 (duplicate reminder notifications on Android), assigned to Rohan: status unknown | Issue #131 open, assigned rohan; `#dev`: "I'll look at the duplicate notifs later" (doesn't establish status) | missing (checklist item not covered) |
 | G15 | (PII masking) | No claim; Rohan's number must be masked for non-reviewers | `#dev`: "call me on +91 90000 00000 if deploy breaks" | masked in Neha's and Rohan's views of the quote |
+
+**Added in Round 3 (D55):** one #dev message on 5 Nov from Rohan: "heads up for the fest page: the sponsor logo has to be
+on it before we launch. neha, can you pick that up?". It names neither the sponsor nor the amount. It gives improvement #3
+an honest, successor-visible source for one restricted item: Neha's withheld task "Neha needs to add the TechNova logo to
+the app's fest page" (from #core-team) is re-rendered as "The sponsor logo has to be on the fest page before launch",
+cited to #dev. The sponsor payment item (G8) correctly stays withheld, because no source Neha can read states it.
+The golden ledger is unchanged; the eval's Round 3 section checks re-rendered claims for a found quote, visibility to
+Neha, and no sponsor name or amount.
 
 Also generate realistic **noise**: routine commits, small talk, event-planning chatter and closed PRs, so the extractor
 has to find the signal. Include 1–2 harmless decisions not in the golden set (e.g. switching to Tailwind). These are fine to surface.
