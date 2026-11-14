@@ -104,6 +104,34 @@ Live AI features (custom repos, re-runs, Ask, rewriting withheld items) need `LL
 `GROQ_API_KEYS`. With a key, `uv run python -m baton.seed_rerender` precomputes the demo's rewrites (improvement #3).
 Without it, those rewrites are simply absent. Email and Slack are optional; the app runs fully without them.
 
+## Self-hosting (one command)
+
+Handover data is sensitive, so Baton can run entirely inside your network:
+
+```bash
+docker compose --profile full up --build      # Postgres + API + web; open http://localhost:3000
+```
+
+The demo is seeded from the frozen ledger, so no AI key is needed to try it. For live runs, add a `.env` with
+Gemini or Groq keys, **or point Baton at your own model**: any OpenAI-compatible server (OpenAI, Azure OpenAI,
+vLLM, LM Studio, a local Ollama) via `OPENAI_BASE_URL`; see `.env.example`. Checked on 14 Nov 2026 from a clean
+clone with no `.env`: the stack starts, and the browser judge flow and knowledge-risk tests pass against it (10/10).
+
+## GitHub Action: knowledge risk in any repo
+
+The same rules as the Knowledge risk panel run as a GitHub Action, with no AI and no hosted service. Ownership
+comes from `git log`, and open assigned issues and PRs from the workflow's own token. The report goes to the job
+summary and a JSON artifact.
+
+```yaml
+- uses: actions/checkout@v4
+  with: { fetch-depth: 0 }
+- uses: theseriouscoder123/CodersPune/.github/actions/knowledge-risk@main
+  # with: { since: "2 years ago", fail-on-high: "false" }
+```
+
+This repo runs it weekly (`.github/workflows/knowledge-risk.yml`).
+
 ## Architecture
 
 ```

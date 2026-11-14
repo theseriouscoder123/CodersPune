@@ -1,0 +1,27 @@
+# Weekly knowledge-risk report for this repository (Baton's own Action, dogfooded). Read-only permissions.
+# Use it in another repo with:  uses: theseriouscoder123/CodersPune/.github/actions/knowledge-risk@main
+name: Knowledge risk
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/actions/knowledge-risk/**", ".github/workflows/knowledge-risk.yml", "apps/api/baton/reconstruct/risk.py"]
+  schedule:
+    - cron: "30 3 * * 1"  # Mondays 09:00 IST
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history: ownership comes from git log
+      - uses: ./.github/actions/knowledge-risk
+        id: risk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: knowledge-risk
+          path: knowledge-risk.json

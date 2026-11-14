@@ -1,0 +1,43 @@
+name: Baton knowledge risk
+description: >-
+  Find where knowledge would be lost if one person left: files one person maintains alone (from git history) and open
+  issues/PRs concentrated on them. Same rules as Baton's Knowledge risk panel. No AI, no hosted service.
+author: Team LoneWolf (Baton)
+branding:
+  icon: users
+  color: orange
+inputs:
+  token:
+    description: Token for reading open issues and PRs (read-only use). Defaults to the workflow token.
+    default: ${{ github.token }}
+  since:
+    description: Only count commits after this date (git --since syntax, e.g. "2 years ago"). Empty = all history.
+    default: ""
+  path:
+    description: Path of the checked-out repository.
+    default: "."
+  json:
+    description: Where to write the JSON report.
+    default: knowledge-risk.json
+  fail-on-high:
+    description: Fail the job when anyone is a high risk.
+    default: "false"
+outputs:
+  high-risk-people:
+    description: Number of people at high risk.
+    value: ${{ steps.report.outputs.high-risk-people }}
+  report:
+    description: Path of the JSON report.
+    value: ${{ steps.report.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - id: report
+      shell: bash
+      env:
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_SINCE: ${{ inputs.since }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_JSON: ${{ inputs.json }}
+        INPUT_FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
+      run: python3 "$GITHUB_ACTION_PATH/knowledge_risk.py"
