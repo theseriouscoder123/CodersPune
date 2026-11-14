@@ -26,6 +26,11 @@ def test_rule_table():
     assert find_duplicates([D(1, "ownership", "x", TAKE_A, reviewed=True), D(2, "ownership", "y", TAKE_B)]) == [(1, 2)]
     assert find_duplicates([D(1, "ownership", "x", TAKE_A, reviewed=True), D(2, "ownership", "y", TAKE_B, reviewed=True)]) == []
     assert find_duplicates([D(1, "ownership", "x", TAKE_A, locked=True), D(2, "ownership", "y", TAKE_B)]) == []
+    # same passage, one contained in the other (after stemming): merged; different passages: not
+    assert find_duplicates([D(1, "ownership", "x", "Neha takes over the app.", chunks=frozenset({9})),
+                            D(2, "ownership", "y", TAKE_A, chunks=frozenset({9}))]) == [(2, 1)]
+    assert find_duplicates([D(1, "ownership", "x", "Neha takes over the app.", chunks=frozenset({8})),
+                            D(2, "ownership", "y", TAKE_A, chunks=frozenset({9}))]) == []
     # three copies collapse to one survivor, each dropped once
     three = find_duplicates([D(1, "ownership", "x", TAKE_A), D(2, "ownership", "y", TAKE_B), D(3, "ownership", "z", TAKE_A)])
     assert sorted(d for _, d in three) == [1, 3] and {k for k, _ in three} == {2}

@@ -109,8 +109,12 @@ def merge_duplicates(db: Session, workspace_id) -> int:
 
     cited = claim_sources(db, ids)
     access = {cid: frozenset(json.dumps(acl, sort_keys=True) for _, _, acl in rows) for cid, rows in cited.items()}
+    chunk_ids: dict = {}
+    for cid, ch in db.execute(select(Evidence.claim_id, Evidence.chunk_id).where(Evidence.claim_id.in_(ids))):
+        chunk_ids.setdefault(cid, set()).add(ch)
     pairs = find_duplicates([
         D(c.id, c.type, c.subject_key, c.text, reviewed=c.review_state != "none", access=access.get(c.id, frozenset()),
+          chunks=frozenset(chunk_ids.get(c.id, ())),
           locked=bool(c.conflict_group_id) or c.origin in ("checklist", "testimony") or bool(c.derived_from)
           or (c.review_state == "none" and c.id in touched))
         for c in claims])

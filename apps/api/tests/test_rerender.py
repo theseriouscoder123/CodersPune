@@ -132,3 +132,27 @@ def test_not_withheld_and_endpoint_permissions(world):
     prev = c.get(f"/api/handovers/{hid}/preview", headers={"X-Baton-Persona": p["meera"]}).json()
     w = next(x for x in prev["withheld"] if x["id"] == logo_id)
     assert w["matters"] == "It names Neha" and w["rerendered"] is None
+
+
+def test_already_visible_fact_is_not_copied(world):
+    """If the successor already sees the same fact from an accessible source, no rewrite is created."""
+    db = SessionLocal()
+    try:
+        logo, neha = _logo_and_neha(db, world["ws"])
+        ch = db.scalar(select(Chunk).join(Source, Source.id == Chunk.source_id)
+                       .where(Chunk.workspace_id == world["ws"], Source.name == "#dev", Chunk.text.contains("sponsor logo")))
+        twin = Claim(workspace_id=world["ws"], type="open_work", text="Neha should add the sponsor logo to the fest page before launch.",
+                     subject_key="fest.logo", origin="extracted", status="supported")
+        db.add(twin)
+        db.flush()
+        q = "the sponsor logo has to be on it before we launch"
+        m = match(q, ch.text)
+        db.add(Evidence(claim_id=twin.id, chunk_id=ch.id, quote=q, quote_found=True, match_score=m.score,
+                        match_start=m.start, match_end=m.end, verdict="supports", verifier="test"))
+        db.flush()
+        out = rerender_claim(db, world["ws"], logo, neha, llm=FakeLLM())
+        assert out["status"] == "already_visible" and out["claim_id"] == str(twin.id)
+        assert db.scalar(select(Claim).where(Claim.derived_from == logo.id)) is None
+        db.rollback()
+    finally:
+        db.close()

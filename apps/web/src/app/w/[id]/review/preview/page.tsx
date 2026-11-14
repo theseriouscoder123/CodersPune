@@ -14,7 +14,7 @@ import { api, storePersona, type HandoverCounts, type HandoverRef, type Status }
 import { useApi } from "@/lib/useApi";
 
 type Item = { id: string; type_label: string; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
-  matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean };
+  matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean; rerender_note?: string | null };
 type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
 
@@ -153,7 +153,7 @@ function PreviewInner() {
                       <li key={it.id} className={`flex items-start gap-3 px-4 py-2.5 text-sm ${it.history ? "bg-paper/40" : ""}`} data-history={it.history ?? undefined}>
                         <StatusChip status={it.status} />
                         <span className={it.history ? "text-muted" : "text-ink"}>
-                          {it.history && <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider">{it.history === "stale" ? "Probably done ·" : "Superseded ·"}</span>}
+                          {it.history && <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider">{it.history === "stale" ? "Probably done ·" : "Earlier, since changed ·"}</span>}
                           {it.text}
                         </span>
                       </li>
@@ -187,7 +187,7 @@ function PreviewInner() {
 function WithheldItem({ it, name, wsId, hid, canAct, onChanged }: { it: Item; name: string; wsId: string; hid: string; canAct: boolean; onChanged: () => void }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<string | null>(it.rerender_tried && !it.rerendered ? `Tried before: no source ${name} can read states this.` : null);
+  const [result, setResult] = useState<string | null>(it.rerender_tried && !it.rerendered ? (it.rerender_note ?? `Tried before: no source ${name} can read states this.`) : null);
   async function rewrite() {
     setBusy(true);
     try {

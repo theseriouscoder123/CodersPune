@@ -66,3 +66,16 @@ def test_every_screen_reports_the_same_counts(world):
     # every section placement in the preview matches the successor's real page
     real = {it["claim_id"]: s["key"] for s in view["sections"] for it in s["items"] if it.get("claim_id")}
     assert {it["id"]: it["section"] for it in prev["visible"]} == real
+
+
+def test_export_labels_history_and_carries_quotes(world):
+    c = TestClient(app)
+    c.cookies.set("baton_visitor", "counts-visitor")
+    ws = world["ws"]
+    p = {m["handle"]: m["id"] for m in c.get(f"/api/workspaces/{ws}").json()["members"]}
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+    md = c.get(f"/api/handovers/{hid}/export.md", headers={"X-Baton-Persona": p["neha"]}).text
+    assert "~~" not in md  # history is labelled, not struck through
+    assert "Earlier, changed" in md and "Now: Push reminders moved from OneSignal to FCM." in md
+    assert "> “" in md  # key quotes travel with the items
+    assert "TechNova" not in md  # withheld for Neha, in the export too

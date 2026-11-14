@@ -15,11 +15,11 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from baton.ingest.scrubber import mask_pii
-from baton.auth import Ctx, workspace_ctx
 from baton.acl import access_label
+from baton.auth import Ctx, workspace_ctx
 from baton.db.models import AuditEvent, Claim, Handover, HandoverVersion, Member, ReviewEvent, Source
 from baton.db.session import get_db
+from baton.ingest.scrubber import mask_pii
 
 router = APIRouter(prefix="/api", tags=["Ledger and review"])
 

@@ -1,4 +1,83 @@
-# Testing — Baton (Round 2)
+# Testing — Baton
+
+## Round 3 (13–16 Nov 2026)
+
+Produced on **14 Nov 2026** by the commands shown. One number is an estimate, and it is labelled as one.
+
+### Targets promised in the Round 1 PDF
+
+| Metric | Target | Result | How |
+|---|---|---|---|
+| Citation precision of shared claims | ≥ 90% | **9/10 = 90%** on the production demo ledger. Claim recall 13/13, status accuracy 13/13. The one miss (G6, leaderboard) cites a real but different issue comment than the golden one. | `python -m eval.eval_citations` against the production template |
+| Permission safety | 0 restricted claims in successor views | **0 leaks in 179 successor requests across all 29 GET routes**, for every claim, source and evidence id in an approved copy of the full demo ledger, including searches for "TechNova". Also 0 permission leaks and 0 secret leaks in the eval. | `tests/test_leak_sweep.py` (pins it); `eval_citations` |
+| Successor readiness | Faster and more accurate with Baton | **With Baton (after fixes): 10/10 in 13.4 s and 13.9 s, opening 1–2 files. Raw sources: 10/10 in 36.6 s and 37.1 s, opening 12 files.** About 2.7× faster at equal accuracy. Before two fixes the Baton group scored 9/10 (details below). | 6 blind AI testers (simulated, see below) |
+| Leaver effort | < 30 min for the demo project | **Estimate: about 10–15 min.** The demo interview has **5 questions** (4 Missing items and 1 conflict pick), about 60 words of question text plus the two quoted sides of the conflict. This is an estimate, not a timing of a real person. The interview page records the duration of every real run (activity log: "Answered the gap interview … N min"). | Interview built from the demo ledger via the API |
+
+### Successor readiness, in detail (simulated testers)
+
+The testers were fresh AI agents (Claude Sonnet) with no context from this project. They were not people, and we report them as simulated. Each got the same 10 continuation questions, written from the planted scenarios that Neha may see (`demo/golden_ledger.json`). Each question asked for the answer, where it was found, and a confidence, and told testers to say "Not established" rather than guess.
+- **With Baton:** Neha's approved handover, as her own Markdown export from production. This is the successor projection, so nothing is withheld from her by mistake and nothing restricted is included.
+- **Without Baton:** the raw sources Neha may read: the GitHub fixture (JSON), the three meeting notes and the #dev channel. #core-team was removed, so both groups had the same permissions.
+
+| Group | Tester | Score | Time | Files opened |
+|---|---|---|---|---|
+| Baton (first run) | A1 | 9/10 | 15.4 s | 2 |
+| Baton (first run) | A2 | 9/10 | 15.8 s | 1 |
+| Raw sources | B1 | 10/10 | 36.6 s | 12 |
+| Raw sources | B2 | 10/10 | 37.1 s | 12 |
+| Baton (after fixes) | A3 | 10/10 | 13.4 s | 1 |
+| Baton (after fixes) | A4 | 10/10 | 13.9 s | 2 |
+
+**What the first run found, and what changed:**
+- **The reason for a decision was missing.** For "why FCM over OneSignal?", both Baton testers answered "not established": the claim text omits the reason, and the export carried only a citation. The export now carries each item's key quote, which contains the reason.
+- **Strike-through read as "false".** History items were struck through, and both testers treated "previously used Supabase" (and a parked PR #142 line) as unreliable. History is now labelled ("Earlier, changed on 9 Feb … Now: Firebase Auth"; "Probably done or parked") on the page, the timeline and the export, never struck through.
+- **A duplicate item.** The handover listed "Neha takes over the app." next to "Neha is taking over the app from Rohan.". It came from re-rendering: the rewrite restated a fact Neha already sees. Re-rendering now returns `already_visible` instead of adding a copy (D59).
+
+**Honest limits:**
+- The project is small: the raw sources are 137 KB, which an AI reads in seconds. A person reading 12 JSON files would take far longer, so the time gap for humans is likely bigger. That is untested until real people try it.
+- Baton's graded answers were no more accurate than reading everything carefully. The gain is speed and being pointed at what is open (every Baton tester flagged the upload-limit conflict and the unknown Firebase owner as things to ask about).
+- 6 runs is a small sample.
+
+### Round 3 checks (part of `eval_citations`, production template)
+
+| Check | Result |
+|---|---|
+| G7 auth change classified (improvement #2) | `historical` (the later claim says "previously used"), never `contradiction`: **ok** |
+| G3 upload limit classified | `contradiction`: **ok** |
+| Stale open work | 4 items; the old "set up push reminders" task is flagged: **ok** |
+| Re-rendered claims (improvement #3) | **1/1** quote found, visible to Neha, no sponsor name or amount. Of the 4 withheld items that look like Neha's: 1 created, 1 already visible to her, 1 a different topic, 1 not stated in her sources. |
+
+### Automated tests
+
+| Layer | Result |
+|---|---|
+| API (`uv run pytest`) | **213 passed, 0 failed** (local Postgres 16). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts and export (2), duplicates (2), leak sweep (1). |
+| End-to-end on production (`pnpm exec playwright test`) | **17 passed, 0 failed.** Round 3 added: gap interview, decision timeline, acknowledgements and rewrites, and counts agreeing across screens. Accessibility (axe) still has 0 serious violations in light and dark. |
+
+### Performance (production, measured from India)
+
+| What | Before | After |
+|---|---|---|
+| Warm API call (ledger, claims, relations) | 0.7–0.9 s | 0.4–0.55 s (API moved next to the database, D58) |
+| Hard load, Verify | 3–4 s (Round 2 testers) | 2.0 s |
+| Hard load, other steps | – | 1.5–2.0 s |
+| Going back to a step already visited | skeleton again | about 0.1 s (cached, refreshed in the background) |
+
+### Reliability matrix (new screens and endpoints)
+
+| Check | Interview | Timeline / relations | Acknowledgements | Re-render | Source access |
+|---|---|---|---|---|---|
+| Bad input (empty, too long, wrong type) | 422 with a readable message | 422 | 422 (note over 500, unknown state, empty question) | n/a (no input) | 422 |
+| HTML or script in text | stored as text, rendered escaped | – | stored as text, rendered escaped; secrets scrubbed | – | – |
+| Repeated attempt | create and submit are idempotent | override is idempotent | re-sending gives one row | returns `exists` | same list saves no new audit row |
+| Wrong persona or role | 403 with a sentence | 403 | 403 / 404 for withheld items | 403 | 403 |
+| AI unavailable | no AI on this path | no AI on this path | no AI on this path | 503 with a message; nothing saved | no AI on this path |
+| Empty state | "Nothing to ask: there are no open Missing or Conflicting items" | "Nothing in this view." for an empty filter | progress hidden until approved | "Nothing is withheld" | – |
+| Phone width (375 px, dark) | checked | checked | checked | checked | checked |
+
+---
+
+# Round 2 (kept for the record)
 
 All numbers below were produced on **9–10 Nov 2026** by the commands shown. Nothing here is estimated.
 

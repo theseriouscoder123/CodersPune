@@ -20,7 +20,13 @@ from baton.ledger import rebuild_relations, recompute_statuses
 from baton.llm.base import LLMError, get_llm
 from baton.projection import claim_sources, visible
 from baton.reconstruct.rerender import (
-    RERENDER_SYSTEM, Rerendered, assert_only_visible, build_prompt, candidate_chunks, same_topic, search_terms,
+    RERENDER_SYSTEM,
+    Rerendered,
+    assert_only_visible,
+    build_prompt,
+    candidate_chunks,
+    same_topic,
+    search_terms,
 )
 from baton.routers.handovers import _handover
 from baton.verify.entailment import excerpt, verify
@@ -63,6 +69,11 @@ def rerender_claim(db: Session, workspace_id, original: Claim, successor: Member
     if not m.found:  # no fabricated quotes (trust rule 2)
         original.meta = {**(original.meta or {}), "rerender_none": "quote_not_found"}
         return {"status": "quote_not_found", "reason": "The rewrite's quote wasn't found in the passage, so it was discarded."}
+    twin = _already_visible(db, workspace_id, viewer, original, res.claim, ch.id)
+    if twin is not None:  # the successor already sees this fact from an accessible source: don't add a copy
+        original.meta = {**(original.meta or {}), "rerender_none": "already_visible", "rerender_twin": str(twin.id)}
+        return {"status": "already_visible", "claim_id": str(twin.id), "text": twin.text,
+                "reason": f"{successor.display_name} already sees this: “{twin.text}”"}
     new = Claim(workspace_id=workspace_id, type=original.type, text=res.claim.strip()[:400], subject_key=original.subject_key,
                 origin="extracted", occurred_at=ch.occurred_at, derived_from=original.id, stated=True,
                 meta={"rerendered_for": successor.display_name, "rerendered_at": datetime.now(UTC).isoformat()})
@@ -81,6 +92,29 @@ def rerender_claim(db: Session, workspace_id, original: Claim, successor: Member
     db.flush()
     recompute_statuses(db, workspace_id, [new.id])
     return {"status": "created", "claim_id": str(new.id), "text": new.text, "claim_status": new.status, "reason": why}
+
+
+def _already_visible(db: Session, workspace_id, viewer: Viewer, original: Claim, text: str, chunk_id) -> Claim | None:
+    """A live claim of the same type the successor can see that states the same thing (duplicate rules, plus the
+    same passage)."""
+    from baton.reconstruct.duplicates import D, similar
+
+    cands = [c for c in db.scalars(select(Claim).where(Claim.workspace_id == workspace_id, Claim.type == original.type,
+                                                        Claim.id != original.id))
+             if c.status not in ("rejected", "inferred") and not c.superseded_by]
+    if not cands:
+        return None
+    cited = claim_sources(db, [c.id for c in cands])
+    chunks: dict = {}
+    for cid, chk in db.execute(select(Evidence.claim_id, Evidence.chunk_id).where(Evidence.claim_id.in_([c.id for c in cands]))):
+        chunks.setdefault(cid, set()).add(chk)
+    probe = D("new", original.type, original.subject_key, text, chunks=frozenset({chunk_id}))
+    for c in cands:
+        if not visible(viewer, cited.get(c.id, [])):
+            continue
+        if similar(probe, D(c.id, c.type, original.subject_key, c.text, chunks=frozenset(chunks.get(c.id, ())))):
+            return c
+    return None
 
 
 @router.post("/handovers/{handover_id}/rerender/{claim_id}")

@@ -28,7 +28,17 @@ from baton import notify
 from baton.acl import ALL_MEMBERS, Viewer, acl_intersection, acl_key, normalise_acl
 from baton.auth import Ctx, _roles, resolve_ctx, workspace_ctx
 from baton.db.models import (
-    AuditEvent, Chunk, Claim, ConflictGroup, Evidence, Handover, Interview, InterviewQuestion, Member, Membership, Source,
+    AuditEvent,
+    Chunk,
+    Claim,
+    ConflictGroup,
+    Evidence,
+    Handover,
+    Interview,
+    InterviewQuestion,
+    Member,
+    Membership,
+    Source,
 )
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii, scrub

@@ -96,6 +96,43 @@ def main() -> None:
     print(f"citation precision {cit_ok}/{cit_total} = {cit_ok / max(cit_total, 1):.0%}")
     print(f"permission leaks   {leaks} (must be 0)")
     print(f"secret leaks       {secrets} (must be 0)")
+    round3(db, ws, claims, ev, cited, neha_v)
+
+
+RESTRICTED_TERMS = ("technova", "40,000", "40000", "₹")  # G8's sponsor details live only in #core-team
+
+
+def round3(db, ws, claims, ev, cited, neha_v) -> None:
+    """Round 3 checks: relations (#2), stale open work (#2) and re-rendered claims (#3)."""
+    from baton.db.models import ClaimRelation
+
+    by_id = {c.id: c for c in claims}
+    rels = list(db.scalars(select(ClaimRelation).where(ClaimRelation.workspace_id == ws.id)))
+    kinds: dict[str, int] = {}
+    for r in rels:
+        kinds[r.relation] = kinds.get(r.relation, 0) + 1
+
+    def rel_for(subject: str) -> set[str]:
+        return {r.relation for r in rels if (by_id.get(r.from_claim_id) and by_id[r.from_claim_id].subject_key == subject)
+                or (by_id.get(r.to_claim_id) and by_id[r.to_claim_id].subject_key == subject)}
+
+    g7, g3 = rel_for("auth.provider"), rel_for("upload.max_size")
+    stale = [c for c in claims if c.stale_reason]
+    push_stale = any("push" in c.text.lower() and c.type in ("open_work", "next_action") for c in stale)
+    rer = [c for c in claims if c.derived_from]
+    rer_ok = 0
+    for c in rer:
+        quotes_ok = all(e.quote_found for e, _, _ in ev.get(c.id, [])) and ev.get(c.id)
+        vis = visible(neha_v, cited.get(c.id, []))
+        clean = not any(t in c.text.lower() for t in RESTRICTED_TERMS)
+        rer_ok += int(bool(quotes_ok and vis and clean))
+    print("\nRound 3")
+    print(f"relations          {len(rels)} {dict(sorted(kinds.items()))}")
+    print(f"G7 auth change     {sorted(g7) or '-'} (expected reversal or historical, never contradiction: "
+          f"{'ok' if g7 and 'contradiction' not in g7 else 'CHECK'})")
+    print(f"G3 upload limit    {sorted(g3) or '-'} (expected contradiction: {'ok' if 'contradiction' in g3 else 'CHECK'})")
+    print(f"stale open work    {len(stale)} (the old push-reminder task flagged: {'ok' if push_stale else 'CHECK'})")
+    print(f"re-rendered claims {rer_ok}/{len(rer)} quote found, visible to Neha, no restricted sponsor terms")
 
 
 if __name__ == "__main__":

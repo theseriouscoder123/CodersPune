@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from baton import notify
 from baton.acl import Viewer, access_label, can_view_acl
 from baton.auth import Ctx, _roles, resolve_ctx, workspace_ctx
-from baton.db.models import Chunk, Claim, Handover, HandoverVersion, Member, Source, Workspace
+from baton.db.models import Chunk, Claim, Evidence, Handover, HandoverVersion, Member, Source, Workspace
 from baton.db.session import get_db
 from baton.ingest.scrubber import mask_pii, scrub
 from baton.ledger import evidence_rows, ref_for
@@ -73,6 +73,21 @@ def eligible_for_successor(c: Claim) -> bool:
     if ((c.meta or {}).get("flags") or {}).get("answered"):
         return False  # a Missing item the leaver answered: the testimony claim ships instead
     return True
+
+
+def _rerender_note(db: Session, c: Claim, name: str) -> str | None:
+    """Why an earlier rewrite attempt didn't produce a claim, in words for the reviewer."""
+    why = (c.meta or {}).get("rerender_none")
+    if not why:
+        return None
+    if why == "already_visible":
+        twin = db.get(Claim, uuid.UUID((c.meta or {})["rerender_twin"])) if (c.meta or {}).get("rerender_twin") else None
+        return f"{name} already sees this from a source they can read: “{twin.text}”" if twin else f"{name} already sees this."
+    if why == "different_topic":
+        return f"The sources {name} can read say something else, not this."
+    if why == "quote_not_found":
+        return "A rewrite was tried but its quote wasn't in the source, so it was discarded."
+    return f"No source {name} can read states this."
 
 
 def handover_items(db: Session, h: Handover) -> list[dict]:
@@ -243,7 +258,8 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
                              "matters": None if history else looks_like_theirs(c.text, target.display_name),
                              "rerendered": {"id": str(derived.id), "text": derived.text, "status": derived.status,
                                             "visible": visible(tv, claim_sources(db, [derived.id]).get(derived.id, []))} if derived else None,
-                             "rerender_tried": bool((c.meta or {}).get("rerender_none"))})
+                             "rerender_tried": bool((c.meta or {}).get("rerender_none")),
+                             "rerender_note": _rerender_note(db, c, target.display_name)})
     shown.sort(key=lambda it: (bool(it["history"]), it.get("rank", 1), it["type"] != "next_action"))
     hidden_inferred = sum(1 for c in db.scalars(select(Claim).where(Claim.workspace_id == h.workspace_id))
                           if c.status == "inferred" and not c.superseded_by)
@@ -476,6 +492,12 @@ def export_md(handover_id: uuid.UUID, request: Request, db: Session = Depends(ge
     data = get_handover(handover_id, request, db)
     if not data.get("approved"):
         raise HTTPException(409, "No approved version yet")
+    _, ctx = _handover(db, request, handover_id)
+    # The key quote travels with each item, so the "why" is readable offline (blind testers missed reasons without it).
+    # Items here already passed the permission projection, so every cited chunk is visible to this reader.
+    ev_ids = [uuid.UUID(e["evidence_id"]) for s in data["sections"] for it in s["items"] for e in it.get("evidence", [])]
+    quotes = {str(e.id): e.quote for e in db.scalars(select(Evidence).where(Evidence.id.in_(ev_ids)))
+              if e.quote_found and e.verdict == "supports"} if ev_ids else {}
     lines = [f"# Handover: {data['leaver']} → {data['successor']}",
              f"Version {data['version']} · approved by {data['approved_by']} · {data['approved_at'][:10]}", ""]
     for s in data["sections"]:
@@ -486,10 +508,21 @@ def export_md(handover_id: uuid.UUID, request: Request, db: Session = Depends(ge
             if it.get("restricted"):
                 lines.append(f"- _{it['text']}_")
                 continue
-            refs = ", ".join(e["ref"] for e in it["evidence"]) or "no source"
+            refs = ", ".join(dict.fromkeys(e["ref"] for e in it["evidence"])) or "no source"
             tag = "Reviewer-confirmed (no source evidence)" if it.get("flags", {}).get("reviewer_confirmed_without_evidence") else it["status"].upper()
-            prefix = "~~" if it.get("history") else ""
-            lines.append(f"- {prefix}{it['text']}{prefix} [{tag}] ({refs})")
+            # History is labelled, never struck through: blind testers read strike-through as "this is false".
+            if it.get("stale"):
+                lines.append(f"- Probably done or parked: {it['text']} [{tag}] ({refs}). {it.get('stale_reason') or ''}".rstrip())
+            elif it.get("history"):
+                when = f" on {it['superseded_on'][:10]}" if it.get("superseded_on") else ""
+                now = f" Now: {it['superseded_by_text']}" if it.get("superseded_by_text") else ""
+                lines.append(f"- Earlier, changed{when}: {it['text']} [{tag}] ({refs}).{now}")
+            else:
+                lines.append(f"- {it['text']} [{tag}] ({refs})")
+            q = next((quotes[e["evidence_id"]] for e in it.get("evidence", []) if e["evidence_id"] in quotes), None)
+            if q:
+                q = " ".join(q.split())
+                lines.append(f"  > “{mask_pii(q) if not ctx.is_reviewer else q}”")
         lines.append("")
     return "\n".join(lines)
 

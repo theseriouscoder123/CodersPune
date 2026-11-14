@@ -101,7 +101,7 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
                 {e.refs.length > 0 && <><span>·</span><span className="truncate text-supported">{e.refs.join(", ")}</span></>}
               </p>
               <Link href={`/w/${wsId}/review?tab=${e.superseded ? "superseded" : "all"}&claim=${e.id}`} title="Open this claim and its evidence"
-                className={`mt-0.5 block text-[14.5px] hover:underline ${e.superseded || stale ? "text-muted line-through decoration-line-2" : "text-ink"}`}>{e.text}</Link>
+                className={`mt-0.5 block text-[14.5px] hover:underline ${e.superseded || stale ? "text-ink-2" : "text-ink"}`}>{e.text}</Link>
               {(rels.length > 0 || stale) && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {rels.map(({ rel, role }) => {
