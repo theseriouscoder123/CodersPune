@@ -16,6 +16,7 @@ import httpx
 
 API = "https://slack.com/api/"
 TIMEOUT_S = 15
+REQUIRED_SCOPES = ("channels:read", "channels:history", "groups:read", "groups:history", "users:read", "users:read.email")
 MAX_MESSAGES = 1000  # per channel, newest first
 MAX_THREADS = 40  # threads with replies fetched per channel
 
@@ -76,6 +77,12 @@ class SlackClient:
             data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
             if not data.get("ok"):
                 err = data.get("error", f"http_{r.status_code}")
+                if err == "missing_scope":  # Slack says exactly which scopes are missing: name them
+                    have = {x.strip() for x in (data.get("provided") or "").split(",") if x.strip()}
+                    missing = [x for x in REQUIRED_SCOPES if x not in have]
+                    if missing:
+                        raise SlackError(f"The Slack app is missing these permissions: {', '.join(missing)}. Add them under "
+                                         "OAuth & Permissions → Bot Token Scopes, click Reinstall to Workspace, then try again.")
                 raise SlackError(_ERRORS.get(err, f"Slack said: {err}"))
             return data
         raise SlackError("Slack is rate limiting us. Try again in a minute.")

@@ -119,10 +119,11 @@ def test_import_end_to_end(ws, fake):
 
 def test_slack_errors_are_explained(ws, monkeypatch):
     real = slack_api.SlackClient
-    bad = httpx.MockTransport(lambda req: httpx.Response(200, json={"ok": False, "error": "missing_scope"}, headers={"content-type": "application/json"}))
+    bad = httpx.MockTransport(lambda req: httpx.Response(200, json={"ok": False, "error": "missing_scope", "provided": "channels:history,chat:write"},
+                                                         headers={"content-type": "application/json"}))
     monkeypatch.setattr(slack_import, "SlackClient", lambda token: real(token, transport=bad))
     c = TestClient(app)
     c.cookies.set("baton_visitor", "slack-owner")
     p = {m["handle"]: m["id"] for m in c.get(f"/api/workspaces/{ws}").json()["members"]}
     r = c.post(f"/api/workspaces/{ws}/slack/channels", headers={"X-Baton-Persona": p["meera"]}, json={"token": TOKEN})
-    assert r.status_code == 422 and "channels:history" in r.json()["detail"]
+    assert r.status_code == 422 and "channels:read" in r.json()["detail"] and "channels:history" not in r.json()["detail"]
