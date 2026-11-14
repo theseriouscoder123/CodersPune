@@ -320,12 +320,12 @@ function TopBar({ ws, onMenu }: { ws: WorkspaceInfo; onMenu: () => void }) {
       <button type="button" onClick={onMenu} aria-label="Open navigation" className="grid h-7 w-7 place-items-center rounded-md text-fg-3 hover:bg-hover hover:text-fg lg:hidden">
         <Menu className="h-4 w-4" />
       </button>
-      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
+      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px] max-sm:shrink-0">
         {leaver && successor && <span className="hidden truncate text-fg-3 sm:inline">{leaver.name} → {successor.name}</span>}
         {leaver && successor && title && <span className="hidden text-fg-4 sm:inline">/</span>}
         {title && <span className="truncate font-medium text-fg">{title}</span>}
       </nav>
-      <div id="topbar-actions" className="ml-auto flex min-w-0 items-center gap-2" />
+      <div id="topbar-actions" className="ml-auto flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0" />
     </header>
   );
 }

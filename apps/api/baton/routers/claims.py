@@ -42,8 +42,9 @@ def _require_ledger_access(ctx: Ctx) -> None:
 
 def claim_numbers(db: Session, workspace_id) -> dict:
     """Short display IDs (CLM-019): each claim's position by creation order in the workspace. Counted over all claims,
-    so a number never depends on who is looking. Links still use the real id."""
-    rows = db.execute(select(Claim.id).where(Claim.workspace_id == workspace_id).order_by(Claim.created_at, Claim.id))
+    so a number never depends on who is looking. Ties (one run inserts many claims at once) break by text, so a
+    sandbox copy, which keeps created_at, numbers its claims the same as the template. Links still use the real id."""
+    rows = db.execute(select(Claim.id).where(Claim.workspace_id == workspace_id).order_by(Claim.created_at, Claim.text, Claim.id))
     return {cid: i for i, (cid,) in enumerate(rows, start=1)}
 
 

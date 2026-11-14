@@ -69,7 +69,7 @@ export function Spinner({ className = "h-4 w-4" }: { className?: string }) {
 
 export function Kbd({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <kbd className={`inline-flex h-[17px] min-w-[17px] items-center justify-center rounded-[4px] border border-line-2 border-b-[1.5px] bg-bg px-1 font-sans text-[10.5px] font-medium leading-none text-fg-3 ${className}`}>
+    <kbd className={`inline-flex [@media(pointer:coarse)]:hidden h-[17px] min-w-[17px] items-center justify-center rounded-[4px] border border-line-2 border-b-[1.5px] bg-bg px-1 font-sans text-[10.5px] font-medium leading-none text-fg-3 ${className}`}>
       {children}
     </kbd>
   );

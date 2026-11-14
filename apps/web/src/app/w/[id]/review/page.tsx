@@ -564,7 +564,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
       {/* header */}
       <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line px-4">
         {clm(c.number) && <span className="font-mono text-[12px] text-fg-3">{clm(c.number)}</span>}
-        {total > 0 && <span className="text-[12px] text-fg-4">· {position} of {total}</span>}
+        {total > 0 && <span className="text-[12px] text-fg-3">· {position} of {total}</span>}
         <span className="ml-auto flex items-center gap-0.5">
           <IconButton aria-label="Previous claim" title="Previous (k)" onClick={onPrev}><ChevronUp /></IconButton>
           <IconButton aria-label="Next claim" title="Next (j)" onClick={onNext}><ChevronDown /></IconButton>

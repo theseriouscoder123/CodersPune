@@ -58,12 +58,12 @@ export function EvidenceCard({ e, tag }: { e: EvidenceInfo; tag?: string | null 
       </div>
 
       <pre tabIndex={0} aria-label="Source excerpt" className="scroll-quiet max-h-72 overflow-auto py-2 font-mono text-[11.5px] leading-[19px] text-fg-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
-        {e.excerpt.truncated_start && <div className="flex"><span className="w-[34px] shrink-0 select-none pr-2 text-right text-fg-4">…</span></div>}
+        {e.excerpt.truncated_start && <div className="flex"><span className="w-[34px] shrink-0 select-none pr-2 text-right text-fg-3">…</span></div>}
         {lines.map((segs, i) => {
           const hit = segs.some((s) => s.hl);
           return (
             <div key={i} className={`flex ${hit ? "bg-hl shadow-[inset_2px_0_0_var(--hl-line)]" : ""}`}>
-              <span className="w-[34px] shrink-0 select-none pr-2 text-right text-fg-4" aria-hidden>{first ? first + i : i + 1}</span>
+              <span className={`w-[34px] shrink-0 select-none pr-2 text-right ${hit ? "text-fg-2" : "text-fg-3"}`} aria-hidden>{first ? first + i : i + 1}</span>
               <span className="min-w-0 flex-1 whitespace-pre-wrap break-words pr-3">
                 {segs.map((s, j) => {
                   if (!s.hl) return <span key={j}>{s.t}</span>;
@@ -74,7 +74,7 @@ export function EvidenceCard({ e, tag }: { e: EvidenceInfo; tag?: string | null 
             </div>
           );
         })}
-        {e.excerpt.truncated_end && <div className="flex"><span className="w-[34px] shrink-0 select-none pr-2 text-right text-fg-4">…</span></div>}
+        {e.excerpt.truncated_end && <div className="flex"><span className="w-[34px] shrink-0 select-none pr-2 text-right text-fg-3">…</span></div>}
       </pre>
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line px-3 py-2 text-[11.5px] text-fg-3">

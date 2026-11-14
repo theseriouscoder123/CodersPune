@@ -60,10 +60,10 @@ def clone_workspace(db: Session, template_id: uuid.UUID, visitor_id: str) -> uui
             SELECT {_m('id')}, {_m('workspace_id')}, subject_key, resolved, resolution FROM conflict_groups WHERE workspace_id = :t""",
         f"""INSERT INTO claims (id, workspace_id, run_id, type, text, subject_key, value, occurred_at, origin, stated,
                                supersedes_hint, superseded_by, conflict_group_id, review_state, reviewer_note, status,
-                               status_reason, about_member_id, meta, stale_reason)
+                               status_reason, about_member_id, meta, stale_reason, created_at)
             SELECT {_m('id')}, {_m('workspace_id')}, NULL, type, text, subject_key, value, occurred_at, origin, stated,
                    supersedes_hint, NULL, {_m('conflict_group_id')}, review_state, reviewer_note, status, status_reason,
-                   {_m('about_member_id')}, meta, stale_reason
+                   {_m('about_member_id')}, meta, stale_reason, created_at
             FROM claims WHERE workspace_id = :t""",
         f"""UPDATE claims n SET superseded_by = {_m('o.superseded_by')}
             FROM claims o WHERE o.workspace_id = :t AND o.superseded_by IS NOT NULL AND n.id = {_m('o.id')}""",
