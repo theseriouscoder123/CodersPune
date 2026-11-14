@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Logo } from "@/components/Logo";
+import { PassIcon } from "@/components/ledger/StatusChip";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Alert, Button, Card } from "@/components/ui";
 
@@ -63,6 +64,66 @@ function SectionTitle({ n, title, icon }: { n: number; title: string; icon: Reac
       <span className="text-[15px] font-semibold text-fg">{title}</span>
       <span className="text-fg-3">{icon}</span>
     </h2>
+  );
+}
+
+
+type SourceRow = { key: string; label: string; access: Access; set: (a: Access) => void };
+
+/** Guided access setup: who will be able to read each source, with the consequences spelled out before anything is created. */
+function AccessCheck({ people, sources }: { people: Person[]; sources: SourceRow[] }) {
+  const named = people.filter((p) => p.handle.trim());
+  const h = (p: Person) => p.handle.trim().toLowerCase();
+  const can = (s: SourceRow, p: Person) => p.role === "reviewer" || s.access.mode === "all" || s.access.handles.includes(h(p));
+  const successor = named.find((p) => p.role === "successor");
+  const leaver = named.find((p) => p.role === "leaver");
+  const tips: { text: string; fix?: { label: string; run: () => void } }[] = [];
+  for (const s of sources) {
+    if (successor && !can(s, successor))
+      tips.push({ text: `${successor.name || successor.handle} can't read ${s.label}. Anything Baton learns only from it is withheld from their handover, and the reviewer sees it listed as withheld.`,
+        fix: { label: `Let ${successor.name || "them"} read it`, run: () => s.set({ mode: "some", handles: [...s.access.handles, h(successor)] }) } });
+    if (s.key === "chat" && s.access.mode === "all")
+      tips.push({ text: "Chat often holds private talk (budgets, people, contracts). Everyone in the workspace can read this export.",
+        fix: leaver && successor ? { label: "Limit to the leaver and successor", run: () => s.set({ mode: "some", handles: [h(leaver), h(successor)] }) } : undefined });
+    if (s.access.mode === "some" && s.access.handles.length === 0)
+      tips.push({ text: `Only the reviewer can read ${s.label}. Claims from it can be reviewed but never handed over.` });
+  }
+  return (
+    <div className="mt-4">
+      <div className="overflow-x-auto rounded-lg border border-line">
+        <table className="w-full min-w-[420px] text-left text-[13px]">
+          <thead className="border-b border-line bg-bg-sunk text-[12px] text-fg-3">
+            <tr>
+              <th className="px-3 py-2 font-medium">Source</th>
+              {named.map((p, i) => <th key={i} className="px-3 py-2 text-center font-medium"><span className="block truncate text-fg-2">{p.name || p.handle}</span><span className="font-normal capitalize">{p.role}</span></th>)}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line" data-testid="access-check">
+            {sources.map((s) => (
+              <tr key={s.key}>
+                <td className="px-3 py-2 text-fg">{s.label}</td>
+                {named.map((p, i) => (
+                  <td key={i} className="px-3 py-2 text-center">
+                    {can(s, p) ? <span className="inline-flex" role="img" aria-label="can read"><PassIcon size={13} /></span> : <span className="inline-flex text-fg-3" role="img" aria-label="can't read"><Lock className="h-3.5 w-3.5" /></span>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-[12px] text-fg-3">A claim is shown to someone only if they can read every source it cites. The reviewer can read everything. You can change access later on Connect.</p>
+      {tips.length > 0 && (
+        <ul className="mt-3 space-y-2" data-testid="access-tips">
+          {tips.map((t, i) => (
+            <li key={i} className="flex flex-wrap items-start gap-x-3 gap-y-1.5 rounded-lg border border-line bg-con-soft px-3 py-2 text-[12.5px] text-fg-2">
+              <span className="min-w-0 flex-1">{t.text}</span>
+              {t.fix && <button type="button" onClick={t.fix.run} className="shrink-0 font-medium text-accent-ink hover:underline">{t.fix.label}</button>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -233,6 +294,18 @@ export default function NewWorkspacePage() {
               <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> API keys, tokens and passwords are removed before anything is stored or sent to the AI.
             </p>
           </Card>
+
+          {(repo.trim() || notes.length > 0 || chat) && people.some((p) => p.handle.trim()) && (
+            <Card className="p-5 sm:p-6">
+              <SectionTitle n={3} title="Check who can see what" icon={<Lock className="h-4 w-4" />} />
+              <p className="mt-1 text-[13px] text-fg-3">This is what each person will be able to read once the workspace exists.</p>
+              <AccessCheck people={people} sources={[
+                ...(repo.trim() ? [{ key: "repo", label: "the repository", access: repoAccess, set: setRepoAccess }] : []),
+                ...(notes.length ? [{ key: "notes", label: notes.length === 1 ? "the notes" : `the ${notes.length} note files`, access: notesAccess, set: setNotesAccess }] : []),
+                ...(chat ? [{ key: "chat", label: "the chat export", access: chatAccess, set: setChatAccess }] : []),
+              ]} />
+            </Card>
+          )}
 
           <Card className="p-5">
             <label className="flex items-start gap-3 text-[13px] text-fg-2">
