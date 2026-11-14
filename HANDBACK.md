@@ -1,6 +1,6 @@
 # HANDBACK — Baton Round 3 (The Finish)
 
-Written by Claude Code on 14 Nov 2026 (IST) and checked against production, the test suite and a clean clone. Where
+Written by Claude Code on 14 Nov 2026 (IST), refreshed on 15 Nov after the redesign and Phase B, and checked against production, the test suite and a clean clone. Where
 something is not done, estimated or simulated, it says so. Arch uses this file, `docs/DECISIONS.md`, `docs/TESTING.md`,
 `docs/ARCHITECTURE.md`, `docs/ROADMAP.md` and `docs/screenshots/` for the final PDF and the submission form.
 
@@ -114,6 +114,16 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - Gap interview entry point (F14)
 - Successor wording for conflicts (F15)
 
+**Added on 14–15 Nov (after the three improvements)**
+- Knowledge risk panel and a GitHub Action that runs the same rules on `git log` (D61)
+- Self-hosting: Dockerfiles, one-command compose, any OpenAI-compatible model (D62)
+- Discord notifications; GitHub issue export leaves out restricted questions (D63)
+- "Before Rohan leaves" checklist tied to the last day (D64) and the successor's first week (D65)
+- Live Slack connector: channel membership becomes the access list; token never stored (D66). Live test pending a bot token with the right scopes.
+- **Full redesign** to the hand-off spec: new tokens (light, dark, print), sidebar with live permission-filtered counts, Verify as an inspector with rule checks and file-style evidence, Handover as a document, every screen and the landing page restyled (D67)
+- Guided access setup when creating a workspace; cancel and resume a run; plain messages when the free AI quota stops a run (D68)
+- Fixes from three blind agent tests on production (judge, phone, permissions), including a search-snippet masking bug (D69)
+
 **Other**
 - Admin can change source access (D48)
 - History labelled instead of struck through, and key quotes in the export (D59)
@@ -124,16 +134,17 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 
 See `docs/ARCHITECTURE.md` (as built, with a diagram). In short:
 - **Web:** Next.js 16 on Vercel, proxying `/api/*` to FastAPI on Vercel Python Functions (region `cle1`).
-- **Database:** Neon Postgres 16 with pgvector and full-text search; 23 tables over migrations 0001–0006.
+- **Database:** Neon Postgres 16 with pgvector and full-text search; migrations 0001–0007.
 - **Pipeline:** a resumable 9-step pipeline driven by polling.
 - **Trust core:** `status.py`, `acl.py`, `quote_match.py` and `scrubber.py`, all pure and unit-tested.
 - **AI** proposes claims, verifies them separately, and rewrites withheld items. It never decides statuses, relations, permissions or interview answers.
 
 ## 6. Testing details
 
-From `docs/TESTING.md` §Round 3, all produced on 14 Nov 2026:
-- **API tests:** 215 passed, 0 failed (real Postgres).
-- **Production e2e:** 18/18 passed, covering the judge flow, interview, timeline, acknowledgements and rewrites, counts across screens and the person-to-person comparison, plus axe accessibility in light and dark.
+From `docs/TESTING.md` §Round 3 (14–15 Nov 2026):
+- **API tests:** 234 passed, 0 failed (real Postgres), 15 Nov.
+- **Production e2e:** 21 passed, 0 failed (7 skipped: screenshot and dev-only specs), after the redesign. Covers the judge flow, interview, timeline, acknowledgements and rewrites, counts across screens, person-to-person comparison, knowledge risk, leaving checklist and first week, plus axe accessibility (0 serious violations) in light and dark and 0 px sideways scroll on phones.
+- **Blind agent tests** on production after the redesign (a first-time judge, a phone user, a permission prober; no project context): all completed the loop; every finding fixed except three pipeline-rule issues listed in §10 (D69).
 - **Citation eval** (production demo ledger):
   - recall 13/13, status accuracy 13/13, citation precision 9/10 (target ≥ 90% met);
   - 0 permission leaks, 0 secret leaks;
@@ -153,8 +164,8 @@ From `docs/TESTING.md` §Round 3, all produced on 14 Nov 2026:
 
 See `docs/ROADMAP.md`.
 - **Phase 1 (17 Nov – 20 Dec 2026):** real user sessions and one real DevClub handover.
-- **Phase 2 (Jan – Feb 2027):** GitHub sign-in, GitHub App for private repos, scheduled Refresh, a live Slack connector, overdue question tracking.
-- **Phase 3 (Mar – Apr 2027):** extraction quality across models, larger repos, a knowledge-risk panel.
+- **Phase 2 (Jan – Feb 2027):** GitHub sign-in, GitHub App for private repos, scheduled Refresh, overdue question tracking. (The live Slack connector moved forward into Round 3, D66.)
+- **Phase 3 (Mar – Apr 2027):** extraction quality across models, larger repos. (A first knowledge-risk panel shipped in Round 3, D61.)
 
 Each phase has effort estimates, exit tests and risks with mitigations.
 
@@ -185,13 +196,16 @@ Unchanged from Round 2 except where noted.
 
 ## 9. Changes from the plan
 
-Round 3 deviations are D47–D59 in `docs/DECISIONS.md`:
+Round 3 deviations are D47–D69 in `docs/DECISIONS.md`:
 - **No demo video** (not required) (D47).
 - **Access-list editing added** (D48).
 - **Testimony status rules** (D50).
 - **Count, duplicate and speed fixes** (D56–D58).
 - **Changes from the readiness test** (D59).
 - **Person-to-person comparison** (D60).
+- **Features beyond the plan:** knowledge risk, self-hosting, Discord, leaving checklist, first week, live Slack connector (D61–D66).
+- **Redesign** to a new hand-off spec, with its own deviations: no strike-through on changed decisions, claim ids computed at read time, the access editor kept as a dialog, some headings kept (D67).
+- **Guided access setup and run cancel** (stretch items, D68) and blind-test fixes (D69).
 
 The successor-readiness measurement uses simulated testers rather than the 35 user tests the Round 1 PDF planned.
 
@@ -203,7 +217,9 @@ The successor-readiness measurement uses simulated testers rather than the 35 us
 - **Live AI depends on free quotas**, and extraction recall is lower on the Groq fallback (9–10/13 in Round 2 runs). The demo never calls the AI.
 - **No real sign-in:** a persona switcher for the demo, plus invite links for real teams. Sources are snapshots; private repos can't auto-refresh.
 - **A deploy drops in-flight requests.** Runs resume on the next poll. No deploys after the freeze.
-- **Keys to rotate after the hackathon:** Neon password, 4 Gemini keys, 2 Groq keys, the GitHub token, the Gmail app password.
+- **Pipeline-rule issues found by the blind judge, not yet fixed:** some timeline dates use a commit range's end date instead of the commit's own date; one open PR item is labelled "probably done"; one Missing item ("status of issue #131") overlaps a supported claim about the same issue. They affect the demo's wording, not permissions.
+- **Live Slack import and Discord notifications** are built and tested against fakes; the live Slack test waits for a bot token with the missing scopes, and Discord for a webhook.
+- **Keys to rotate after the hackathon:** Neon password, 4 Gemini keys, 2 Groq keys, the GitHub token, the Gmail app password, the Slack webhook and bot token (and the app-level token that was shared by mistake).
 
 ## 11. Role and contribution
 
@@ -216,5 +232,5 @@ Arch writes this in his own words (form rule). Facts he can use:
 
 - Round 2's last commit: `2772dae`, 2026-11-11 09:11 IST. No commits between then and the Round 3 window.
 - Round 3's first commit: `f5c56ae`, **2026-11-14 00:06 IST** (the plan), 7 minutes after the window opened. The first code followed at 00:15 (`5f5c51a`).
-- 85 commits in total at the time of writing, 14 of them in Round 3, plus this documentation commit. History is never squashed.
+- 112 commits in total on 15 Nov 02:50 IST, 41 of them in Round 3, plus this documentation commit. History is never squashed.
 - No code was written outside the build windows; Round 3 builds on our own Round 2 code.

@@ -51,8 +51,20 @@ The testers were fresh AI agents (Claude Sonnet) with no context from this proje
 
 | Layer | Result |
 |---|---|
-| API (`uv run pytest`) | **215 passed, 0 failed** (local Postgres 16). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts, export and person-to-person comparison (3), duplicates (2), leak sweep (1). |
-| End-to-end on production (`pnpm exec playwright test`) | **18 passed, 0 failed.** Round 3 added: gap interview, decision timeline, acknowledgements and rewrites, counts agreeing across screens, and the person-to-person comparison. Accessibility (axe) still has 0 serious violations in light and dark. |
+| API (`uv run pytest`) | **234 passed, 0 failed** (local Postgres 16, 15 Nov). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts, export and person-to-person comparison (3), duplicates (2), leak sweep (1), then knowledge risk, leaving checklist, first week, Slack import, notifications and issue export, run cancel and resume, and search masking (D61–D69). |
+| End-to-end on production (`pnpm exec playwright test`) | **21 passed, 0 failed** (7 skipped: screenshot capture and dev-only specs), after the redesign and the blind-test fixes. Round 3 added: gap interview, decision timeline, acknowledgements and rewrites, counts agreeing across screens, person-to-person comparison, knowledge risk, leaving checklist and first week. Accessibility (axe, WCAG 2.1 A/AA): 0 serious violations on the landing page and 8 workspace screens, light and dark. Phone: 0 px sideways scroll on every workspace page at 360 and 390 px. |
+
+### Blind agent tests (15 Nov, production, after the redesign)
+
+Three agents with no project context drove the live site with Playwright: a first-time judge (desktop), a phone user (390 and 360 px, touch) and a permission prober. All three completed the loop (Connect → Handover) without help.
+
+| Tester | Found | Fixed (D69) |
+|---|---|---|
+| Judge | Sidebar counts and step states stale until reload; promoted claims shown under "Verified"; wrong switcher location in copy; toasts over the switcher | All |
+| Phone | Primary action off-screen in the top bar; Verify detail in a 100px pane; handover items squeezed to one word per line; floating button over content | All |
+| Permissions | Search could unmask a phone number for a non-reviewer (highlight markers broke the pattern); template id visible in a sandbox's run info; denial text naming the wrong roles | All. No restricted text reached the successor or a member through any page, export, evidence link, Ask or swapped id. |
+
+Left for review (pipeline rules, not presentation): timeline dates taken from a commit range's end instead of the commit; one "probably done" item that is still open; a Missing item overlapping a supported claim.
 
 ### Performance (production, measured from India)
 
