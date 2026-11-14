@@ -41,17 +41,17 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
         {opts && (
           <div data-testid="confirm-dialog">
             <div className="flex items-start gap-3">
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${danger ? "bg-missing-soft text-missing" : "bg-amber-soft text-amber-ink"}`}>
-                {danger ? <AlertTriangle className="h-5 w-5" /> : <HelpCircle className="h-5 w-5" />}
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border border-line ${danger ? "text-mis" : "text-fg-3"}`}>
+                {danger ? <AlertTriangle className="h-4 w-4" /> : <HelpCircle className="h-4 w-4" />}
               </span>
               <div>
-                <p className="font-display text-lg font-semibold leading-snug text-ink">{opts.title}</p>
-                {opts.body && <div className="mt-1.5 text-sm leading-relaxed text-muted">{opts.body}</div>}
+                <p className="text-[14px] font-semibold leading-5 text-fg">{opts.title}</p>
+                {opts.body && <div className="mt-1 text-[13px] leading-5 text-fg-3">{opts.body}</div>}
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-5 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => done(false)}>{opts.cancelLabel ?? "Cancel"}</Button>
-              <Button variant={danger ? "danger" : "primary"} onClick={() => done(true)} data-testid="confirm-ok">{opts.confirmLabel ?? "Continue"}</Button>
+              <Button variant="primary" className={danger ? "!border-mis !bg-mis hover:!bg-mis/90" : ""} onClick={() => done(true)} data-testid="confirm-ok">{opts.confirmLabel ?? "Continue"}</Button>
             </div>
           </div>
         )}

@@ -1,30 +1,34 @@
 "use client";
 
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import Link from "next/link";
 import { forwardRef, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
-/* ------------------------------------------------------------------ Button */
+/* ------------------------------------------------------------------ Button
+ * 28px tall, radius 6, 13px/500. primary = accent fill; secondary = bordered; ghost = transparent;
+ * danger = secondary with red text; success = secondary with a green icon. ("amber" is kept as an alias of primary.)
+ */
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "amber";
 type Size = "sm" | "md" | "lg";
 
 const VARIANT: Record<Variant, string> = {
-  primary: "bg-strong text-on-strong hover:bg-strong/90 shadow-[var(--shadow-sm)]",
-  secondary: "bg-card text-ink ring-1 ring-line-2 hover:bg-paper-2 hover:ring-ink/20",
-  ghost: "text-ink-2 hover:bg-paper-2",
-  danger: "bg-card text-missing ring-1 ring-missing/30 hover:bg-missing-soft",
-  success: "bg-verified-solid text-white hover:bg-verified-solid/90 shadow-[var(--shadow-sm)]",
-  amber: "bg-amber text-on-amber hover:brightness-105 shadow-[var(--shadow-sm)]",
+  primary: "bg-accent text-white border border-accent hover:bg-accent-hover hover:border-accent-hover",
+  amber: "bg-accent text-white border border-accent hover:bg-accent-hover hover:border-accent-hover",
+  secondary: "bg-bg text-fg border border-line-2 hover:bg-hover",
+  ghost: "text-fg-2 border border-transparent hover:bg-hover hover:text-fg",
+  danger: "bg-bg text-mis border border-line-2 hover:bg-mis-soft",
+  success: "bg-bg text-fg border border-line-2 hover:bg-hover [&>svg:first-child]:text-ver",
 };
 const SIZE: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px] gap-1.5",
-  md: "h-10 px-4 text-sm gap-2",
-  lg: "h-12 px-6 text-[15px] gap-2",
+  sm: "h-7 px-2.5 text-[13px] gap-1.5 [&_svg]:h-3.5 [&_svg]:w-3.5",
+  md: "h-8 px-3 text-[13px] gap-1.5 [&_svg]:h-3.5 [&_svg]:w-3.5",
+  lg: "h-9 px-4 text-[14px] gap-2 [&_svg]:h-4 [&_svg]:w-4",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", extra = "") {
-  return `inline-flex select-none items-center justify-center rounded-xl font-semibold transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${extra}`;
+  return `inline-flex select-none items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors duration-150 ease-out disabled:pointer-events-none disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${extra}`;
 }
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; loading?: boolean };
@@ -32,8 +36,8 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: V
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = "primary", size = "md", loading, className = "", children, disabled, ...rest }, ref) {
   return (
-    <button ref={ref} className={buttonClass(variant, size, className)} disabled={disabled || loading} {...rest}>
-      {loading && <Spinner />}
+    <button ref={ref} className={buttonClass(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+      {loading && <Spinner className="h-3.5 w-3.5" />}
       {children}
     </button>
   );
@@ -44,6 +48,16 @@ export function ButtonLink({ href, variant = "primary", size = "md", className =
   return <Link href={href} className={buttonClass(variant, size, className)} {...rest}>{children}</Link>;
 }
 
+/** 28×28 icon-only button. Always pass an aria-label. */
+export const IconButton = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { "aria-label": string }>(
+  function IconButton({ className = "", children, ...rest }, ref) {
+    return (
+      <button ref={ref} type="button" className={`grid h-7 w-7 shrink-0 place-items-center rounded-md text-fg-3 transition-colors duration-150 hover:bg-hover hover:text-fg disabled:opacity-40 [&_svg]:h-4 [&_svg]:w-4 ${className}`} {...rest}>
+        {children}
+      </button>
+    );
+  });
+
 export function Spinner({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -53,20 +67,29 @@ export function Spinner({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+export function Kbd({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <kbd className={`inline-flex h-[17px] min-w-[17px] items-center justify-center rounded-[4px] border border-line-2 border-b-[1.5px] bg-bg px-1 font-sans text-[10.5px] font-medium leading-none text-fg-3 ${className}`}>
+      {children}
+    </kbd>
+  );
+}
+
 /* ------------------------------------------------------------------ Surfaces */
 
 export function Card({ className = "", children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`rounded-2xl border border-line bg-card shadow-[var(--shadow-sm)] ${className}`} {...rest}>{children}</div>;
+  return <div className={`rounded-lg border border-line bg-bg ${className}`} {...rest}>{children}</div>;
 }
 
-export function PageHeader({ eyebrow, title, description, actions }:
+/** Page title (24px/650), description in fg-3, actions on the right. The eyebrow is kept for the API but not shown
+ *  (the breadcrumb in the top bar says where you are). */
+export function PageHeader({ title, description, actions }:
   { eyebrow?: string; title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className="animate-rise flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        {eyebrow && <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">{eyebrow}</p>}
-        <h1 className="font-display mt-1 text-[28px] font-semibold leading-tight text-ink sm:text-[32px]">{title}</h1>
-        {description && <p className="mt-1.5 max-w-2xl text-[15px] text-muted">{description}</p>}
+    <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <div className="min-w-0 max-w-[720px]">
+        <h1 className="text-[24px] font-[650] leading-8 tracking-[-0.02em] text-fg">{title}</h1>
+        {description && <p className="mt-1.5 text-[13.5px] leading-[21px] text-fg-3">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -79,49 +102,98 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 export function SkeletonList({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="space-y-3" aria-label="Loading">
+    <div className="divide-y divide-line overflow-hidden rounded-lg border border-line" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="rounded-2xl border border-line bg-card p-4">
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="mt-3 h-4 w-11/12" />
-          <Skeleton className="mt-2 h-4 w-2/3" />
+        <div key={i} className="flex items-start gap-3 px-3.5 py-3">
+          <Skeleton className="mt-0.5 h-3.5 w-3.5 rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="h-3.5 w-10/12" />
+            <Skeleton className="mt-2 h-3 w-1/3" />
+          </div>
         </div>
       ))}
     </div>
   );
 }
 
+/** Empty, error and "not for you" states: a 16px icon in a 32px rounded square, a 13px title, a 12.5px line. */
 export function EmptyState({ icon, title, children, action }:
   { icon?: React.ReactNode; title: string; children?: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="animate-fade flex flex-col items-center rounded-2xl border border-dashed border-line-2 bg-card/60 px-6 py-12 text-center">
-      {icon && <div className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-paper-2 text-ink-2">{icon}</div>}
-      <p className="font-display text-lg font-semibold text-ink">{title}</p>
-      {children && <div className="mt-1 max-w-md text-sm text-muted">{children}</div>}
-      {action && <div className="mt-5">{action}</div>}
+    <div className="flex flex-col items-center rounded-lg border border-line px-6 py-10 text-center">
+      {icon && <div className="mb-3 grid h-8 w-8 place-items-center rounded-md border border-line text-fg-3 [&_svg]:h-4 [&_svg]:w-4">{icon}</div>}
+      <p className="text-[13px] font-semibold text-fg">{title}</p>
+      {children && <div className="mt-1 max-w-md text-[12.5px] leading-[19px] text-fg-3">{children}</div>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }
 
+/** Notice: a bordered box on bg-sunk with a semantic icon; warnings use the soft tint. */
 export function Alert({ tone = "info", children, className = "" }:
   { tone?: "info" | "error" | "success" | "warn"; children: React.ReactNode; className?: string }) {
   const t = {
-    info: "bg-supported-soft text-supported ring-supported/20",
-    error: "bg-missing-soft text-missing ring-missing/20",
-    success: "bg-verified-soft text-verified ring-verified/20",
-    warn: "bg-amber-soft text-amber-ink ring-amber/30",
+    info: { box: "border-line bg-bg-sunk", icon: <Info className="h-4 w-4 text-accent-ink" /> },
+    error: { box: "border-line bg-bg-sunk", icon: <XCircle className="h-4 w-4 text-mis" /> },
+    success: { box: "border-line bg-bg-sunk", icon: <CheckCircle2 className="h-4 w-4 text-ver" /> },
+    warn: { box: "border-con/25 bg-con-soft", icon: <AlertTriangle className="h-4 w-4 text-con" /> },
   }[tone];
-  return <div role={tone === "error" ? "alert" : "status"} className={`animate-fade rounded-xl px-4 py-3 text-sm ring-1 ${t} ${className}`}>{children}</div>;
+  return (
+    <div role={tone === "error" ? "alert" : "status"} className={`flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5 text-[13px] text-fg ${t.box} ${className}`}>
+      <span className="mt-0.5 shrink-0">{t.icon}</span>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
 }
 
 export function Pill({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <span className={`inline-flex items-center gap-1 rounded-full bg-paper-2 px-2.5 py-0.5 text-[11px] font-medium text-ink-2 ring-1 ring-line ${className}`}>{children}</span>;
+  return <span className={`inline-flex h-[22px] items-center gap-1 rounded-[4px] border border-line px-1.5 text-[12px] font-medium text-fg-2 ${className}`}>{children}</span>;
+}
+
+/** Notion-style property list: a label column (icon + label in fg-3) and values in fg. */
+export function PropertyList({ rows, labelWidth = 124, className = "" }:
+  { rows: { icon?: React.ReactNode; label: string; value: React.ReactNode; testid?: string }[]; labelWidth?: number; className?: string }) {
+  return (
+    <dl className={`grid gap-y-0.5 text-[13px] ${className}`} style={{ gridTemplateColumns: `${labelWidth}px minmax(0,1fr)` }}>
+      {rows.map((r) => (
+        <div key={r.label} className="contents" data-testid={r.testid}>
+          <dt className="flex min-h-[28px] items-center gap-2 text-fg-3 [&_svg]:h-3.5 [&_svg]:w-3.5">{r.icon}{r.label}</dt>
+          <dd className="flex min-h-[28px] min-w-0 flex-wrap items-center gap-x-2 text-fg">{r.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** Boxed list: hairline border, radius 8, rows divided by hairlines, optional sunk header and footer. */
+export function BoxedList({ header, footer, children, className = "", ...rest }:
+  { header?: React.ReactNode; footer?: React.ReactNode; children: React.ReactNode; className?: string } & Omit<React.HTMLAttributes<HTMLDivElement>, "children">) {
+  return (
+    <div className={`overflow-hidden rounded-lg border border-line bg-bg ${className}`} {...rest}>
+      {header && <div className="border-b border-line bg-bg-sunk px-3.5 py-2 text-[12px] font-medium text-fg-3">{header}</div>}
+      <div className="divide-y divide-line">{children}</div>
+      {footer && <div className="border-t border-line bg-bg-sunk px-3.5 py-2 text-[12.5px] text-fg-3">{footer}</div>}
+    </div>
+  );
+}
+
+/** Section heading used inside pages: 16px/600 title, a muted count, an optional line, optional right side. */
+export function SectionTitle({ title, count, hint, right, id }:
+  { title: React.ReactNode; count?: number | string; hint?: React.ReactNode; right?: React.ReactNode; id?: string }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-2" id={id}>
+      <div>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-fg">{title}{count !== undefined && <span className="ml-1.5 text-[13px] font-normal text-fg-3">{count}</span>}</h2>
+        {hint && <p className="mt-0.5 text-[12.5px] text-fg-3">{hint}</p>}
+      </div>
+      {right}
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ Modal / drawer */
 
-// Overlays render into <body> so animated/transformed ancestors (which create stacking contexts) can't trap them
-// beneath the sticky header.
+// Overlays render into <body> so ancestors with their own stacking context can't trap them under the top bar.
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** Focus management for dialogs: focus moves in on open, Tab stays inside, Escape closes, focus returns on close. */
@@ -165,9 +237,9 @@ function ModalPanel({ onClose, children, label }: { onClose: () => void; childre
   const ref = useRef<HTMLDivElement>(null);
   useDialogFocus(ref, onClose);
   return (
-    <div className="animate-fade fixed inset-0 z-40 grid place-items-center bg-[var(--overlay)] p-4 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="animate-fade fixed inset-0 z-50 grid place-items-center bg-[var(--overlay)] p-4" onClick={onClose}>
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
-        className="animate-pop w-full max-w-md rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-lg)] outline-none" onClick={(e) => e.stopPropagation()}>
+        className="animate-pop scroll-quiet max-h-[calc(100vh-32px)] w-full max-w-[480px] overflow-auto rounded-[10px] border border-line bg-bg p-5 shadow-[var(--pop)] outline-none" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -183,9 +255,9 @@ function DrawerPanel({ onClose, children, label }: { onClose: () => void; childr
   const ref = useRef<HTMLElement>(null);
   useDialogFocus(ref, onClose);
   return (
-    <div className="animate-fade fixed inset-0 z-40 flex justify-end bg-[var(--overlay)] backdrop-blur-[1px]" onClick={onClose}>
+    <div className="animate-fade fixed inset-0 z-50 flex justify-end bg-[var(--overlay)]" onClick={onClose}>
       <aside ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
-        className="animate-drawer scroll-quiet h-full w-full max-w-xl overflow-auto border-l border-line bg-paper shadow-[var(--shadow-lg)] outline-none" onClick={(e) => e.stopPropagation()}>
+        className="animate-drawer scroll-quiet h-full w-full max-w-[540px] overflow-auto border-l border-line bg-bg shadow-[var(--pop)] outline-none" onClick={(e) => e.stopPropagation()}>
         {children}
       </aside>
     </div>
