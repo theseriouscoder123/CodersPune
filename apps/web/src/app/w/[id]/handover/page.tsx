@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, Download, FileText, HelpCircle, History, Hourglass, Lock, Network, Printer, Rocket, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarDays, Download, FileText, HelpCircle, History, Hourglass, Lock, Network, Printer, Rocket, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -12,7 +12,7 @@ import { EvidenceCard } from "@/components/ledger/EvidenceCard";
 import { STATUS_META, StatusChip } from "@/components/ledger/StatusChip";
 import { HandoverPicker, useHandoverSelection } from "@/components/workspace/HandoverPicker";
 import { Avatar, useWorkspace } from "@/components/workspace/WorkspaceShell";
-import { Alert, Button, Card, Drawer, EmptyState, SkeletonList, Spinner } from "@/components/ui";
+import { Alert, Button, ButtonLink, Card, Drawer, EmptyState, SkeletonList, Spinner } from "@/components/ui";
 import { api, type EvidenceInfo, type HandoverItem, type HandoverView } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
@@ -139,6 +139,7 @@ function HandoverInner() {
                 )}
               </div>
               <div className="no-print flex flex-wrap gap-2">
+                {(isSuccessor || isReviewer) && hid && <ButtonLink href={`/w/${ws.id}/first-week?h=${hid}`} data-testid="first-week-link"><CalendarDays className="h-4 w-4" /> {isSuccessor ? "My first week" : `${v.successor}'s first week`}</ButtonLink>}
                 <Button variant="secondary" onClick={() => window.print()} data-testid="print"><Printer className="h-4 w-4" /> Print / Save as PDF</Button>
                 <Button variant="secondary" loading={exporting} onClick={() => exportMd(v.version)}><Download className="h-4 w-4" /> Export Markdown</Button>
               </div>

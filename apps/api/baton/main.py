@@ -13,6 +13,7 @@ from baton.routers import (
     ask,
     claims,
     custom,
+    firstweek,
     handovers,
     interviews,
     leaving,
@@ -22,6 +23,7 @@ from baton.routers import (
     risk,
     runs,
     search,
+    slack_import,
     sources,
     team,
     workspaces,
@@ -83,5 +85,5 @@ def health() -> dict:
 
 
 app.include_router(api)
-for r in (workspaces.router, custom.router, runs.router, claims.router, handovers.router, pipeline_health_routes.router, team.router, ask.router, activity.router, search.router, lifecycle.router, sources.router, interviews.router, relations.router, acks.router, rerender.router, risk.router, leaving.router):
+for r in (workspaces.router, custom.router, runs.router, claims.router, handovers.router, pipeline_health_routes.router, team.router, ask.router, activity.router, search.router, lifecycle.router, sources.router, interviews.router, relations.router, acks.router, rerender.router, risk.router, leaving.router, firstweek.router, slack_import.router):
     app.include_router(r)
