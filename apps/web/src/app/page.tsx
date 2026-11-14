@@ -56,9 +56,9 @@ export default function Home() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <Logo />
         <nav className="flex items-center gap-1 text-sm">
-          <a href="#how" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 sm:block">How it works</a>
-          <a href="#trust" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 sm:block">Trust</a>
-          <a href="#security" className="hidden rounded-lg px-3 py-2 text-ink-2 hover:bg-paper-2 md:block">Security</a>
+          <a href="#how" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-fg-2 hover:bg-bg-sunk sm:block">How it works</a>
+          <a href="#trust" className="hidden rounded-lg px-3 py-2 text-fg-2 hover:bg-bg-sunk sm:block">Trust</a>
+          <a href="#security" className="hidden rounded-lg px-3 py-2 text-fg-2 hover:bg-bg-sunk md:block">Security</a>
           <ThemeToggle />
           <ButtonLink href="/new" variant="secondary" size="sm" className="ml-1 whitespace-nowrap">Use your repo</ButtonLink>
         </nav>
@@ -67,13 +67,13 @@ export default function Home() {
       <main className="flex-1">
         <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pt-16">
           <div className="animate-rise">
-            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1 text-xs font-medium text-ink-2">
-              <span className="animate-pulse-dot h-1.5 w-1.5 rounded-full bg-amber" /> Knowledge handover for small software teams
+            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-3 py-1 text-xs font-medium text-fg-2">
+              <span className="animate-pulse-dot h-1.5 w-1.5 rounded-full bg-accent" /> Knowledge handover for small software teams
             </p>
-            <h1 className="font-display mt-5 max-w-[19ch] text-[40px] font-semibold leading-[1.04] tracking-[-0.01em] text-ink [text-wrap:balance] sm:text-[48px] lg:text-[54px]">
-              When someone leaves, keep the <em className="font-normal italic text-amber-ink">reasoning</em>, not just the files.
+            <h1 className="mt-5 max-w-[19ch] text-[40px] font-semibold leading-[1.04] tracking-[-0.01em] text-fg [text-wrap:balance] sm:text-[48px] lg:text-[54px]">
+              When someone leaves, keep the <em className="font-normal italic text-accent-ink">reasoning</em>, not just the files.
             </h1>
-            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-ink-2">
+            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-fg-2">
               Baton rebuilds a project&apos;s decisions, owners, risks and open work from its repo, notes and chat. Every statement
               is linked to a source and graded by its evidence, and nothing reaches the successor until a person approves it.
             </p>
@@ -83,32 +83,32 @@ export default function Home() {
                 Start with a public GitHub repo <ArrowRight className="h-4 w-4" />
               </ButtonLink>
             </div>
-            <p className="mt-3 text-xs text-muted">
+            <p className="mt-3 text-xs text-fg-3">
               The demo is a fictional student-club project, opened in your own copy so nothing you do affects other visitors. No sign-up.
             </p>
           </div>
 
           <div className="animate-rise relative" style={{ animationDelay: "120ms" }}>
-            <div className="absolute -inset-6 -z-10 rounded-[32px] bg-gradient-to-br from-amber-soft via-transparent to-supported-soft opacity-70 blur-2xl" />
-            <div className="rounded-3xl border border-line bg-card p-5 shadow-[var(--shadow-lg)]">
+            <div className="absolute -inset-6 -z-10 rounded-[32px] bg-gradient-to-br from-accent-soft via-transparent to-ver-soft opacity-70 blur-2xl" />
+            <div className="rounded-xl border border-line bg-bg p-5 shadow-[var(--pop)]">
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Handover ledger</p>
-                  <p className="font-display text-lg font-semibold text-ink">Campus Events App · Rohan → Neha</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-fg-3">Handover ledger</p>
+                  <p className="text-lg font-semibold text-fg">Campus Events App · Rohan → Neha</p>
                 </div>
-                <span className="rounded-full bg-amber-soft px-2.5 py-1 text-[11px] font-semibold text-amber-ink">Draft v1</span>
+                <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-semibold text-accent-ink">Draft v1</span>
               </div>
               <ul className="mt-3 space-y-2.5">
                 {LEDGER.map((c, i) => (
-                  <li key={c.text} className="animate-rise rounded-xl border border-line bg-paper/60 p-3" style={{ animationDelay: `${300 + i * 260}ms` }}>
+                  <li key={c.text} className="animate-rise rounded-lg border border-line bg-bg-side/60 p-3" style={{ animationDelay: `${300 + i * 260}ms` }}>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{c.type}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">{c.type}</span>
                       <span className="animate-stamp" style={{ animationDelay: `${650 + i * 260}ms` }}>
                         <StatusChip status={c.status} />
                       </span>
                     </div>
-                    <p className="mt-1 text-[14px] leading-snug text-ink">{c.text}</p>
-                    <p className="mt-1 font-mono text-[11px] text-supported">{c.ref}</p>
+                    <p className="mt-1 text-[14px] leading-snug text-fg">{c.text}</p>
+                    <p className="mt-1 font-mono text-[11px] text-ver">{c.ref}</p>
                   </li>
                 ))}
               </ul>
@@ -116,20 +116,20 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="how" className="border-y border-line bg-card/70">
+        <section id="how" className="border-y border-line bg-bg/70">
           <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">How it works</p>
-            <h2 className="font-display mt-2 text-3xl font-semibold text-ink">Five steps, each with a clear owner</h2>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink">How it works</p>
+            <h2 className="mt-2 text-3xl font-semibold text-fg">Five steps, each with a clear owner</h2>
             <ol className="relative mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
               <span className="animate-draw absolute left-6 right-6 top-6 hidden h-px bg-line-2 lg:block" aria-hidden />
               {STEPS.map((s, i) => (
                 <li key={s.name} className="relative">
-                  <span className="relative z-10 grid h-12 w-12 place-items-center rounded-2xl border border-line bg-card text-ink shadow-[var(--shadow-sm)]">
+                  <span className="relative z-10 grid h-12 w-12 place-items-center rounded-lg border border-line bg-bg text-fg">
                     <s.Icon className="h-5 w-5" strokeWidth={1.8} />
                   </span>
-                  <p className="mt-4 text-xs font-semibold text-amber-ink">Step {i + 1}</p>
-                  <p className="font-display text-xl font-semibold text-ink">{s.name}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{s.text}</p>
+                  <p className="mt-4 text-xs font-semibold text-accent-ink">Step {i + 1}</p>
+                  <p className="text-xl font-semibold text-fg">{s.name}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-fg-3">{s.text}</p>
                 </li>
               ))}
             </ol>
@@ -139,9 +139,9 @@ export default function Home() {
         <section id="trust" className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.4fr]">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Evidence, not guesswork</p>
-              <h2 className="font-display mt-2 text-3xl font-semibold text-ink">Five statuses, set by rules</h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-ink-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink">Evidence, not guesswork</p>
+              <h2 className="mt-2 text-3xl font-semibold text-fg">Five statuses, set by rules</h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-fg-2">
                 The language model only proposes claims and quotes. Deterministic code and a separate verifier decide how much each
                 claim can be trusted, and the reason is always shown.
               </p>
@@ -151,25 +151,25 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {PRINCIPLES.map((p) => (
-                <div key={p.title} className="lift rounded-2xl border border-line bg-card p-5">
-                  <p.Icon className="h-5 w-5 text-amber-ink" strokeWidth={1.8} />
-                  <p className="mt-3 font-semibold text-ink">{p.title}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{p.text}</p>
+                <div key={p.title} className="lift rounded-lg border border-line bg-bg p-5">
+                  <p.Icon className="h-5 w-5 text-accent-ink" strokeWidth={1.8} />
+                  <p className="mt-3 font-semibold text-fg">{p.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-fg-3">{p.text}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
-        <section id="features" className="border-t border-line bg-card/70">
+        <section id="features" className="border-t border-line bg-bg/70">
           <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Built for real teams</p>
-            <h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold text-ink">Everything around the handover, not just the handover</h2>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink">Built for real teams</p>
+            <h2 className="mt-2 max-w-2xl text-3xl font-semibold text-fg">Everything around the handover, not just the handover</h2>
             <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((f) => (
-                <div key={f.title} className="lift rounded-2xl border border-line bg-card p-5">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-soft text-amber-ink"><f.Icon className="h-5 w-5" strokeWidth={1.8} /></span>
-                  <p className="mt-4 font-semibold text-ink">{f.title}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.text}</p>
+                <div key={f.title} className="lift rounded-lg border border-line bg-bg p-5">
+                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent-ink"><f.Icon className="h-5 w-5" strokeWidth={1.8} /></span>
+                  <p className="mt-4 font-semibold text-fg">{f.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-fg-3">{f.text}</p>
                 </div>
               ))}
             </div>
@@ -179,17 +179,17 @@ export default function Home() {
         <section id="security" className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_1.2fr]">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Security and privacy</p>
-              <h2 className="font-display mt-2 text-3xl font-semibold text-ink">Designed for the parts of a project people shouldn&apos;t see</h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-ink-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink">Security and privacy</p>
+              <h2 className="mt-2 text-3xl font-semibold text-fg">Designed for the parts of a project people shouldn&apos;t see</h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-fg-2">
                 Handovers touch budgets, contracts and credentials. Baton treats every source as restricted until its access list
                 says otherwise, and every rule below is enforced on the server and covered by automated tests.
               </p>
             </div>
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {SECURITY.map((t) => (
-                <li key={t} className="flex items-start gap-3 rounded-xl border border-line bg-card px-4 py-3 text-sm text-ink-2">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-verified" /> {t}
+                <li key={t} className="flex items-start gap-3 rounded-lg border border-line bg-bg px-4 py-3 text-sm text-fg-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-ver" /> {t}
                 </li>
               ))}
             </ul>
@@ -197,9 +197,9 @@ export default function Home() {
         </section>
 
         <section className="px-5 pb-20 sm:px-8">
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-strong px-6 py-12 text-center text-on-strong sm:px-12">
-            <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-amber/25 blur-3xl" aria-hidden />
-            <h2 className="font-display relative text-3xl font-semibold sm:text-4xl">See a full handover in two minutes</h2>
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-xl bg-fg px-6 py-12 text-center text-bg sm:px-12">
+            <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent/25 blur-3xl" aria-hidden />
+            <h2 className="relative text-3xl font-semibold sm:text-4xl">See a full handover in two minutes</h2>
             <p className="relative mx-auto mt-3 max-w-xl text-[15px] opacity-80">
               Open your own copy of the demo project, review the evidence as the reviewer, then read the result as the successor.
             </p>
@@ -211,34 +211,34 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-line bg-card/60">
+      <footer className="border-t border-line bg-bg/60">
         <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-8 px-5 py-10 text-sm sm:grid-cols-4 sm:px-8">
           <div className="col-span-2">
             <Logo />
-            <p className="mt-3 max-w-xs text-xs leading-relaxed text-muted">
+            <p className="mt-3 max-w-xs text-xs leading-relaxed text-fg-3">
               Evidence-graded knowledge handovers for small software teams. The demo project and its people are fictional.
             </p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Product</p>
-            <ul className="mt-3 space-y-2 text-ink-2">
-              <li><a className="hover:text-ink" href="#how">How it works</a></li>
-              <li><a className="hover:text-ink" href="#features">Features</a></li>
-              <li><a className="hover:text-ink" href="#security">Security</a></li>
-              <li><a className="hover:text-ink" href="/new">Use your repo</a></li>
+            <p className="text-xs font-semibold uppercase tracking-wider text-fg-3">Product</p>
+            <ul className="mt-3 space-y-2 text-fg-2">
+              <li><a className="hover:text-fg" href="#how">How it works</a></li>
+              <li><a className="hover:text-fg" href="#features">Features</a></li>
+              <li><a className="hover:text-fg" href="#security">Security</a></li>
+              <li><a className="hover:text-fg" href="/new">Use your repo</a></li>
             </ul>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Resources</p>
-            <ul className="mt-3 space-y-2 text-ink-2">
-              <li><a className="inline-flex items-center gap-1.5 hover:text-ink" href="https://github.com/theseriouscoder123/CodersPune" target="_blank" rel="noreferrer"><Github className="h-3.5 w-3.5" /> Source code</a></li>
-              <li><a className="hover:text-ink" href="/api/docs" target="_blank" rel="noreferrer">API reference</a></li>
-              <li><a className="hover:text-ink" href="/api/health" target="_blank" rel="noreferrer">Service status</a></li>
+            <p className="text-xs font-semibold uppercase tracking-wider text-fg-3">Resources</p>
+            <ul className="mt-3 space-y-2 text-fg-2">
+              <li><a className="inline-flex items-center gap-1.5 hover:text-fg" href="https://github.com/theseriouscoder123/CodersPune" target="_blank" rel="noreferrer"><Github className="h-3.5 w-3.5" /> Source code</a></li>
+              <li><a className="hover:text-fg" href="/api/docs" target="_blank" rel="noreferrer">API reference</a></li>
+              <li><a className="hover:text-fg" href="/api/health" target="_blank" rel="noreferrer">Service status</a></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-line">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-4 text-xs text-fg-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <span>© 2026 Baton · Built by Archit Dandavate with AI assistance (Claude Code) · Demo data is synthetic</span>
             <ApiStatus />
           </div>

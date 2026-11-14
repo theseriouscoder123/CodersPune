@@ -17,7 +17,7 @@ export function TryDemoButton({ inverted = false }: { inverted?: boolean }) {
       <Button
         size="lg"
         loading={busy}
-        className={inverted ? "!bg-amber !text-on-amber hover:!bg-amber/90" : ""}
+        className={inverted ? "!bg-accent !text-white hover:!bg-accent/90" : ""}
         onClick={async () => {
           setBusy(true);
           setError(null);
@@ -33,7 +33,7 @@ export function TryDemoButton({ inverted = false }: { inverted?: boolean }) {
       >
         {busy ? "Preparing your copy…" : "Try the demo"} {!busy && <ArrowRight className="h-4 w-4" />}
       </Button>
-      {error && <p className={`mt-2 text-sm ${inverted ? "text-amber" : "text-missing"}`}>Couldn&apos;t open the demo: {error}</p>}
+      {error && <p className={`mt-2 text-sm ${inverted ? "text-accent" : "text-mis"}`}>Couldn&apos;t open the demo: {error}</p>}
     </div>
   );
 }

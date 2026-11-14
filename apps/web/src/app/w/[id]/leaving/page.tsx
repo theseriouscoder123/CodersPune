@@ -53,7 +53,7 @@ function LeavingInner() {
         <>
           <Countdown d={d} hid={h.id} open={open} onChanged={data.reload} />
           <ol className="mt-6 space-y-2" data-testid="leaving-items">
-            {d.items.length === 0 && <li><Card className="p-5 text-sm text-muted">Nothing depends on {d.leaver} alone. Nice.</Card></li>}
+            {d.items.length === 0 && <li><Card className="p-5 text-sm text-fg-3">Nothing depends on {d.leaver} alone. Nice.</Card></li>}
             {d.items.map((it, i) => <Row key={it.key} it={it} n={i + 1} hid={h.id} canMark={d.can_mark} onChanged={data.reload} wsId={ws.id} />)}
           </ol>
         </>
@@ -83,12 +83,12 @@ function Countdown({ d, hid, open, onChanged }: { d: Leaving; hid: string; open:
     }
   }
   return (
-    <Card className={`mt-6 p-5 ${past && open ? "border-missing/30" : ""}`} data-testid="leaving-countdown">
+    <Card className={`mt-6 p-5 ${past && open ? "border-mis/30" : ""}`} data-testid="leaving-countdown">
       <div className="flex flex-wrap items-center gap-4">
-        <span className={`grid h-12 w-12 place-items-center rounded-2xl ${past && open ? "bg-missing-soft text-missing" : "bg-amber-soft text-amber-ink"}`}><CalendarClock className="h-6 w-6" /></span>
+        <span className={`grid h-12 w-12 place-items-center rounded-lg ${past && open ? "bg-mis-soft text-mis" : "bg-accent-soft text-accent-ink"}`}><CalendarClock className="h-6 w-6" /></span>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-2xl font-semibold text-ink">{headline}</p>
-          <p className="text-sm text-muted">
+          <p className="text-2xl font-semibold text-fg">{headline}</p>
+          <p className="text-sm text-fg-3">
             {d.leaves_on && !past ? `Last day ${fmt(d.leaves_on)}. ` : ""}
             {open ? `${open} of ${d.counts.total} still open${past ? `; these now need another owner, or ${d.leaver} on a call.` : "."}` : "Everything is done."}
           </p>
@@ -97,16 +97,16 @@ function Countdown({ d, hid, open, onChanged }: { d: Leaving; hid: string; open:
         {editing && (
           <div className="flex items-center gap-2">
             <input type="date" value={value} onChange={(e) => setValue(e.target.value)} aria-label="Last day"
-              className="h-9 rounded-xl border border-line bg-card px-3 text-sm text-ink" />
+              className="h-9 rounded-lg border border-line bg-bg px-3 text-sm text-fg" />
             <Button size="sm" onClick={() => void save()}>Save</Button>
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
           </div>
         )}
       </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-paper-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Done before the last day">
-        <div className="h-full bg-verified-solid transition-all" style={{ width: `${pct}%` }} />
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-bg-sunk" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Done before the last day">
+        <div className="h-full bg-ver transition-all" style={{ width: `${pct}%` }} />
       </div>
-      <p className="mt-1.5 text-xs text-muted">{d.counts.done} of {d.counts.total} done</p>
+      <p className="mt-1.5 text-xs text-fg-3">{d.counts.done} of {d.counts.total} done</p>
     </Card>
   );
 }
@@ -127,21 +127,21 @@ function Row({ it, n, hid, canMark, onChanged, wsId }: { it: Item; n: number; hi
     }
   }
   return (
-    <li className={`flex items-start gap-3 rounded-2xl border bg-card p-4 ${it.done ? "border-line opacity-80" : "border-line-2"}`} data-testid="leaving-item" data-kind={it.kind} data-done={it.done ? "1" : undefined}>
+    <li className={`flex items-start gap-3 rounded-lg border bg-bg p-4 ${it.done ? "border-line opacity-80" : "border-line-2"}`} data-testid="leaving-item" data-kind={it.kind} data-done={it.done ? "1" : undefined}>
       {it.manual && canMark ? (
         <button type="button" onClick={() => void toggle()} disabled={busy} aria-pressed={it.done} aria-label={it.done ? "Mark as not done" : "Mark as done"} data-testid="leaving-toggle"
-          className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border transition ${it.done ? "border-verified-solid bg-verified-solid text-white" : "border-line-2 bg-paper hover:border-ink/40"}`}>
+          className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border transition ${it.done ? "border-ver bg-ver text-white" : "border-line-2 bg-bg-side hover:border-fg/40"}`}>
           {it.done && <Check className="h-4 w-4" />}
         </button>
       ) : (
-        <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${it.done ? "bg-verified-solid text-white" : "bg-paper-2 text-muted"}`}>{it.done ? <Check className="h-4 w-4" /> : n}</span>
+        <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${it.done ? "bg-ver text-white" : "bg-bg-sunk text-fg-3"}`}>{it.done ? <Check className="h-4 w-4" /> : n}</span>
       )}
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted"><k.Icon className="h-3.5 w-3.5" /> {k.label}{it.done ? " · done" : ""}</p>
-        <p className="mt-1 text-[15px] leading-snug text-ink">{it.title}</p>
-        <p className="mt-0.5 text-xs text-muted">{it.detail}{it.done && it.marked_by ? ` Ticked off by ${it.marked_by}.` : ""}</p>
+        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-fg-3"><k.Icon className="h-3.5 w-3.5" /> {k.label}{it.done ? " · done" : ""}</p>
+        <p className="mt-1 text-[15px] leading-snug text-fg">{it.title}</p>
+        <p className="mt-0.5 text-xs text-fg-3">{it.detail}{it.done && it.marked_by ? ` Ticked off by ${it.marked_by}.` : ""}</p>
       </div>
-      {it.link && <Link href={it.link} className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-xs font-medium text-supported hover:underline">Open <ArrowRight className="h-3.5 w-3.5" /></Link>}
+      {it.link && <Link href={it.link} className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-xs font-medium text-ver hover:underline">Open <ArrowRight className="h-3.5 w-3.5" /></Link>}
     </li>
   );
 }

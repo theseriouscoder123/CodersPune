@@ -22,23 +22,23 @@ export function HandoverChanges({ handoverId, version }: { handoverId: string; v
   return (
     <Card className="no-print mt-5 overflow-hidden" data-testid="handover-changes">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open}
-        className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-paper/50">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-amber-soft text-amber-ink"><GitCompareArrows className="h-4 w-4" /></span>
+        className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-bg-side/50">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent-soft text-accent-ink"><GitCompareArrows className="h-4 w-4" /></span>
         <span className="flex-1">
-          <span className="block font-semibold text-ink">What changed since version {d.previous}</span>
-          <span className="block text-xs text-muted">
+          <span className="block font-semibold text-fg">What changed since version {d.previous}</span>
+          <span className="block text-xs text-fg-3">
             {total === 0 ? "Nothing you can see changed." : (
               <>{d.added.length} added · {d.changed.length} updated · {d.removed.length} removed</>
             )}
           </span>
         </span>
-        {total > 0 && <ChevronDown className={`h-4 w-4 text-muted transition ${open ? "rotate-180" : ""}`} />}
+        {total > 0 && <ChevronDown className={`h-4 w-4 text-fg-3 transition ${open ? "rotate-180" : ""}`} />}
       </button>
       {open && total > 0 && (
         <div className="animate-fade space-y-4 border-t border-line px-5 py-4">
-          <Group title="Added" icon={<Plus className="h-3.5 w-3.5" />} tone="text-verified" items={d.added} />
-          <Group title="Updated" icon={<Pencil className="h-3.5 w-3.5" />} tone="text-amber-ink" items={d.changed} />
-          <Group title="No longer in the handover" icon={<Minus className="h-3.5 w-3.5" />} tone="text-missing" items={d.removed} struck />
+          <Group title="Added" icon={<Plus className="h-3.5 w-3.5" />} tone="text-ver" items={d.added} />
+          <Group title="Updated" icon={<Pencil className="h-3.5 w-3.5" />} tone="text-accent-ink" items={d.changed} />
+          <Group title="No longer in the handover" icon={<Minus className="h-3.5 w-3.5" />} tone="text-mis" items={d.removed} struck />
         </div>
       )}
     </Card>
@@ -52,14 +52,14 @@ function Group({ title, icon, tone, items, struck }: { title: string; icon: Reac
       <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${tone}`}>{icon} {title} ({items.length})</p>
       <ul className="mt-2 space-y-2">
         {items.map((it) => (
-          <li key={it.claim_id} className="rounded-xl border border-line bg-paper/40 px-3.5 py-2.5">
+          <li key={it.claim_id} className="rounded-lg border border-line bg-bg-side/40 px-3.5 py-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <StatusChip status={it.status} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{it.type_label} · {it.section}</span>
-              {it.was_status && <span className="text-[11px] text-muted">was {it.was_status}</span>}
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">{it.type_label} · {it.section}</span>
+              {it.was_status && <span className="text-[11px] text-fg-3">was {it.was_status}</span>}
             </div>
-            <p className={`mt-1 text-sm text-ink ${struck ? "line-through decoration-line-2" : ""}`}>{it.text}</p>
-            {it.was_text && <p className="mt-1 text-xs text-muted">Before: <span className="line-through">{it.was_text}</span></p>}
+            <p className={`mt-1 text-sm text-fg ${struck ? "line-through decoration-line-2" : ""}`}>{it.text}</p>
+            {it.was_text && <p className="mt-1 text-xs text-fg-3">Before: <span className="line-through">{it.was_text}</span></p>}
           </li>
         ))}
       </ul>

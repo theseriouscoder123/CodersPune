@@ -43,11 +43,11 @@ function FirstWeekInner() {
         <>
           <Card className="mt-6 p-5" data-testid="first-week-progress">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="font-display text-xl font-semibold text-ink">{p.counts.done} of {p.counts.total} picked up</p>
-              {p.leaves_on && <p className="text-sm text-muted">{p.leaver_here ? `${p.leaver} is around until ${new Date(`${p.leaves_on}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" })}: ask now.` : `${p.leaver} has left; ask the reviewer.`}</p>}
+              <p className="text-xl font-semibold text-fg">{p.counts.done} of {p.counts.total} picked up</p>
+              {p.leaves_on && <p className="text-sm text-fg-3">{p.leaver_here ? `${p.leaver} is around until ${new Date(`${p.leaves_on}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" })}: ask now.` : `${p.leaver} has left; ask the reviewer.`}</p>}
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="First-week progress">
-              <div className="h-full bg-verified-solid transition-all" style={{ width: `${pct}%` }} />
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-sunk" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="First-week progress">
+              <div className="h-full bg-ver transition-all" style={{ width: `${pct}%` }} />
             </div>
           </Card>
           <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3" data-testid="first-week">
@@ -66,26 +66,26 @@ function Bucket({ b }: { b: Plan["buckets"][number] }) {
   return (
     <section data-testid={`bucket-${b.key}`}>
       <div className="flex items-baseline justify-between border-b border-line-2 pb-2">
-        <h2 className="font-display text-lg font-semibold text-ink">{b.title}</h2>
-        <span className="text-xs text-muted">{left} to do</span>
+        <h2 className="text-lg font-semibold text-fg">{b.title}</h2>
+        <span className="text-xs text-fg-3">{left} to do</span>
       </div>
-      <p className="mt-1.5 text-xs text-muted">{b.help}</p>
+      <p className="mt-1.5 text-xs text-fg-3">{b.help}</p>
       <ul className="mt-3 space-y-2">
-        {b.items.length === 0 && <li className="text-sm text-muted">Nothing here.</li>}
+        {b.items.length === 0 && <li className="text-sm text-fg-3">Nothing here.</li>}
         {shown.map((i) => (
-          <li key={i.claim_id} className={`rounded-xl border bg-card p-3 ${i.done ? "border-line" : "border-line-2"}`} data-done={i.done ? "1" : undefined}>
+          <li key={i.claim_id} className={`rounded-lg border bg-bg p-3 ${i.done ? "border-line" : "border-line-2"}`} data-done={i.done ? "1" : undefined}>
             <div className="flex items-center gap-2">
-              {i.done ? <span className="grid h-5 w-5 place-items-center rounded-full bg-verified-solid text-white"><Check className="h-3 w-3" /></span>
-                : i.state === "question" ? <MessageCircleQuestion className="h-4 w-4 text-amber-ink" /> : <StatusChip status={i.status} />}
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{i.section}</span>
+              {i.done ? <span className="grid h-5 w-5 place-items-center rounded-full bg-ver text-white"><Check className="h-3 w-3" /></span>
+                : i.state === "question" ? <MessageCircleQuestion className="h-4 w-4 text-accent-ink" /> : <StatusChip status={i.status} />}
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">{i.section}</span>
             </div>
-            <p className={`mt-1.5 text-sm leading-snug ${i.done ? "text-ink-2" : "text-ink"}`}>{i.text}</p>
-            <p className="mt-1 text-xs text-muted">{i.state === "question" ? "You asked a question about this. " : ""}{i.why}</p>
+            <p className={`mt-1.5 text-sm leading-snug ${i.done ? "text-fg-2" : "text-fg"}`}>{i.text}</p>
+            <p className="mt-1 text-xs text-fg-3">{i.state === "question" ? "You asked a question about this. " : ""}{i.why}</p>
           </li>
         ))}
       </ul>
       {b.items.length > SHOW && (
-        <button type="button" onClick={() => setAll((v) => !v)} className="mt-2 text-xs font-medium text-supported hover:underline">
+        <button type="button" onClick={() => setAll((v) => !v)} className="mt-2 text-xs font-medium text-ver hover:underline">
           {all ? "Show fewer" : `Show all ${b.items.length}`}
         </button>
       )}

@@ -14,9 +14,9 @@ import { api } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
 const KIND: Record<InterviewQuestion["kind"], { label: string; tone: string }> = {
-  missing: { label: "Missing from the sources", tone: "bg-missing-soft text-missing ring-missing/20" },
-  conflict: { label: "Sources disagree", tone: "bg-conflicting-soft text-conflicting ring-conflicting/20" },
-  custom: { label: "From the reviewer", tone: "bg-supported-soft text-supported ring-supported/20" },
+  missing: { label: "Missing from the sources", tone: "bg-mis-soft text-mis ring-mis/20" },
+  conflict: { label: "Sources disagree", tone: "bg-con-soft text-con ring-con/20" },
+  custom: { label: "From the reviewer", tone: "bg-ver-soft text-ver ring-ver/20" },
 };
 
 export default function InterviewPage() {
@@ -124,14 +124,14 @@ export default function InterviewPage() {
 
   return (
     <div className="mx-auto max-w-3xl" data-testid="interview">
-      <Link href={iv.is_reviewer ? `/w/${ws.id}/review?tab=missing` : `/w/${ws.id}/sources`} className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-ink">
+      <Link href={iv.is_reviewer ? `/w/${ws.id}/review?tab=missing` : `/w/${ws.id}/sources`} className="inline-flex items-center gap-1 text-xs font-medium text-fg-3 hover:text-fg">
         <ArrowLeft className="h-3.5 w-3.5" /> {iv.is_reviewer ? "Back to Review" : "Back to the workspace"}
       </Link>
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-ink">Gap interview</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-ink sm:text-3xl">{title}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink">Gap interview</p>
+          <h1 className="mt-1 text-2xl font-semibold text-fg sm:text-3xl">{title}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-fg-3">
             {iv.is_reviewer
               ? "Baton couldn't answer these from the project's sources. Answers become cited “leaver testimony”: they go through the same evidence and permission checks as every other source, and you review them before approval."
               : `${iv.created_by} is preparing the handover. Baton couldn't find these answers in the project, and you're the person who knows. Your answers are saved as you go.`}
@@ -143,11 +143,11 @@ export default function InterviewPage() {
       {/* Progress */}
       {iv.status !== "draft" && (
         <div className="mt-5" aria-label={`${iv.counts.answered} of ${iv.counts.total} answered`}>
-          <div className="flex items-center justify-between text-xs text-muted">
+          <div className="flex items-center justify-between text-xs text-fg-3">
             <span>{iv.counts.answered} of {iv.counts.total} answered</span>
             {iv.minutes_to_answer != null && <span>Took {iv.minutes_to_answer} min</span>}
           </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-paper-2"><div className="h-full rounded-full bg-amber transition-all" style={{ width: `${pct}%` }} /></div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg-sunk"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} /></div>
         </div>
       )}
 
@@ -187,8 +187,8 @@ export default function InterviewPage() {
 
       {/* Footer actions */}
       {iv.status === "draft" && iv.can_edit && (
-        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur">
-          <p className="text-sm text-ink-2">{iv.counts.total} question{iv.counts.total === 1 ? "" : "s"} for {iv.respondent.name}. Edit or remove any before sending.</p>
+        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-bg/95 px-4 py-3 shadow-[var(--pop)] backdrop-blur">
+          <p className="text-sm text-fg-2">{iv.counts.total} question{iv.counts.total === 1 ? "" : "s"} for {iv.respondent.name}. Edit or remove any before sending.</p>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" loading={busy === "discard"} onClick={() => void discard()}>Discard</Button>
             <Button size="sm" loading={busy === "send"} onClick={() => void send()} data-testid="send-interview"><Send className="h-4 w-4" /> Send to {iv.respondent.name}</Button>
@@ -196,8 +196,8 @@ export default function InterviewPage() {
         </div>
       )}
       {answering && (
-        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur">
-          <p className="text-sm text-ink-2">{iv.counts.answered === 0 ? "Answer at least one question to submit." : `${iv.counts.answered} of ${iv.counts.total} answered. Skipped questions stay open.`}</p>
+        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-bg/95 px-4 py-3 shadow-[var(--pop)] backdrop-blur">
+          <p className="text-sm text-fg-2">{iv.counts.answered === 0 ? "Answer at least one question to submit." : `${iv.counts.answered} of ${iv.counts.total} answered. Skipped questions stay open.`}</p>
           <Button size="sm" loading={busy === "submit"} disabled={iv.counts.answered === 0} onClick={() => void submit()} data-testid="submit-interview">
             <Check className="h-4 w-4" /> Submit answers
           </Button>
@@ -208,7 +208,7 @@ export default function InterviewPage() {
       )}
       {iv.status === "submitted" && iv.is_reviewer && (
         <div className="mt-6 flex justify-end">
-          <Link href={`/w/${ws.id}/review/preview`} className="inline-flex items-center gap-1 text-sm font-semibold text-ink hover:underline">
+          <Link href={`/w/${ws.id}/review/preview`} className="inline-flex items-center gap-1 text-sm font-semibold text-fg hover:underline">
             Preview and approve a new version <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -219,10 +219,10 @@ export default function InterviewPage() {
 
 function StatusBadge({ iv }: { iv: InterviewView }) {
   const m = {
-    draft: ["Draft · not sent", "bg-paper-2 text-ink-2 ring-line"],
-    sent: [iv.on_behalf ? "Answering on their behalf" : iv.is_reviewer ? `Sent · waiting for ${iv.respondent.name}` : "Waiting for your answers", "bg-amber-soft text-amber-ink ring-amber/30"],
-    submitted: ["Answered", "bg-verified-soft text-verified ring-verified/25"],
-    closed: ["Closed", "bg-paper-2 text-ink-2 ring-line"],
+    draft: ["Draft · not sent", "bg-bg-sunk text-fg-2 ring-line"],
+    sent: [iv.on_behalf ? "Answering on their behalf" : iv.is_reviewer ? `Sent · waiting for ${iv.respondent.name}` : "Waiting for your answers", "bg-accent-soft text-accent-ink ring-accent/30"],
+    submitted: ["Answered", "bg-ver-soft text-ver ring-ver/25"],
+    closed: ["Closed", "bg-bg-sunk text-fg-2 ring-line"],
   }[iv.status];
   return <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${m[1]}`} data-testid="interview-status">{m[0]}</span>;
 }
@@ -246,9 +246,9 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
 
   return (
     <li>
-      <Card className={`p-5 transition ${done && answering ? "ring-1 ring-verified/30" : ""}`} data-testid="interview-question">
+      <Card className={`p-5 transition ${done && answering ? "ring-1 ring-ver/30" : ""}`} data-testid="interview-question">
         <div className="flex items-start gap-3">
-          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold ${done ? "bg-verified text-white" : "bg-paper-2 text-ink-2"}`}>
+          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold ${done ? "bg-ver text-white" : "bg-bg-sunk text-fg-2"}`}>
             {done ? <Check className="h-3.5 w-3.5" /> : index}
           </span>
           <div className="min-w-0 flex-1">
@@ -256,22 +256,22 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
             {editing ? (
               <div className="mt-2 flex gap-2">
                 <input value={text} onChange={(e) => setText(e.target.value)} maxLength={500} aria-label="Question text"
-                  className="h-10 flex-1 rounded-xl border border-line bg-paper px-3 text-sm outline-none focus:border-amber" />
+                  className="h-10 flex-1 rounded-lg border border-line bg-bg-side px-3 text-sm outline-none focus:border-accent" />
                 <Button size="sm" loading={busy === `edit-${q.id}`} onClick={async () => { await onEdit(text); setEditing(false); }}>Save</Button>
                 <Button size="sm" variant="ghost" onClick={() => { setText(q.question); setEditing(false); }} aria-label="Cancel"><X className="h-4 w-4" /></Button>
               </div>
             ) : (
-              <p className="mt-2 text-[15px] font-medium leading-snug text-ink">{q.question}</p>
+              <p className="mt-2 text-[15px] font-medium leading-snug text-fg">{q.question}</p>
             )}
-            {q.context && <p className="mt-1 text-xs text-muted">{q.context}</p>}
+            {q.context && <p className="mt-1 text-xs text-fg-3">{q.context}</p>}
           </div>
           {iv.can_edit && !editing && (
             <div className="flex shrink-0 gap-1">
               {q.kind !== "conflict" && (
-                <button type="button" onClick={() => setEditing(true)} aria-label="Edit question" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-paper-2 hover:text-ink"><Pencil className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setEditing(true)} aria-label="Edit question" className="grid h-8 w-8 place-items-center rounded-lg text-fg-3 hover:bg-bg-sunk hover:text-fg"><Pencil className="h-3.5 w-3.5" /></button>
               )}
               <button type="button" onClick={() => void onDrop()} aria-label="Remove question" disabled={busy === `drop-${q.id}`}
-                className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-missing-soft hover:text-missing"><Trash2 className="h-3.5 w-3.5" /></button>
+                className="grid h-8 w-8 place-items-center rounded-lg text-fg-3 hover:bg-mis-soft hover:text-mis"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           )}
         </div>
@@ -282,12 +282,12 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
             {q.options.map((o) => {
               const picked = (answering ? choice : q.chosen_claim_id) === o.claim_id;
               return (
-                <label key={o.claim_id} className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition ${
-                  picked ? "border-amber bg-amber-soft/50" : "border-line bg-paper hover:border-line-2"} ${answering ? "" : "cursor-default"}`}>
+                <label key={o.claim_id} className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition ${
+                  picked ? "border-accent bg-accent-soft/50" : "border-line bg-bg-side hover:border-line-2"} ${answering ? "" : "cursor-default"}`}>
                   {answering && <input type="radio" name={`q-${q.id}`} checked={choice === o.claim_id} onChange={() => setChoice(o.claim_id)} className="mt-0.5 h-4 w-4 accent-[var(--color-amber)]" />}
                   <span className="min-w-0">
-                    <span className="block text-ink">{o.text}</span>
-                    {o.ref && <span className="mt-0.5 block font-mono text-[11px] text-supported">{o.ref}</span>}
+                    <span className="block text-fg">{o.text}</span>
+                    {o.ref && <span className="mt-0.5 block font-mono text-[11px] text-ver">{o.ref}</span>}
                   </span>
                 </label>
               );
@@ -302,15 +302,15 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
               <div>
                 <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={1000} rows={3} aria-label={`Answer to question ${index}`}
                   placeholder="Type what you know. Short is fine."
-                  className="w-full resize-y rounded-xl border border-line bg-paper px-3 py-2 text-sm leading-relaxed outline-none focus:border-amber" />
-                <p className="mt-0.5 text-right text-[11px] text-muted">{answer.length}/1000</p>
+                  className="w-full resize-y rounded-lg border border-line bg-bg-side px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent" />
+                <p className="mt-0.5 text-right text-[11px] text-fg-3">{answer.length}/1000</p>
               </div>
             )}
             {asking && (
               <label className="block text-sm">
-                <span className="text-xs text-muted">Who would know?</span>
+                <span className="text-xs text-fg-3">Who would know?</span>
                 <input value={who} onChange={(e) => setWho(e.target.value)} maxLength={80} placeholder="A name or a team"
-                  className="mt-1 h-10 w-full rounded-xl border border-line bg-paper px-3 text-sm outline-none focus:border-amber" />
+                  className="mt-1 h-10 w-full rounded-lg border border-line bg-bg-side px-3 text-sm outline-none focus:border-accent" />
               </label>
             )}
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -325,27 +325,27 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
               <Button size="sm" variant="ghost" disabled={saving} onClick={() => { setAsking(false); void onAnswer({ answer_kind: "dont_know" }); }}>
                 <HelpCircle className="h-4 w-4" /> I don&apos;t know
               </Button>
-              {done && <span className="text-xs text-verified"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />{q.answer_kind === "dont_know" ? "Marked as unknown" : "Saved"}</span>}
+              {done && <span className="text-xs text-ver"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />{q.answer_kind === "dont_know" ? "Marked as unknown" : "Saved"}</span>}
             </div>
           </div>
         )}
 
         {/* Read-only answer (reviewer, or after submitting) */}
         {!answering && done && (
-          <div className="mt-3 rounded-xl bg-paper px-3 py-2.5 text-sm sm:ml-10">
-            {q.answer_kind === "answered" && <p className="text-ink"><span className="text-xs font-semibold text-muted">{iv.respondent.name}: </span>{q.answer}</p>}
-            {q.answer_kind === "dont_know" && <p className="text-muted">{iv.respondent.name} doesn&apos;t know. This stays an open question.</p>}
-            {q.answer_kind === "ask_other" && <p className="text-ink">{iv.respondent.name} says to ask <b>{q.ask_who}</b>.</p>}
-            {q.answer_kind === "chose_option" && chosen && <p className="text-ink">{iv.respondent.name} says this is current: <b>“{chosen.text}”</b></p>}
+          <div className="mt-3 rounded-lg bg-bg-side px-3 py-2.5 text-sm sm:ml-10">
+            {q.answer_kind === "answered" && <p className="text-fg"><span className="text-xs font-semibold text-fg-3">{iv.respondent.name}: </span>{q.answer}</p>}
+            {q.answer_kind === "dont_know" && <p className="text-fg-3">{iv.respondent.name} doesn&apos;t know. This stays an open question.</p>}
+            {q.answer_kind === "ask_other" && <p className="text-fg">{iv.respondent.name} says to ask <b>{q.ask_who}</b>.</p>}
+            {q.answer_kind === "chose_option" && chosen && <p className="text-fg">{iv.respondent.name} says this is current: <b>“{chosen.text}”</b></p>}
             {iv.is_reviewer && iv.status === "submitted" && (
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 {q.testimony_claim_id && (
-                  <Link href={`/w/${wsId}/review?tab=all&claim=${q.testimony_claim_id}`} className="inline-flex items-center gap-1 text-xs font-semibold text-supported hover:underline" data-testid="open-testimony">
+                  <Link href={`/w/${wsId}/review?tab=all&claim=${q.testimony_claim_id}`} className="inline-flex items-center gap-1 text-xs font-semibold text-ver hover:underline" data-testid="open-testimony">
                     Open the testimony claim <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 )}
                 {q.answer_kind === "chose_option" && (q.conflict_resolved
-                  ? <span className="text-xs text-verified"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />Conflict resolved</span>
+                  ? <span className="text-xs text-ver"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />Conflict resolved</span>
                   : <Button size="sm" variant="secondary" loading={busy === `resolve-${q.id}`} onClick={onResolve} data-testid="resolve-as-suggested">Resolve as {iv.respondent.name} says</Button>)}
               </div>
             )}
@@ -361,7 +361,7 @@ function AddQuestion({ busy, onAdd }: { busy: boolean; onAdd: (t: string) => Pro
   return (
     <form className="mt-3 flex gap-2" onSubmit={async (e) => { e.preventDefault(); if (text.trim().length < 3) return; const ok = await onAdd(text.trim()); if (ok) setText(""); }}>
       <input value={text} onChange={(e) => setText(e.target.value)} maxLength={500} placeholder="Add your own question for the leaver…" aria-label="New question"
-        className="h-10 flex-1 rounded-xl border border-dashed border-line-2 bg-card px-3 text-sm outline-none focus:border-amber" />
+        className="h-10 flex-1 rounded-lg border border-dashed border-line-2 bg-bg px-3 text-sm outline-none focus:border-accent" />
       <Button type="submit" variant="secondary" size="sm" loading={busy} disabled={text.trim().length < 3}><Plus className="h-4 w-4" /> Add</Button>
     </form>
   );

@@ -95,12 +95,12 @@ export default function TeamPage() {
         <>
           <Card className="mt-6 flex flex-wrap items-center justify-between gap-4 p-5">
             <div className="flex items-start gap-3">
-              <span className={`grid h-10 w-10 place-items-center rounded-xl ${t.identity_mode === "invites" ? "bg-verified-soft text-verified" : "bg-amber-soft text-amber-ink"}`}>
+              <span className={`grid h-10 w-10 place-items-center rounded-lg ${t.identity_mode === "invites" ? "bg-ver-soft text-ver" : "bg-accent-soft text-accent-ink"}`}>
                 {t.identity_mode === "invites" ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
               </span>
               <div>
-                <p className="font-semibold text-ink">{t.identity_mode === "invites" ? "Identities are locked" : "Persona switching is on"}</p>
-                <p className="mt-0.5 max-w-xl text-sm text-muted">
+                <p className="font-semibold text-fg">{t.identity_mode === "invites" ? "Identities are locked" : "Persona switching is on"}</p>
+                <p className="mt-0.5 max-w-xl text-sm text-fg-3">
                   {t.identity_mode === "invites"
                     ? "Each person sees only what their role and source access allow. Persona switching is off for everyone."
                     : "Fine for demos and trying things out: anyone with this workspace open can view it as any member. Lock identities before sharing real data."}
@@ -115,16 +115,16 @@ export default function TeamPage() {
             )}
           </Card>
 
-          <div className="stagger mt-5 overflow-hidden rounded-2xl border border-line bg-card">
+          <div className="stagger mt-5 overflow-hidden rounded-lg border border-line bg-bg">
             {t.members.map((m) => (
               <div key={m.id} className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 last:border-0">
                 <Avatar m={m} size={36} />
                 <div className="min-w-[160px] flex-1">
-                  <p className="font-semibold text-ink">{m.name} {m.is_you && <span className="text-xs font-normal text-muted">(you)</span>}</p>
+                  <p className="font-semibold text-fg">{m.name} {m.is_you && <span className="text-xs font-normal text-fg-3">(you)</span>}</p>
                   <div className="mt-0.5 flex flex-wrap gap-1">{m.roles.filter((r) => r !== "member" || m.roles.length === 1).map((r) => <RoleBadge key={r} role={r} />)}</div>
                 </div>
-                <span className="text-xs text-muted">
-                  {m.has_invite ? <span className="inline-flex items-center gap-1 text-verified"><Link2 className="h-3 w-3" /> Link active</span> : "No link yet"}
+                <span className="text-xs text-fg-3">
+                  {m.has_invite ? <span className="inline-flex items-center gap-1 text-ver"><Link2 className="h-3 w-3" /> Link active</span> : "No link yet"}
                   {m.joined ? ` · joined on ${m.joined} device${m.joined > 1 ? "s" : ""}` : ""}
                 </span>
                 {t.can_manage && (
@@ -142,16 +142,16 @@ export default function TeamPage() {
                 )}
                 {t.can_manage && <MemberEmail wsId={ws.id} member={m} onSaved={team.reload} />}
                 {links[m.id] && (
-                  <div className="animate-fade flex w-full items-center gap-2 rounded-xl bg-paper px-3 py-2">
-                    <code className="flex-1 truncate font-mono text-xs text-ink-2">{links[m.id]}</code>
-                    <button className="rounded-lg p-1.5 text-muted hover:bg-paper-2 hover:text-ink" aria-label="Copy link"
+                  <div className="animate-fade flex w-full items-center gap-2 rounded-lg bg-bg-side px-3 py-2">
+                    <code className="flex-1 truncate font-mono text-xs text-fg-2">{links[m.id]}</code>
+                    <button className="rounded-lg p-1.5 text-fg-3 hover:bg-bg-sunk hover:text-fg" aria-label="Copy link"
                       onClick={() => { void navigator.clipboard.writeText(links[m.id]); toast("Link copied"); }}><Copy className="h-3.5 w-3.5" /></button>
                   </div>
                 )}
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted">Links are shown once and stored only as a hash. Making a new link or revoking one immediately invalidates the old one.</p>
+          <p className="mt-3 text-xs text-fg-3">Links are shown once and stored only as a hash. Making a new link or revoking one immediately invalidates the old one.</p>
           {t.notifications && <NotificationsCard wsId={ws.id} n={t.notifications} canManage={t.can_manage} onChanged={team.reload} />}
           <DataCard />
         </>
@@ -181,10 +181,10 @@ function MemberEmail({ wsId, member, onSaved }: { wsId: string; member: Team["me
 
   return (
     <form className="flex w-full items-center gap-2 sm:w-auto sm:basis-full sm:pl-12" onSubmit={(e) => { e.preventDefault(); if (dirty) void save(); }}>
-      <Mail className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+      <Mail className="h-3.5 w-3.5 shrink-0 text-fg-3" aria-hidden />
       <input type="email" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Email for notifications (optional)"
         aria-label={`Email for ${member.name}`} maxLength={254}
-        className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 text-xs outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30 sm:max-w-xs" />
+        className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-bg-side px-2.5 text-xs outline-none focus:border-fg/30 focus:ring-2 focus:ring-accent/30 sm:max-w-xs" />
       {dirty && <Button size="sm" variant="secondary" type="submit" loading={saving}>Save</Button>}
     </form>
   );
@@ -212,20 +212,20 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
   return (
     <Card className="mt-6 p-5" data-testid="notifications">
       <div className="flex items-center gap-2">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-supported-soft text-supported"><Bell className="h-4 w-4" /></span>
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ver-soft text-ver"><Bell className="h-4 w-4" /></span>
         <div>
-          <p className="font-semibold text-ink">Notifications <span className="font-normal text-muted">(optional)</span></p>
-          <p className="text-xs text-muted">Messages carry names and a link, never claim text, so they can&apos;t reveal anything a person isn&apos;t allowed to see.</p>
+          <p className="font-semibold text-fg">Notifications <span className="font-normal text-fg-3">(optional)</span></p>
+          <p className="text-xs text-fg-3">Messages carry names and a link, never claim text, so they can&apos;t reveal anything a person isn&apos;t allowed to see.</p>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-xl border border-line bg-paper/50 p-4">
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink"><Mail className="h-4 w-4" /> Email</p>
+        <div className="rounded-lg border border-line bg-bg-side/50 p-4">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-fg"><Mail className="h-4 w-4" /> Email</p>
           {n.email.configured ? (
-            <p className="mt-1 text-xs text-muted">Sending from {n.email.from}. The successor and leaver get an email when a version is approved; you can email invite links and the leaver&apos;s questions. Add addresses next to each person above.</p>
+            <p className="mt-1 text-xs text-fg-3">Sending from {n.email.from}. The successor and leaver get an email when a version is approved; you can email invite links and the leaver&apos;s questions. Add addresses next to each person above.</p>
           ) : (
-            <p className="mt-1 text-xs text-muted">Email isn&apos;t enabled on this server yet. Everything else works without it, and invite links can still be copied and shared by hand.</p>
+            <p className="mt-1 text-xs text-fg-3">Email isn&apos;t enabled on this server yet. Everything else works without it, and invite links can still be copied and shared by hand.</p>
           )}
           {canManage && n.email.configured && (
             <Button size="sm" variant="secondary" className="mt-3" loading={busy === "email"} onClick={() => test("email")}><Send className="h-3.5 w-3.5" /> Send me a test</Button>
@@ -237,15 +237,15 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
 
       {n.recent.length > 0 && (
         <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Recent</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-fg-3">Recent</p>
           <ul className="mt-2 space-y-1 text-xs">
             {n.recent.map((r, i) => (
-              <li key={i} className="flex flex-wrap items-center gap-2 text-ink-2">
-                <span className={`rounded-full px-1.5 py-px font-medium ${r.status === "sent" ? "bg-verified-soft text-verified" : r.status === "failed" ? "bg-missing-soft text-missing" : "bg-paper-2 text-muted"}`}>{r.status}</span>
+              <li key={i} className="flex flex-wrap items-center gap-2 text-fg-2">
+                <span className={`rounded-full px-1.5 py-px font-medium ${r.status === "sent" ? "bg-ver-soft text-ver" : r.status === "failed" ? "bg-mis-soft text-mis" : "bg-bg-sunk text-fg-3"}`}>{r.status}</span>
                 <span>{r.channel} · {r.event.replaceAll("_", " ")}</span>
-                {r.recipient && <span className="font-mono text-muted">{r.recipient}</span>}
-                {r.detail && <span className="text-muted">· {r.detail}</span>}
-                <span className="ml-auto text-muted">{new Date(r.at).toLocaleString()}</span>
+                {r.recipient && <span className="font-mono text-fg-3">{r.recipient}</span>}
+                {r.detail && <span className="text-fg-3">· {r.detail}</span>}
+                <span className="ml-auto text-fg-3">{new Date(r.at).toLocaleString()}</span>
               </li>
             ))}
           </ul>
@@ -287,18 +287,18 @@ function DataCard() {
 
   return (
     <Card className="mt-6 p-5" data-testid="data-card">
-      <p className="font-semibold text-ink">Your data</p>
-      <p className="mt-0.5 text-sm text-muted">Download everything in this workspace (sources, claims, evidence, reviews and approved versions) as JSON. Secrets were removed before storage, so they aren&apos;t in the export.</p>
+      <p className="font-semibold text-fg">Your data</p>
+      <p className="mt-0.5 text-sm text-fg-3">Download everything in this workspace (sources, claims, evidence, reviews and approved versions) as JSON. Secrets were removed before storage, so they aren&apos;t in the export.</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="secondary" onClick={() => void exportJson()}><Download className="h-4 w-4" /> Export JSON</Button>
         {canDelete && <Button variant="danger" onClick={() => setOpen(true)}><Trash2 className="h-4 w-4" /> Delete workspace</Button>}
       </div>
       <Modal open={open} onClose={() => setOpen(false)} label="Delete workspace">
-        <p className="font-display text-lg font-semibold text-ink">Delete “{ws.name}”?</p>
-        <p className="mt-2 text-sm text-muted">This permanently removes its sources, claims, evidence, reviews, handovers and invite links for everyone. It can&apos;t be undone. Export first if you might need it.</p>
-        <label className="mt-4 block text-xs font-medium text-ink-2" htmlFor="confirm-name">Type the workspace name to confirm</label>
+        <p className="text-lg font-semibold text-fg">Delete “{ws.name}”?</p>
+        <p className="mt-2 text-sm text-fg-3">This permanently removes its sources, claims, evidence, reviews, handovers and invite links for everyone. It can&apos;t be undone. Export first if you might need it.</p>
+        <label className="mt-4 block text-xs font-medium text-fg-2" htmlFor="confirm-name">Type the workspace name to confirm</label>
         <input id="confirm-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off"
-          className="mt-1 h-10 w-full rounded-xl border border-line bg-paper px-3 text-sm outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
+          className="mt-1 h-10 w-full rounded-lg border border-line bg-bg-side px-3 text-sm outline-none focus:border-fg/30 focus:ring-2 focus:ring-accent/30" />
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
           <Button variant="danger" loading={busy} disabled={name.trim() !== ws.name} onClick={() => void remove()}>Delete permanently</Button>
@@ -335,16 +335,16 @@ function ChatHook({ wsId, kind, status, canManage, busy, onTest, onChanged }: {
     }
   }
   return (
-    <div className="rounded-xl border border-line bg-paper/50 p-4" data-testid={`hook-${kind}`}>
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">{kind === "slack" ? <Slack className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />} {h.label}</p>
-      <p className="mt-1 text-xs text-muted">
+    <div className="rounded-lg border border-line bg-bg-side/50 p-4" data-testid={`hook-${kind}`}>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-fg">{kind === "slack" ? <Slack className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />} {h.label}</p>
+      <p className="mt-1 text-xs text-fg-3">
         {status.set ? <>Posting to <code className="font-mono">{status.hint}</code> when a run finishes and when a handover is approved.</>
           : <>Paste a {h.label} <a className="underline underline-offset-2" href={h.docs} target="_blank" rel="noreferrer">{h.what}</a> to post run results and approvals to a channel.</>}
       </p>
       {canManage && (
         <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (value.trim()) void save(value.trim()); }}>
           <input value={value} onChange={(e) => setValue(e.target.value)} placeholder={h.placeholder} aria-label={`${h.label} webhook URL`}
-            className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2.5 font-mono text-xs outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
+            className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-bg px-2.5 font-mono text-xs outline-none focus:border-fg/30 focus:ring-2 focus:ring-accent/30" />
           <Button size="sm" variant="secondary" type="submit" loading={saving} disabled={!value.trim()}>Save</Button>
         </form>
       )}

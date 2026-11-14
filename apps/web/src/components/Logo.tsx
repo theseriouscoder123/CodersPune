@@ -17,7 +17,7 @@ export function Logo({ small = false }: { small?: boolean }) {
       <span className="transition-transform duration-300 group-hover:-rotate-6">
         <BatonMark size={small ? 26 : 32} />
       </span>
-      <span className={`font-display font-semibold tracking-tight text-ink ${small ? "text-[17px]" : "text-[21px]"}`}>Baton</span>
+      <span className={`font-semibold tracking-tight text-fg ${small ? "text-[17px]" : "text-[21px]"}`}>Baton</span>
     </Link>
   );
 }

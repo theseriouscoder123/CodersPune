@@ -27,21 +27,21 @@ export function JoinClient() {
 
   return (
     <div className="paper-grain flex flex-1 flex-col items-center justify-center px-5">
-      <div className="animate-pop w-full max-w-md rounded-2xl border border-line bg-card p-8 text-center shadow-[var(--shadow-md)]">
+      <div className="animate-pop w-full max-w-md rounded-lg border border-line bg-bg p-8 text-center">
         <div className="flex justify-center"><Logo /></div>
         {state.error ? (
           <>
-            <p className="font-display mt-6 text-xl font-semibold text-ink">This link doesn&apos;t work</p>
-            <p className="mt-2 text-sm text-muted">{state.error}</p>
+            <p className="mt-6 text-xl font-semibold text-fg">This link doesn&apos;t work</p>
+            <p className="mt-2 text-sm text-fg-3">{state.error}</p>
             <ButtonLink href="/" variant="secondary" className="mt-6">Go to the start page</ButtonLink>
           </>
         ) : state.name ? (
           <>
-            <p className="font-display mt-6 text-xl font-semibold text-ink">Welcome, {state.name}</p>
-            <p className="mt-2 text-sm text-muted">Taking you to your handover…</p>
+            <p className="mt-6 text-xl font-semibold text-fg">Welcome, {state.name}</p>
+            <p className="mt-2 text-sm text-fg-3">Taking you to your handover…</p>
           </>
         ) : (
-          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted"><Spinner /> Checking your invite…</p>
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-fg-3"><Spinner /> Checking your invite…</p>
         )}
       </div>
     </div>

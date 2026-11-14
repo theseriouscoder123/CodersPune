@@ -1,16 +1,15 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, CheckCircle2, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 import { Suspense, useState } from "react";
 
-import { CoachBar } from "@/components/CoachBar";
 import { CompareViews } from "@/components/ledger/CompareViews";
-import { StatusChip } from "@/components/ledger/StatusChip";
+import { PassIcon, StatusChip } from "@/components/ledger/StatusChip";
 import { useToast } from "@/components/Toast";
 import { HandoverPicker, useHandoverSelection } from "@/components/workspace/HandoverPicker";
 import { NotForPersona } from "@/components/workspace/NotForPersona";
-import { Avatar, useWorkspace } from "@/components/workspace/WorkspaceShell";
-import { Alert, Button, ButtonLink, Card, EmptyState, Modal, PageHeader, SkeletonList } from "@/components/ui";
+import { Avatar, TopbarActions, useWorkspace } from "@/components/workspace/WorkspaceShell";
+import { Alert, Button, ButtonLink, EmptyState, Modal, SkeletonList } from "@/components/ui";
 import { api, storePersona, type HandoverCounts, type HandoverRef, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
@@ -30,6 +29,16 @@ export default function PreviewPage() {
     <Suspense fallback={<SkeletonList rows={4} />}>
       <PreviewInner />
     </Suspense>
+  );
+}
+
+function Stat({ n, label, tone = "fg" }: { n: number; label: string; tone?: "fg" | "ver" | "mis" | "fg-3" }) {
+  const color = { fg: "text-fg", ver: "text-ver", mis: "text-mis", "fg-3": "text-fg-3" }[tone];
+  return (
+    <div className="px-4 py-3">
+      <p className={`text-[22px] font-semibold leading-7 tracking-[-0.02em] ${color}`}>{n}</p>
+      <p className="mt-0.5 text-[12px] leading-[16px] text-fg-3">{label}</p>
+    </div>
   );
 }
 
@@ -75,110 +84,131 @@ function PreviewInner() {
 
   const counts = pv.data?.counts;
   const grouped = (items: Item[]) => ORDER.map((k) => [k, items.filter((i) => i.section === k)] as const).filter(([, xs]) => xs.length);
+  const w = pv.data?.warnings;
+  const hasWarnings = !!w && (w.unresolved_conflicts > 0 || w.missing > 0 || (w.source_changed ?? 0) > 0);
 
   return (
     <div>
-      <CoachBar id="preview" step="Step 4 · Review.">
-        This is exactly what {name} will see after you approve. Anything that cites a source {name} can&apos;t open is withheld
-        automatically, and inferred claims never reach the successor as fact.
-      </CoachBar>
+      <TopbarActions>
+        <ButtonLink size="sm" variant="ghost" href={`/w/${ws.id}/review`}><ArrowLeft /> Back to claims</ButtonLink>
+        {handover && <ButtonLink size="sm" variant="secondary" href={`/w/${ws.id}/leaving?h=${handover.id}`} data-testid="leaving-link"><CalendarClock /> Before {handover.leaver} leaves</ButtonLink>}
+        {!ws.read_only && <Button size="sm" onClick={() => setOpen(true)} data-testid="approve-open"><ShieldCheck /> Approve handover v{nextVersion}</Button>}
+      </TopbarActions>
 
-      <PageHeader eyebrow="Review" title={<span className="flex items-center gap-3">{successor && <Avatar m={successor} size={36} />} What {name} will see</span>}
-        description={handover?.latest_version ? `Version ${handover.latest_version} is approved. Approving again creates version ${nextVersion}.` : "Nothing is approved yet, so the successor currently sees nothing."}
-        actions={<>
-          <ButtonLink href={`/w/${ws.id}/review`} variant="secondary"><ArrowLeft className="h-4 w-4" /> Back to claims</ButtonLink>
-          {handover && <ButtonLink href={`/w/${ws.id}/leaving?h=${handover.id}`} variant="secondary" data-testid="leaving-link"><CalendarClock className="h-4 w-4" /> Before {handover.leaver} leaves</ButtonLink>}
-          {!ws.read_only && <Button variant="success" onClick={() => setOpen(true)} data-testid="approve-open"><ShieldCheck className="h-4 w-4" /> Approve handover v{nextVersion}</Button>}
-        </>} />
+      <p className="flex items-center gap-1.5 text-[12.5px] text-fg-3">
+        <Eye className="h-3.5 w-3.5" /> Preview as {name} · {handover?.latest_version ? `v${handover.latest_version} approved, v${nextVersion} would be next` : "not approved yet"}
+      </p>
+      <h1 className="mt-2 flex items-center gap-3 text-[28px] font-semibold leading-9 tracking-[-0.02em] text-fg">
+        {successor && <Avatar m={successor} size={32} />} What {name} will see
+      </h1>
+      <p className="mt-2 max-w-[680px] text-[14px] leading-[22px] text-fg-2">
+        {handover?.latest_version ? `Version ${handover.latest_version} is approved. Approving again creates version ${nextVersion}.` : "Nothing is approved yet, so the successor currently sees nothing."}{" "}
+        Anything that cites a source {name} can&apos;t open is withheld automatically, and inferred claims never reach {name} as fact.
+      </p>
       <HandoverPicker handovers={sel.handovers} selected={handover} onCreated={sel.reload} />
-      {handover?.scope && <p className="mt-2 text-xs text-muted">Scope: only claims about <b className="text-ink-2">{handover.scope}</b> are included in this handover.</p>}
+      {handover?.scope && <p className="mt-2 text-[12.5px] text-fg-3">Scope: only claims about <b className="font-medium text-fg-2">{handover.scope}</b> are included in this handover.</p>}
 
       {done && handover && (
-        <div className="animate-pop mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-verified/25 bg-verified-soft px-5 py-4" data-testid="approved-banner">
-          <span className="flex items-center gap-2 text-sm font-medium text-verified"><CheckCircle2 className="h-5 w-5" /> Version {done} approved. {name} can now see it.</span>
-          <Button variant="success" size="sm" onClick={() => {
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-ver-soft px-4 py-3" data-testid="approved-banner">
+          <span className="flex items-center gap-2 text-[13px] font-medium text-fg"><PassIcon size={14} /> Version {done} approved. {name} can now see it.</span>
+          <Button size="sm" onClick={() => {
             storePersona(ws.id, handover.successor_id);
             // Full navigation on purpose: the whole shell must reload under the new persona.
             // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             window.location.href = `/w/${ws.id}/handover`;
-          }}>View as {name} <ArrowRight className="h-4 w-4" /></Button>
+          }}>View as {name} <ArrowRight /></Button>
         </div>
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} label="Approve handover">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-verified-soft text-verified"><ShieldCheck className="h-5 w-5" /></span>
-          <h2 className="font-display text-xl font-semibold text-ink">Approve version {nextVersion} for {name}?</h2>
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center" data-testid="approve-counts">
-          <div className="rounded-xl bg-verified-soft p-3"><p className="font-display text-2xl font-semibold text-verified">{counts?.current ?? 0}</p><p className="text-xs text-verified">items shared</p></div>
-          <div className="rounded-xl bg-paper-2 p-3"><p className="font-display text-2xl font-semibold text-ink-2">{counts?.history ?? 0}</p><p className="text-xs text-muted">earlier decisions, as history</p></div>
-          <div className="rounded-xl bg-missing-soft p-3"><p className="font-display text-2xl font-semibold text-missing">{counts?.withheld ?? 0}</p><p className="text-xs text-missing">withheld (restricted)</p></div>
+        <h2 className="flex items-center gap-2 text-[14px] font-semibold text-fg"><ShieldCheck className="h-4 w-4 text-ver" /> Approve version {nextVersion} for {name}?</h2>
+        <p className="mt-1 text-[13px] text-fg-3">{name} sees this version as soon as you approve. You can approve a new version at any time.</p>
+        <div className="mt-4 grid grid-cols-3 divide-x divide-line overflow-hidden rounded-lg border border-line" data-testid="approve-counts">
+          <Stat n={counts?.current ?? 0} label="items shared" tone="ver" />
+          <Stat n={counts?.history ?? 0} label="earlier decisions, as history" />
+          <Stat n={counts?.withheld ?? 0} label="withheld (restricted)" tone="mis" />
         </div>
         {!!counts?.unconfirmed && (
-          <p className="mt-2 text-xs text-muted" data-testid="approve-unconfirmed">
+          <p className="mt-2 text-[12.5px] text-fg-3" data-testid="approve-unconfirmed">
             {counts.unconfirmed} of the {counts.current} shared items passed the AI quote check but no person has confirmed them. {name} will see them marked that way.
           </p>
         )}
-        {pv.data?.warnings && (pv.data.warnings.unresolved_conflicts > 0 || pv.data.warnings.missing > 0 || (pv.data.warnings.source_changed ?? 0) > 0) && (
-          <div className="mt-4 space-y-1 rounded-xl border border-amber/30 bg-amber-soft/70 p-3 text-xs text-amber-ink" data-testid="approve-warnings">
-            <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-3.5 w-3.5" /> Before you approve</p>
-            {pv.data.warnings.unresolved_conflicts > 0 && <p>· {pv.data.warnings.unresolved_conflicts} claims are still in an unresolved conflict. They&apos;ll be shared under &quot;Risks and conflicts&quot;.</p>}
-            {(pv.data.warnings.source_changed ?? 0) > 0 && <p>· {pv.data.warnings.source_changed} claims lost their quote when a source changed. Re-check them first.</p>}
-            {pv.data.warnings.missing > 0 && <p>· {pv.data.warnings.missing} expected items are missing and will appear as Unresolved.</p>}
+        {hasWarnings && w && (
+          <div className="mt-3 space-y-1 rounded-lg border border-line bg-con-soft px-3 py-2.5 text-[12.5px] text-fg-2" data-testid="approve-warnings">
+            <p className="flex items-center gap-1.5 font-semibold text-con"><AlertTriangle className="h-3.5 w-3.5" /> Before you approve</p>
+            {w.unresolved_conflicts > 0 && <p>· {w.unresolved_conflicts} claims are still in an unresolved conflict. They&apos;ll be shared under &quot;Risks and conflicts&quot;.</p>}
+            {(w.source_changed ?? 0) > 0 && <p>· {w.source_changed} claims lost their quote when a source changed. Re-check them first.</p>}
+            {w.missing > 0 && <p>· {w.missing} expected items are missing and will appear as Unresolved.</p>}
           </div>
         )}
-        <label className="mt-4 flex items-start gap-2.5 rounded-xl border border-line p-3 text-sm text-ink-2">
-          <input type="checkbox" checked={showStubs} onChange={(e) => setStubs(e.target.checked)} className="mt-0.5 accent-[var(--ink)]" />
+        <label className="mt-3 flex items-start gap-2.5 rounded-lg border border-line px-3 py-2.5 text-[13px] text-fg-2">
+          <input type="checkbox" checked={showStubs} onChange={(e) => setStubs(e.target.checked)} className="mt-[3px] accent-[var(--accent)]" />
           <span>Show withheld items as <i>&quot;Restricted item. Ask the reviewer&quot;</i> stubs. No text, type or source is revealed.</span>
         </label>
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Approval note (optional)" rows={2}
-          className="mt-3 w-full rounded-xl border border-line bg-card p-3 text-sm outline-none focus:border-ink/30 focus:ring-2 focus:ring-amber/30" />
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Approval note (optional)" rows={2} aria-label="Approval note"
+          className="mt-3 w-full rounded-md border border-line bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-4 focus:border-accent focus:shadow-[0_0_0_3px_var(--ring)]" />
         {err && <Alert tone="error" className="mt-3">{err}</Alert>}
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="success" loading={busy} onClick={approve} data-testid="approve-confirm">Approve and share</Button>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button size="sm" loading={busy} onClick={approve} data-testid="approve-confirm">Approve and share</Button>
         </div>
       </Modal>
 
-      {pv.loading && <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-2"><SkeletonList rows={4} /><SkeletonList rows={2} /></div>}
+      {pv.loading && <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]"><SkeletonList rows={5} /><SkeletonList rows={2} /></div>}
       {pv.data && (
-        <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <section>
-            <h2 className="flex items-center gap-2 font-semibold text-ink"><Eye className="h-4 w-4 text-verified" /> {name} will see <span className="text-muted">({counts ? `${counts.current}${counts.history ? ` + ${counts.history} as history` : ""}` : pv.data.visible.length})</span></h2>
-            <div className="stagger mt-3 space-y-5">
-              {grouped(pv.data.visible).map(([sec, items]) => (
-                <div key={sec}>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{SECTION_NAMES[sec]} · {items.length}</p>
-                  <ul className="mt-2 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
-                    {items.map((it) => (
-                      <li key={it.id} className={`flex items-start gap-3 px-4 py-2.5 text-sm ${it.history ? "bg-paper/40" : ""}`} data-history={it.history ?? undefined}>
-                        <StatusChip status={it.status} />
-                        <span className={it.history ? "text-muted" : "text-ink"}>
-                          {it.history && <span className="mr-1.5 text-[11px] font-semibold uppercase tracking-wider">{it.history === "stale" ? "Probably done ·" : "Earlier, since changed ·"}</span>}
-                          {it.text}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="scroll-quiet lg:sticky lg:top-[8.25rem] lg:max-h-[calc(100vh-9.75rem)] lg:overflow-auto lg:overscroll-contain lg:pr-1">
-            <h2 className="flex items-center gap-2 font-semibold text-ink"><EyeOff className="h-4 w-4 text-missing" /> Withheld from {name} <span className="text-muted">({pv.data.withheld.length})</span></h2>
-            <ul className="stagger mt-3 space-y-2" data-testid="withheld">
-              {[...pv.data.withheld].sort((a, b) => Number(!!b.matters) - Number(!!a.matters)).map((it) => (
-                <WithheldItem key={it.id} it={it} name={name} wsId={ws.id} hid={handover!.id} canAct={!ws.read_only} onChanged={pv.reload} />
-              ))}
-              {pv.data.withheld.length === 0 && <li className="rounded-2xl border border-line bg-card p-4 text-sm text-muted">Nothing is withheld.</li>}
-            </ul>
-            <Card className="mt-4 p-4 text-xs leading-relaxed text-muted">
-              <b className="text-ink">Also not shared:</b> {pv.data.hidden_inferred} inferred claim{pv.data.hidden_inferred === 1 ? "" : "s"} with no passing evidence. If you know one is true,
-              promote it with a note on the claims page.
-            </Card>
-          </section>
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-lg border border-line sm:grid-cols-4 sm:divide-x sm:divide-line max-sm:[&>*:nth-child(n+3)]:border-t max-sm:[&>*:nth-child(even)]:border-l [&>*]:border-line">
+            <Stat n={counts?.current ?? pv.data.visible.length} label={`shared with ${name}`} tone="ver" />
+            <Stat n={counts?.history ?? 0} label="kept as history" />
+            <Stat n={pv.data.withheld.length} label="withheld, restricted source" tone="mis" />
+            <Stat n={pv.data.hidden_inferred} label="inferred, not shared" tone="fg-3" />
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <section className="min-w-0">
+              <h2 className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em] text-fg">
+                <Eye className="h-4 w-4 text-ver" /> {name} will see <span className="text-[13px] font-normal text-fg-3">({counts ? `${counts.current}${counts.history ? ` + ${counts.history} as history` : ""}` : pv.data.visible.length})</span>
+              </h2>
+              <div className="mt-4 space-y-6">
+                {grouped(pv.data.visible).map(([sec, items]) => (
+                  <div key={sec}>
+                    <h3 className="text-[13px] font-semibold text-fg">{SECTION_NAMES[sec]}<span className="ml-1.5 font-normal text-fg-3">{items.length}</span></h3>
+                    <ul className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line">
+                      {items.map((it) => (
+                        <li key={it.id} className="flex items-start gap-3 px-3.5 py-2.5 text-[13px] leading-5" data-history={it.history ?? undefined}>
+                          <span className="mt-px shrink-0"><StatusChip status={it.status} iconOnly /></span>
+                          <span className="sr-only">{it.status}</span>
+                          <span className={`min-w-0 flex-1 ${it.history ? "text-fg-3" : "text-fg"}`}>
+                            {it.history && <span className="mr-1.5 inline-flex h-[18px] items-center rounded-[4px] border border-line px-1 align-[1px] text-[10.5px] font-semibold uppercase tracking-[0.04em] text-fg-3">{it.history === "stale" ? "Probably done" : "Changed later"}</span>}
+                            {it.text}
+                          </span>
+                          <span className="hidden shrink-0 text-[12px] text-fg-3 sm:block">{it.type_label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <aside className="min-w-0 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-auto lg:overscroll-contain scroll-quiet">
+              <h2 className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em] text-fg">
+                <EyeOff className="h-4 w-4 text-mis" /> Withheld from {name} <span className="text-[13px] font-normal text-fg-3">({pv.data.withheld.length})</span>
+              </h2>
+              <p className="mt-0.5 text-[12.5px] text-fg-3">Each cites a source {name} can&apos;t open. Fix it here or leave it withheld.</p>
+              <ul className="mt-3 space-y-2" data-testid="withheld">
+                {[...pv.data.withheld].sort((a, b) => Number(!!b.matters) - Number(!!a.matters)).map((it) => (
+                  <WithheldItem key={it.id} it={it} name={name} wsId={ws.id} hid={handover!.id} canAct={!ws.read_only} onChanged={pv.reload} />
+                ))}
+                {pv.data.withheld.length === 0 && <li className="rounded-lg border border-line px-3.5 py-3 text-[13px] text-fg-3">Nothing is withheld.</li>}
+              </ul>
+              <div className="mt-3 rounded-lg border border-dashed border-line-2 px-3.5 py-3 text-[12.5px] leading-[18px] text-fg-3">
+                <b className="font-semibold text-fg-2">Also not shared:</b> {pv.data.hidden_inferred} inferred claim{pv.data.hidden_inferred === 1 ? "" : "s"} with no passing evidence. If you know one is true,
+                promote it with a note on the claims page.
+              </div>
+            </aside>
+          </div>
+        </>
       )}
       {pv.data && handover && (
         <CompareViews hid={handover.id} members={ws.members} defaultA={handover.successor_id}
@@ -212,24 +242,24 @@ function WithheldItem({ it, name, wsId, hid, canAct, onChanged }: { it: Item; na
     }
   }
   return (
-    <li className={`rounded-2xl border p-3.5 text-sm ${it.matters ? "border-amber/40 bg-amber-soft/50" : "border-missing/20 bg-missing-soft/50"}`} data-testid="withheld-item">
-      {it.matters && <p className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[11px] font-semibold text-amber-ink"><AlertTriangle className="h-3 w-3" /> Looks like {name}&apos;s own work · {it.matters}</p>}
-      <p className="text-ink">{it.text}</p>
-      <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-missing"><Lock className="h-3 w-3" /> {it.reason}</p>
+    <li className={`rounded-lg border px-3.5 py-3 text-[13px] ${it.matters ? "border-accent/50 shadow-[0_0_0_1px_var(--accent-soft)]" : "border-line"}`} data-testid="withheld-item">
+      {it.matters && <p className="mb-1.5 flex items-center gap-1 text-[12px] font-medium text-accent-ink"><AlertTriangle className="h-3 w-3" /> Looks like {name}&apos;s own work · {it.matters}</p>}
+      <p className="leading-5 text-fg">{it.text}</p>
+      <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-mis"><Lock className="mt-0.5 h-3 w-3 shrink-0" /> {it.reason}</p>
       {it.rerendered ? (
-        <div className="mt-2 rounded-xl bg-card p-2.5 text-xs ring-1 ring-line" data-testid="rerendered">
-          <p className="font-semibold text-verified">Rewritten from sources {name} can read</p>
-          <p className="mt-0.5 text-ink">{it.rerendered.text}</p>
-          <p className="mt-1 flex items-center gap-1.5 text-muted"><StatusChip status={it.rerendered.status} />
+        <div className="mt-2.5 rounded-md border border-line bg-bg-sunk px-2.5 py-2 text-[12.5px]" data-testid="rerendered">
+          <p className="font-medium text-ver">Rewritten from sources {name} can read</p>
+          <p className="mt-0.5 text-fg">{it.rerendered.text}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-fg-3"><StatusChip status={it.rerendered.status} />
             {it.rerendered.status === "inferred" ? `Not verified, so ${name} won't see it.` : it.rerendered.visible ? `${name} will see this in the next version you approve.` : ""}</p>
         </div>
       ) : canAct ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Button size="sm" variant={it.matters ? "primary" : "ghost"} loading={busy} onClick={() => void rewrite()} data-testid="rerender">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <Button size="sm" variant={it.matters ? "primary" : "secondary"} loading={busy} onClick={() => void rewrite()} data-testid="rerender">
             Rewrite from {name}&apos;s sources
           </Button>
-          {it.matters && <ButtonLink size="sm" variant="ghost" href={`/w/${wsId}/sources`}>Change who can access the source</ButtonLink>}
-          {result && <p className="w-full text-xs text-muted" data-testid="rerender-result">{result}</p>}
+          {it.matters && <ButtonLink size="sm" variant="ghost" href={`/w/${wsId}/sources`}>Change access</ButtonLink>}
+          {result && <p className="w-full text-[12px] text-fg-3" data-testid="rerender-result">{result}</p>}
         </div>
       ) : null}
     </li>

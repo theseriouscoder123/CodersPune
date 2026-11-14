@@ -21,9 +21,9 @@ type Person = {
 type Risk = { people: Person[]; unowned: ClaimRef[]; rules: { weights: Record<string, number>; high: number; medium: number; sole_share: number; sole_min_commits: number } };
 
 const LEVEL: Record<Person["level"], { label: string; tone: string; bar: string }> = {
-  high: { label: "High risk", tone: "bg-missing-soft text-missing", bar: "bg-missing" },
-  medium: { label: "Medium", tone: "bg-amber-soft text-amber-ink", bar: "bg-amber" },
-  low: { label: "Low", tone: "bg-paper-2 text-muted", bar: "bg-line-2" },
+  high: { label: "High risk", tone: "bg-mis-soft text-mis", bar: "bg-mis" },
+  medium: { label: "Medium", tone: "bg-accent-soft text-accent-ink", bar: "bg-accent" },
+  low: { label: "Low", tone: "bg-bg-sunk text-fg-3", bar: "bg-line-2" },
 };
 
 export default function RiskPage() {
@@ -41,18 +41,18 @@ export default function RiskPage() {
       {risk.data && (
         <>
           {risk.data.unowned.length > 0 && (
-            <Card className="mt-6 border-missing/25 p-5" data-testid="unowned">
-              <h2 className="flex items-center gap-2 font-semibold text-ink"><KeyRound className="h-4 w-4 text-missing" /> Services and accounts with no named owner ({risk.data.unowned.length})</h2>
-              <p className="mt-1 text-sm text-muted">The project depends on these, but no source says who owns them. If the only person who knows leaves, access can be lost.</p>
-              <ul className="mt-3 space-y-1.5">{risk.data.unowned.map((u) => <li key={u.id} className="text-sm text-ink">· {u.text.replace(/^Who owns (the )?/, "").replace(/\?$/, "")}</li>)}</ul>
+            <Card className="mt-6 border-mis/25 p-5" data-testid="unowned">
+              <h2 className="flex items-center gap-2 font-semibold text-fg"><KeyRound className="h-4 w-4 text-mis" /> Services and accounts with no named owner ({risk.data.unowned.length})</h2>
+              <p className="mt-1 text-sm text-fg-3">The project depends on these, but no source says who owns them. If the only person who knows leaves, access can be lost.</p>
+              <ul className="mt-3 space-y-1.5">{risk.data.unowned.map((u) => <li key={u.id} className="text-sm text-fg">· {u.text.replace(/^Who owns (the )?/, "").replace(/\?$/, "")}</li>)}</ul>
             </Card>
           )}
           <div className="stagger mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2" data-testid="risk-people">
             {risk.data.people.length === 0 && <EmptyState title="Nothing to assess yet">Connect a repository and run the pipeline first.</EmptyState>}
             {risk.data.people.map((p) => <PersonCard key={p.key} p={p} max={max} />)}
           </div>
-          <Card className="mt-6 p-4 text-xs leading-relaxed text-muted" data-testid="risk-rules">
-            <b className="text-ink">How the score works.</b> Each file one person maintains alone (at least {Math.round(risk.data.rules.sole_share * 100)}% of {risk.data.rules.sole_min_commits}+ commits) counts {risk.data.rules.weights.sole_files};
+          <Card className="mt-6 p-4 text-xs leading-relaxed text-fg-3" data-testid="risk-rules">
+            <b className="text-fg">How the score works.</b> Each file one person maintains alone (at least {Math.round(risk.data.rules.sole_share * 100)}% of {risk.data.rules.sole_min_commits}+ commits) counts {risk.data.rules.weights.sole_files};
             each open task that names them {risk.data.rules.weights.open_tasks}; each unanswered gap that points at them {risk.data.rules.weights.unanswered};
             each supported fact only they wrote down {risk.data.rules.weights.only_source}. {risk.data.rules.high}+ is high, {risk.data.rules.medium}+ is medium.
             No AI is involved, and only sources you can read are counted.
@@ -76,27 +76,27 @@ function PersonCard({ p, max }: { p: Person; max: number }) {
   return (
     <Card className="p-5" data-testid={`risk-${p.key}`}>
       <div className="flex flex-wrap items-center gap-3">
-        {member ? <Avatar m={member} size={34} /> : <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-paper-2 text-muted"><UserX className="h-4 w-4" /></span>}
+        {member ? <Avatar m={member} size={34} /> : <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-bg-sunk text-fg-3"><UserX className="h-4 w-4" /></span>}
         <div className="min-w-0 flex-1">
-          <p className="font-display text-lg font-semibold text-ink">{p.name}</p>
-          {!p.in_workspace && <p className="text-xs text-muted">Contributor, not a member of this workspace</p>}
+          <p className="text-lg font-semibold text-fg">{p.name}</p>
+          {!p.in_workspace && <p className="text-xs text-fg-3">Contributor, not a member of this workspace</p>}
         </div>
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${lv.tone}`} data-testid="risk-level">{lv.label} · {p.score}</span>
       </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper-2"><div className={`h-full ${lv.bar}`} style={{ width: `${Math.round((p.score / max) * 100)}%` }} /></div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-bg-sunk"><div className={`h-full ${lv.bar}`} style={{ width: `${Math.round((p.score / max) * 100)}%` }} /></div>
       <dl className="mt-4 space-y-3">
         {rows.filter((r) => r.items.length).map((r) => (
           <div key={r.label}>
-            <dt className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">{r.icon} {r.label} · {r.items.length}</dt>
+            <dt className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-fg-3">{r.icon} {r.label} · {r.items.length}</dt>
             <dd>
               <ul className="mt-1 space-y-1">
-                {r.items.slice(0, 4).map((t, i) => <li key={i} className="text-sm leading-snug text-ink-2">{t}</li>)}
-                {r.items.length > 4 && <li className="text-xs text-muted">and {r.items.length - 4} more</li>}
+                {r.items.slice(0, 4).map((t, i) => <li key={i} className="text-sm leading-snug text-fg-2">{t}</li>)}
+                {r.items.length > 4 && <li className="text-xs text-fg-3">and {r.items.length - 4} more</li>}
               </ul>
             </dd>
           </div>
         ))}
-        {p.score === 0 && <p className="text-sm text-muted">Nothing depends on this person alone.</p>}
+        {p.score === 0 && <p className="text-sm text-fg-3">Nothing depends on this person alone.</p>}
       </dl>
       {p.in_workspace && p.score > 0 && <HandoverAction p={p} />}
     </Card>
@@ -138,8 +138,8 @@ function HandoverAction({ p }: { p: Person }) {
     <div className="mt-4">
       {!open ? <Button size="sm" variant="secondary" onClick={() => setOpen(true)} data-testid="risk-start">Start a handover for {p.name}</Button> : (
         <div className="flex flex-wrap items-end gap-2">
-          <label className="flex flex-col gap-1 text-xs font-medium text-muted">Who takes over?
-            <select value={successor} onChange={(e) => setSuccessor(e.target.value)} className="rounded-xl border border-line bg-card px-3 py-2 text-sm text-ink" data-testid="risk-successor">
+          <label className="flex flex-col gap-1 text-xs font-medium text-fg-3">Who takes over?
+            <select value={successor} onChange={(e) => setSuccessor(e.target.value)} className="rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg" data-testid="risk-successor">
               <option value="">Choose a person</option>
               {ws.members.filter((m) => m.id !== p.member_id).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>

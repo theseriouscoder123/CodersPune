@@ -20,7 +20,7 @@ export function ApiStatus() {
   const label = failed ? "Service unreachable" : !health ? "Checking service…" : ok ? "All systems operational" : "Database unreachable";
   return (
     <span className="inline-flex items-center gap-2" data-testid="api-status" title={health ? `AI pipeline ${health.llm.configured ? "configured" : "not configured"}` : undefined}>
-      <span className={`h-2 w-2 rounded-full ${failed || (health && !ok) ? "bg-missing" : health ? "bg-verified" : "bg-line-2"}`} aria-hidden />
+      <span className={`h-2 w-2 rounded-full ${failed || (health && !ok) ? "bg-mis" : health ? "bg-ver" : "bg-line-2"}`} aria-hidden />
       {label}
     </span>
   );

@@ -21,9 +21,9 @@ const ICONS: Record<string, React.ReactNode> = {
   approve: <ShieldCheck className="h-3.5 w-3.5" />,
 };
 const TONE: Record<string, string> = {
-  confirm: "bg-verified-soft text-verified", bulk_confirm: "bg-verified-soft text-verified", approve: "bg-verified-soft text-verified",
-  reject: "bg-missing-soft text-missing", bulk_reject: "bg-missing-soft text-missing",
-  edit: "bg-amber-soft text-amber-ink", promote: "bg-amber-soft text-amber-ink",
+  confirm: "bg-ver-soft text-ver", bulk_confirm: "bg-ver-soft text-ver", approve: "bg-ver-soft text-ver",
+  reject: "bg-mis-soft text-mis", bulk_reject: "bg-mis-soft text-mis",
+  edit: "bg-accent-soft text-accent-ink", promote: "bg-accent-soft text-accent-ink",
 };
 const FILTERS = [
   { key: "all", label: "Everything" },
@@ -57,7 +57,7 @@ export default function ActivityPage() {
       <div className="mt-5 flex flex-wrap gap-1.5" role="tablist">
         {FILTERS.map((x) => (
           <button key={x.key} role="tab" aria-selected={filter === x.key} onClick={() => setFilter(x.key)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${filter === x.key ? "bg-strong text-on-strong ring-strong" : "bg-card text-ink-2 ring-line hover:ring-ink/25"}`}>
+            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${filter === x.key ? "bg-fg text-bg ring-fg" : "bg-bg text-fg-2 ring-line hover:ring-fg/25"}`}>
             {x.label}
           </button>
         ))}
@@ -72,14 +72,14 @@ export default function ActivityPage() {
           <ol className="divide-y divide-line" data-testid="activity-list">
             {entries.map((e, i) => (
               <li key={i} className="flex gap-3 px-4 py-3.5">
-                <span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full ${TONE[e.action] ?? "bg-paper-2 text-ink-2"}`}>{ICONS[e.action] ?? <Pencil className="h-3.5 w-3.5" />}</span>
+                <span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full ${TONE[e.action] ?? "bg-bg-sunk text-fg-2"}`}>{ICONS[e.action] ?? <Pencil className="h-3.5 w-3.5" />}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-ink"><b>{e.actor}</b> <span className="text-muted">({e.role})</span> · {e.label}</p>
-                  <p className="mt-0.5 text-sm text-ink-2">{e.claim}</p>
-                  {e.before && <p className="mt-0.5 text-xs text-muted">Before: <span className="line-through">{e.before}</span></p>}
-                  {e.note && <p className="mt-1 rounded-lg bg-paper px-2.5 py-1.5 text-xs text-ink-2">“{e.note}”</p>}
+                  <p className="text-sm text-fg"><b>{e.actor}</b> <span className="text-fg-3">({e.role})</span> · {e.label}</p>
+                  <p className="mt-0.5 text-sm text-fg-2">{e.claim}</p>
+                  {e.before && <p className="mt-0.5 text-xs text-fg-3">Before: <span className="line-through">{e.before}</span></p>}
+                  {e.note && <p className="mt-1 rounded-lg bg-bg-side px-2.5 py-1.5 text-xs text-fg-2">“{e.note}”</p>}
                 </div>
-                <time className="shrink-0 text-xs text-muted" dateTime={e.at} title={new Date(e.at).toLocaleString()}>{new Date(e.at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time>
+                <time className="shrink-0 text-xs text-fg-3" dateTime={e.at} title={new Date(e.at).toLocaleString()}>{new Date(e.at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time>
               </li>
             ))}
           </ol>

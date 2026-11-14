@@ -113,11 +113,11 @@ export default function RunPage() {
 
       <Card className="mt-6 p-5">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-ink">{history ? (info?.status === "done" ? "Completed" : "Stopped") : info?.status === "done" ? "Done. Opening the ledger…" : info?.status === "failed" ? "Stopped" : info ? "Working…" : "Loading…"}</span>
-          <span className="font-mono text-xs text-muted">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</span>
+          <span className="font-semibold text-fg">{history ? (info?.status === "done" ? "Completed" : "Stopped") : info?.status === "done" ? "Done. Opening the ledger…" : info?.status === "failed" ? "Stopped" : info ? "Working…" : "Loading…"}</span>
+          <span className="font-mono text-xs text-fg-3">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</span>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper-2">
-          <div className={`h-full rounded-full transition-all duration-700 ${info?.status === "failed" ? "bg-missing" : "bg-amber"}`} style={{ width: `${Math.max(pct, 4)}%` }} />
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-sunk">
+          <div className={`h-full rounded-full transition-all duration-700 ${info?.status === "failed" ? "bg-mis" : "bg-accent"}`} style={{ width: `${Math.max(pct, 4)}%` }} />
         </div>
       </Card>
 
@@ -140,27 +140,27 @@ export default function RunPage() {
         {steps.map((s) => {
           const running = s.status === "running";
           return (
-            <li key={s.step} className={`rounded-2xl border p-4 transition ${running ? "border-amber/40 bg-card shadow-[var(--shadow-md)]" : "border-line bg-card/60"}`}>
+            <li key={s.step} className={`rounded-lg border p-4 transition ${running ? "border-accent/40 bg-bg" : "border-line bg-bg/60"}`}>
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-3">
-                  <span className={`grid h-7 w-7 place-items-center rounded-full ${s.status === "done" ? "bg-verified-solid text-white" : s.status === "failed" ? "bg-missing-solid text-white" : running ? "bg-amber-soft text-amber-ink" : "bg-paper-2 text-muted"}`}>
+                  <span className={`grid h-7 w-7 place-items-center rounded-full ${s.status === "done" ? "bg-ver text-white" : s.status === "failed" ? "bg-mis text-white" : running ? "bg-accent-soft text-accent-ink" : "bg-bg-sunk text-fg-3"}`}>
                     {s.status === "done" ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : s.status === "failed" ? <X className="h-3.5 w-3.5" /> : running ? <Spinner className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                   </span>
-                  <span className={`text-sm font-medium ${s.status === "pending" ? "text-muted" : "text-ink"}`}>{s.label}</span>
+                  <span className={`text-sm font-medium ${s.status === "pending" ? "text-fg-3" : "text-fg"}`}>{s.label}</span>
                 </span>
-                {s.total > 0 && <span className="font-mono text-xs text-muted">{s.progress}/{s.total}</span>}
+                {s.total > 0 && <span className="font-mono text-xs text-fg-3">{s.progress}/{s.total}</span>}
               </div>
-              {s.message && s.status !== "pending" && <p className="mt-1.5 pl-10 text-xs text-muted">{s.message}</p>}
+              {s.message && s.status !== "pending" && <p className="mt-1.5 pl-10 text-xs text-fg-3">{s.message}</p>}
               {running && s.total > 0 && (
-                <div className="ml-10 mt-2 h-1.5 overflow-hidden rounded-full bg-paper-2"><div className="h-full rounded-full bg-amber transition-all duration-500" style={{ width: `${Math.round((100 * s.progress) / s.total)}%` }} /></div>
+                <div className="ml-10 mt-2 h-1.5 overflow-hidden rounded-full bg-bg-sunk"><div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${Math.round((100 * s.progress) / s.total)}%` }} /></div>
               )}
               {s.errors.length > 0 && (
-                <p className="mt-2 flex items-start gap-1.5 pl-10 text-xs text-conflicting"><AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" /> {s.errors.length} issue(s), the run continues: {s.errors[s.errors.length - 1]}</p>
+                <p className="mt-2 flex items-start gap-1.5 pl-10 text-xs text-con"><AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" /> {s.errors.length} issue(s), the run continues: {s.errors[s.errors.length - 1]}</p>
               )}
             </li>
           );
         })}
-        {!info && <li className="flex items-center gap-2 text-sm text-muted"><Spinner /> Loading the run…</li>}
+        {!info && <li className="flex items-center gap-2 text-sm text-fg-3"><Spinner /> Loading the run…</li>}
       </ol>
     </div>
   );
