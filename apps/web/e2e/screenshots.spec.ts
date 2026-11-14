@@ -114,3 +114,67 @@ test("capture screenshots", async ({ page }) => {
   await ask.scrollIntoViewIfNeeded();
   await shot(page, "12-ask-handover");
 });
+
+test("capture Round 3 screenshots", async ({ page }) => {
+  test.setTimeout(300_000);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Try the demo" }).first().click();
+  await page.waitForURL(/\/w\/[0-9a-f-]+\/sources/);
+  const ws = page.url().match(/\/w\/([0-9a-f-]+)\//)![1];
+
+  // 08b: why two decisions relate (the timeline's detail drawer)
+  await page.goto(`/w/${ws}/ledger`);
+  const tl = page.getByTestId("decision-timeline");
+  await tl.getByTestId("relation-chip").first().click();
+  await expect(page.getByTestId("relation-detail")).toBeVisible();
+  await shot(page, "08b-timeline-why");
+  await page.keyboard.press("Escape");
+
+  // 21: knowledge risk
+  await page.goto(`/w/${ws}/risk`);
+  await expect(page.getByTestId("risk-people")).toBeVisible();
+  await shot(page, "21-knowledge-risk");
+
+  // 20: compare what two people see
+  await page.goto(`/w/${ws}/review/preview`);
+  await expect(page.getByText(/will see \(\d+/).first()).toBeVisible();
+  await page.getByTestId("compare-views").scrollIntoViewIfNeeded();
+  await expect(page.getByTestId("compare-summary")).toBeVisible();
+  await page.getByTestId("compare-views").evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 64));
+  await shot(page, "20-compare-views");
+
+  // 09b: the approve dialog with its counts
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.getByRole("button", { name: /Approve handover/ }).click();
+  await expect(page.getByTestId("approve-counts")).toBeVisible();
+  await shot(page, "09b-approve-counts");
+  await page.getByRole("button", { name: /Approve and share/ }).click();
+  await expect(page.getByText(/Version 1 approved/i).first()).toBeVisible();
+
+  // 19: a successor question waiting for the reviewer
+  await page.goto(`/w/${ws}/handover`);
+  await persona(page, "Neha");
+  const controls = page.getByTestId("ack-controls");
+  await controls.first().getByTestId("ack-got-it").click();
+  await controls.nth(1).getByTestId("ack-ask").click();
+  await controls.nth(1).getByTestId("ack-question").fill("Who do I ask for admin access to the Vercel project?");
+  await controls.nth(1).getByRole("button", { name: "Send" }).click();
+  await expect(controls.nth(1)).toContainText("Waiting for the reviewer");
+  await persona(page, "Meera");
+  const rq = page.getByTestId("reviewer-questions");
+  await expect(rq).toContainText("Vercel project");
+  await rq.scrollIntoViewIfNeeded();
+  await rq.evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 64));
+  await shot(page, "19-acks-reviewer-questions");
+
+  // 17 and 18: the gap interview, as the reviewer and then as the leaver
+  await page.goto(`/w/${ws}/review?tab=missing`);
+  await page.getByTestId("start-interview").click();
+  await page.waitForURL(/\/interview\//);
+  await expect(page.getByTestId("interview-question").first()).toBeVisible();
+  await shot(page, "17-interview-reviewer");
+  await page.getByTestId("send-interview").click();
+  await page.getByTestId("play-leaver").click();
+  await expect(page.getByTestId("interview-status")).toHaveText("Waiting for your answers");
+  await shot(page, "18-interview-leaver");
+});
