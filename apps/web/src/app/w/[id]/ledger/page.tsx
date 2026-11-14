@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Clock, RefreshCw, X } from "lucide-react";
+import { ArrowRight, Check, Clock, Gauge, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -56,6 +56,7 @@ export default function LedgerPage() {
       <PageHeader eyebrow="Reconstruct" title="The reconstructed ledger"
         description={ledger.data ? <>{total} claims about {leaver}&apos;s work, each linked to evidence.</> : <>Claims about {leaver}&apos;s work, each linked to evidence.</>}
         actions={<>
+          {(isAdmin || ws.persona.roles.includes("reviewer")) && <ButtonLink variant="secondary" href={`/w/${ws.id}/risk`} data-testid="ledger-risk-link"><Gauge className="h-4 w-4" /> Knowledge risk</ButtonLink>}
           {isAdmin && !ws.read_only && <Button variant="secondary" onClick={() => setRunOpen(true)} loading={starting}><RefreshCw className="h-4 w-4" /> Re-run pipeline</Button>}
           <ButtonLink href={`/w/${ws.id}/review`}>Inspect the evidence <ArrowRight className="h-4 w-4" /></ButtonLink>
         </>} />

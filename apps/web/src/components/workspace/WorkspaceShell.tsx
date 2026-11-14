@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Eye, FileSearch, GitBranch, Handshake, History, Lock, RotateCcw, Scale, Search, UserCheck, UsersRound } from "lucide-react";
+import { Check, ChevronDown, Eye, FileSearch, Gauge, GitBranch, Handshake, History, Lock, RotateCcw, Scale, Search, UserCheck, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -287,6 +287,12 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
                   className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="search-open">
                   <Search className="h-4 w-4" />
                 </button>
+              )}
+              {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && (
+                <Link href={`/w/${ws.id}/risk`} title="Knowledge risk: what would be lost if one person left" aria-label="Knowledge risk"
+                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-2 transition hover:bg-paper-2 hover:text-ink" data-testid="risk-link">
+                  <Gauge className="h-4 w-4" />
+                </Link>
               )}
               {(ws.persona.roles.includes("admin") || ws.persona.roles.includes("reviewer")) && !ws.read_only && (
                 <Link href={`/w/${ws.id}/activity`} title="Activity log: who did what, when" aria-label="Activity log"
