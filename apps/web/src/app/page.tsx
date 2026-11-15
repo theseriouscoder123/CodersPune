@@ -83,7 +83,7 @@ export default function Home() {
               </ButtonLink>
             </div>
             <p className="mt-3 text-[12.5px] text-fg-3">
-              The demo is a fictional student-club project, opened in your own copy so nothing you do affects other visitors. No sign-up.
+              The demo is a fictional student-club project, opened in your own copy so nothing you do affects other visitors. No sign-up or login: once inside, switch people from the bottom of the sidebar.
             </p>
           </div>
 

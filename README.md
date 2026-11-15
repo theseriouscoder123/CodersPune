@@ -8,7 +8,10 @@ see, with the unknowns clearly marked.
 
 > CodersInPune Hackathon · Round 3 (The Finish) · Team LoneWolf (Archit Dandavate)
 
-- **Live app:** https://baton-lac.vercel.app  (click **Try the demo**, no sign-up)
+- **Demo access: no login or credentials needed.** Open the live app, click **Try the demo** (you get your own private
+  copy), then use the person switcher at the bottom of the sidebar to act as Meera (reviewer), Neha (successor) or
+  anyone else on the team. Each person sees only what their access allows, enforced by the server.
+- **Live app:** https://baton-lac.vercel.app
 - **Guide:** https://baton-lac.vercel.app/guide (workflow, statuses, access rules and limits)
 - **API health:** https://baton-lac.vercel.app/api/health
 - **Repo:** https://github.com/theseriouscoder123/CodersPune
