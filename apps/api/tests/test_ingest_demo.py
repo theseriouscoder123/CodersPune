@@ -82,3 +82,21 @@ def test_repo_signals_for_checklist(demo):
     assert set(sig["env_prefixes"]["FIREBASE"]) >= {"FIREBASE_PROJECT_ID", "FIREBASE_SERVER_KEY", "FIREBASE_BILLING_ALERT_EMAIL"}
     assert sig["workflows"] == [".github/workflows/deploy.yml"]
     assert sig["path_stats"][".github/workflows/deploy.yml"] == {"rohan": 31, "neha": 2}
+
+
+def test_bot_and_dependency_noise_is_skipped_at_ingest():
+    from baton.ingest.github_normalise import RepoData, is_noise, normalise
+
+    assert is_noise("allcontributors[bot]") and is_noise("dependabot") and is_noise("kent", "docs: add dsbert as a contributor")
+    assert is_noise("kent", "chore(deps): bump vitest from 1.0 to 2.0") and is_noise("kent", "Bump lodash from 4.17.20 to 4.17.21")
+    assert not is_noise("kent", "Switch push reminders to FCM") and not is_noise("kent", "Contributor guide")
+    pr = lambda n, who, title: {"number": n, "title": title, "user": {"login": who}, "state": "closed", "created_at": "2025-01-01T00:00:00Z"}
+    data = RepoData(repo={"html_url": "https://github.com/o/r", "full_name": "o/r"},
+                    pulls=[pr(1, "kent", "Use OIDC for releases"), pr(2, "allcontributors[bot]", "docs: add x as a contributor"),
+                           pr(3, "dependabot[bot]", "Bump y from 1 to 2")],
+                    issue_comments=[{"issue_url": "https://api.github.com/repos/o/r/issues/2", "user": {"login": "kent"},
+                                     "body": "@all-contributors please add x", "created_at": "2025-01-02T00:00:00Z", "id": 9}])
+    drafts, meta = normalise(data)
+    assert [d.location.get("pr") for d in drafts if d.kind == "pr"] == [1]
+    assert not [d for d in drafts if d.kind == "issue_comment"]  # comments on skipped PRs go too
+    assert meta["noise_skipped"] == 2

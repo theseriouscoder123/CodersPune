@@ -41,6 +41,9 @@ Rules:
 - Be thorough: output every distinct handover-relevant fact in the chunks (often 8-20 claims per batch).
 - Prefer claims a successor needs: decisions and WHY, who owns what, unfinished work, blockers, risks, dependencies,
   contacts, recurring problems, next actions. Skip greetings, small talk and routine chores.
+- State what a PR, issue or commit established, not that it happened: "Releases publish through npm OIDC" instead of
+  "PR #265 was merged". A closed issue matters only for the cause, fix or workaround it records; skip issues and PRs
+  that record nothing a successor needs.
 - Never include secrets, credentials or personal contact details (phone numbers, emails) in claim text.""" + UNTRUSTED
 
 

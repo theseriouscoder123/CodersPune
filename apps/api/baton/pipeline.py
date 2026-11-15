@@ -337,7 +337,8 @@ def step_ingest(run_id, job_id, workspace_id, deadline) -> bool:
         _set_job(job_id, progress=total - len(pending) + 1,
                  message=f"{name}: {res['chunks']} chunks ({len(data.commits)} commits, {len(data.pulls)} PRs, "
                          f"{len(data.issues)} issues, {len(data.files)} files), {res['new']} new, {res['removed']} removed, "
-                         f"{res['redactions']} secrets removed")
+                         f"{res['redactions']} secrets removed"
+                         + (f", {meta['noise_skipped']} bot or dependency-bump items skipped" if meta.get("noise_skipped") else ""))
         return len(pending) == 1
     _set_job(job_id, progress=total, total=total, message=f"{total} sources ready")
     return True

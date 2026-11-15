@@ -49,9 +49,35 @@ def _num_from_url(url: str | None) -> int | None:
     return int(m.group(1)) if m else None
 
 
+BOT_LOGINS = frozenset({"allcontributors", "dependabot", "dependabot-preview", "renovate", "renovate-bot",
+                        "github-actions", "greenkeeper", "codecov", "snyk-bot", "imgbot", "semantic-release-bot"})
+NOISE_TITLE = re.compile(r"^(?:docs:\s*)?(?:add|update) @?[\w.-]+ as a contributor|^(?:chore|build|fix)\(deps(?:-dev)?\):\s*bump|"
+                         r"^bump [\w@/.-]+ from |^update dependency |^\[snyk\]", re.IGNORECASE)
+
+
+def is_noise(login: str | None, title: str | None = "") -> bool:
+    """Automated activity that carries no handover knowledge: bot accounts, all-contributors entries and dependency
+    bumps. Skipped at ingest so they neither become claims nor use the AI budget (D75)."""
+    lg = (login or "").lower()
+    return lg.endswith("[bot]") or lg in BOT_LOGINS or bool(NOISE_TITLE.search((title or "").strip()))
+
+
 def normalise(data: RepoData) -> tuple[list[ChunkDraft], dict]:
     repo_url = data.repo.get("html_url", "")
     drafts: list[ChunkDraft] = []
+    noise_prs = {p["number"] for p in data.pulls if is_noise(_login(p.get("user")), p.get("title"))}
+    noise_issues = {i["number"] for i in data.issues if is_noise(_login(i.get("user")), i.get("title"))}
+    skipped = len(noise_prs) + len(noise_issues)
+    data = RepoData(
+        repo=data.repo, files=data.files,
+        pulls=[p for p in data.pulls if p["number"] not in noise_prs],
+        issues=[i for i in data.issues if i["number"] not in noise_issues],
+        pull_comments=[c for c in data.pull_comments if _num_from_url(c.get("pull_request_url")) not in noise_prs
+                       and not is_noise(_login(c.get("user")))],
+        issue_comments=[c for c in data.issue_comments if _num_from_url(c.get("issue_url")) not in noise_prs | noise_issues
+                        and not is_noise(_login(c.get("user")))],
+        commits=[c for c in data.commits if not is_noise(_commit_author(c), c["commit"]["message"].splitlines()[0] if c["commit"]["message"] else "")],
+    )
 
     # --- files
     for path, text in sorted(data.files.items()):
@@ -144,7 +170,7 @@ def normalise(data: RepoData) -> tuple[list[ChunkDraft], dict]:
                                  {"file": path, "computed": True, "url": f"{repo_url}/commits/main/{path}"},
                                  None, last_commit))
 
-    return drafts, {"signals": repo_signals(data, stats)}
+    return drafts, {"signals": repo_signals(data, stats), "noise_skipped": skipped}
 
 
 def _commit_author(c: dict) -> str:
