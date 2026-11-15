@@ -116,7 +116,7 @@ def merge_duplicates(db: Session, workspace_id) -> int:
         D(c.id, c.type, c.subject_key, c.text, reviewed=c.review_state != "none", access=access.get(c.id, frozenset()),
           chunks=frozenset(chunk_ids.get(c.id, ())),
           locked=bool(c.conflict_group_id) or c.origin in ("checklist", "testimony") or bool(c.derived_from)
-          or (c.review_state == "none" and c.id in touched))
+          or (c.review_state == "none" and c.id in touched), value=c.value)
         for c in claims])
     by_id = {c.id: c for c in claims}
     merged = 0

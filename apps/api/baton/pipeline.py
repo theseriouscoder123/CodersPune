@@ -702,7 +702,33 @@ def date_from_evidence(db: Session, workspace_id) -> int:
                       .group_by(Claim.id)).all()
     for c, when in rows:
         c.occurred_at = when
-    return len(rows)
+    # A commit-log passage is dated by the end of its range, but each line starts with its own commit date. A claim
+    # dated from such a passage takes the date at the start of its quote instead ("2026-03-25 rohan: ci: ..."), D73.
+    fixed = 0
+    for c, ev_quote, ch_when in db.execute(
+            select(Claim, Evidence.quote, Chunk.occurred_at).join(Evidence, Evidence.claim_id == Claim.id)
+            .join(Chunk, Chunk.id == Evidence.chunk_id)
+            .where(Claim.workspace_id == workspace_id, Chunk.kind == "commit", Claim.occurred_at == Chunk.occurred_at)).all():
+        when = commit_quote_date(ev_quote, ch_when)
+        if when and when != c.occurred_at:
+            c.occurred_at = when
+            fixed += 1
+    return len(rows) + fixed
+
+
+_QUOTE_DATE = re.compile(r"^\s*(\d{4})-(\d{2})-(\d{2})(?![0-9])")
+
+
+def commit_quote_date(quote: str | None, fallback: datetime | None) -> datetime | None:
+    """The date a commit-log quote starts with, in the passage's timezone; None when it has none or it is invalid."""
+    m = _QUOTE_DATE.match(quote or "")
+    if not m:
+        return None
+    try:
+        d = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), tzinfo=fallback.tzinfo if fallback else None)
+    except ValueError:
+        return None
+    return d if not fallback or d <= fallback else None  # never later than the passage itself
 
 
 def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[int, int]:

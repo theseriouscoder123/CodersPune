@@ -66,3 +66,28 @@ def test_merge_moves_evidence_and_audits(ws):
         db.rollback()
     finally:
         db.close()
+
+
+def test_same_value_rule_merges_decisions_not_ownership():
+    from baton.reconstruct.duplicates import D, find_duplicates
+    a = D(1, "decision", "deploy.timeouts", "The deployment workflow has a 15-minute timeout.", value="15 minutes")
+    b = D(2, "decision", "deploy.timeouts", "The CI/CD pipeline is configured to timeout after 15 minutes.", value="15 minutes")
+    assert find_duplicates([a, b]) == [(2, 1)]
+    # a different value is a conflict, not a duplicate
+    assert find_duplicates([a, D(2, "decision", "deploy.timeouts", "Timeout is 30 minutes.", value="30 minutes")]) == []
+    # two duties for the same person stay two claims
+    assert find_duplicates([D(1, "ownership", "service.owner", "Neha is responsible for frontend and documentation.", value="Neha"),
+                            D(2, "ownership", "service.owner", "Neha is the on-call person on day 1.", value="Neha")]) == []
+    # different access never merges
+    assert find_duplicates([a, D(2, b.type, b.subject_key, b.text, value=b.value, access=frozenset({"core"}))]) == []
+
+
+def test_commit_quote_date():
+    from datetime import UTC, datetime
+
+    from baton.pipeline import commit_quote_date
+    end = datetime(2026, 6, 16, tzinfo=UTC)
+    assert commit_quote_date("2026-03-25 rohan: ci: deploy only from main", end) == datetime(2026, 3, 25, tzinfo=UTC)
+    assert commit_quote_date("ci: deploy only from main", end) is None
+    assert commit_quote_date("2026-02-30 bad date", end) is None
+    assert commit_quote_date("2026-07-01 after the range", end) is None

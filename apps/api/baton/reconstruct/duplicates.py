@@ -8,7 +8,12 @@ and token-set >= 90). The plain-similarity floor stops a short claim being swall
 fact ("uses Next.js and Tailwind" vs "uses Next.js 15.1.0" stays two claims). The reviewed one survives, otherwise the
 longer text. A second, narrow rule: two claims citing the SAME passage where one's words are contained in the
 other's after light stemming ("Neha takes over the app." inside "Neha is taking over the app from Rohan.").
-Evidence is moved to the survivor, so nothing is lost, and every merge is audited."""
+A third rule (D73): a decision or dependency with the same subject key and the same normalised value as another is the
+same fact in different words ("15-minute timeout" in the workflow file and "timeout after 15 minutes" in the commit
+log). Ownership and open work never merge this way: two ownership claims about Neha can be different duties.
+Evidence is moved to the survivor, so nothing is lost, and every merge is audited.
+Checklist questions are never merged: "Status and next step for issue #131" stays Missing even beside a claim that
+the issue is unresolved, because the next step is still unknown (golden ledger G14)."""
 
 from __future__ import annotations
 
@@ -16,6 +21,8 @@ import re
 from dataclasses import dataclass
 
 from rapidfuzz import fuzz
+
+from baton.reconstruct.values import normalise_value
 
 SET_MIN, PLAIN_MIN = 90, 75
 
@@ -30,6 +37,17 @@ class D:
     access: frozenset = frozenset()  # the access keys of every cited source
     chunks: frozenset = frozenset()  # cited chunk ids
     locked: bool = False  # in a conflict group, a reviewer relation, acknowledged, testimony or checklist: never merged
+    value: str | None = None
+
+
+VALUE_TYPES = ("decision", "dependency")
+
+
+def same_value(a: D, b: D) -> bool:
+    if a.type not in VALUE_TYPES or a.type != b.type or a.subject_key != b.subject_key or a.access != b.access:
+        return False
+    va, vb = normalise_value(a.value), normalise_value(b.value)
+    return bool(va) and va == vb
 
 
 _WORD = re.compile(r"[a-z0-9]+")
@@ -49,6 +67,8 @@ def _stems(text: str) -> set[str]:
 def similar(a: D, b: D) -> bool:
     if a.type != b.type or a.access != b.access:
         return False
+    if same_value(a, b):
+        return True
     if a.chunks & b.chunks:  # same passage: one claim's words contained in the other's
         sa, sb = _stems(a.text), _stems(b.text)
         if sa and sb and (sa <= sb or sb <= sa) and min(len(sa), len(sb)) >= 3:
@@ -76,3 +96,4 @@ def find_duplicates(claims: list[D]) -> list[tuple[object, object]]:
             if drop is a:
                 break
     return out
+
