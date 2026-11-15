@@ -23,13 +23,17 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 
-from baton.reconstruct.conflicts import HISTORICAL, REVERSAL
+from baton.reconstruct.conflicts import HISTORICAL, REVERSAL, UPGRADE
 from baton.reconstruct.values import normalise_value
 
 OPEN_TYPES = ("open_work", "next_action")
 COMPLETION = re.compile(
     r"\b(uses|now uses|is using|migrated|moved (?:to|from)|switched|replaced|implemented|shipped|launched|went live|is live|"
     r"set up|configured|completed|finished|done|merged|added|enabled|deployed|having migrated)\b", re.IGNORECASE)
+# Open work whose own text or value says it is finished ("Issue #239 ... was closed on 2020-05-15").
+SELF_DONE = re.compile(r"\b(?:was|were|has been|have been|got) (?:closed|merged|resolved|fixed|completed|done)\b|"
+                       r"\b(?:closed|merged|resolved|fixed) on \d", re.IGNORECASE)
+DONE_VALUES = frozenset({"closed", "merged", "resolved", "fixed", "done", "completed"})
 PARKED = re.compile(r"\b(parked|on hold|paused|deferred|postponed|shelved|abandoned|dropped|cancelled|canceled|"
                     r"won't do|not planned)\b", re.IGNORECASE)
 STOP = frozenset("""a an the and or but if of to in on at by for from with without into onto over under about after before
@@ -92,6 +96,10 @@ def classify_supersession(older: C, newer: C) -> Relation:
         return Relation("contradiction", f"The claim that would replace it is dated earlier ({_day(newer.occurred_at)}) than "
                                          f"the claim it replaces ({_day(older.occurred_at)}), so this can't be a reversal.")
     rev = REVERSAL.search(newer.text or "")
+    up = UPGRADE.search(newer.text or "")
+    if not rev and up and "version" in newer.subject_key:
+        return Relation("reversal", f"Upgrade language “{up.group(0)}” in the later claim{_src(newer)}, "
+                                    f"{_day(newer.occurred_at)}: version {newer.value} replaces {older.value}.")
     if rev:
         return Relation("reversal", f"Reversal language “{rev.group(0)}” in the later claim{_src(newer)}, "
                                     f"{_day(newer.occurred_at)}, naming the earlier value.")
@@ -129,6 +137,9 @@ def stale_reasons(claims: list[C]) -> dict[str, str]:
     live = [c for c in claims if c.origin != "checklist"]
     open_items = [c for c in live if c.type in OPEN_TYPES]
     for w in open_items:
+        if SELF_DONE.search(w.text or "") or (w.value or "").strip().lower() in DONE_VALUES:
+            out[w.id] = f"It says itself that it is finished {_when(w)}: “{w.text}”"
+            continue
         later_same = [o for o in open_items if o.id != w.id and o.subject_key == w.subject_key and w.occurred_at and o.occurred_at
                       and _naive(o.occurred_at) > _naive(w.occurred_at)]
         if later_same:

@@ -85,3 +85,28 @@ def test_task_owner_and_start_here_rank():
     assert start_here_rank("Rohan must transfer Vercel ownership to Neha before 15 Nov", "Neha") == 0
     assert start_here_rank("Organiser role management is needed", "Neha") == 1
     assert start_here_rank("Sana is preparing poster drafts", "Neha") == 2
+
+
+def test_open_work_that_says_it_is_closed_is_stale():
+    from baton.reconstruct.relations import C, stale_reasons
+    closed = C("a", "open_work", "Issue #239 regarding an Angular compilation problem was closed on 2020-05-15.", "issue.239.status", value="closed")
+    by_value = C("b", "open_work", "Issue #243 about wheels.", "issue.243.status", value="Closed")
+    still_open = C("c", "open_work", "Duplicate reminder notifications on Android remain unresolved.", "issue.131.status", value="open")
+    out = stale_reasons([closed, by_value, still_open])
+    assert set(out) == {"a", "b"} and out["a"].startswith("It says itself that it is finished")
+
+
+def test_version_upgrade_is_a_reversal_not_a_contradiction():
+    from datetime import datetime
+
+    from baton.reconstruct.conflicts import ClaimLite, plan_conflicts
+    old = ClaimLite("o", "ci.node_version", "14", datetime(2020, 4, 23), False, "Testing on Node 14 was added via PR #236.")
+    new = ClaimLite("n", "ci.node_version", "24", datetime(2025, 10, 22), False, "The workflow node-version values are updated to Node 24 LTS.")
+    plan = plan_conflicts([old, new])
+    assert plan.superseded == {"o": "n"} and not plan.groups
+    # no upgrade wording: still a conflict for a person
+    plain = ClaimLite("n", "ci.node_version", "24", datetime(2025, 10, 22), False, "CI runs Node 24.")
+    assert plan_conflicts([old, plain]).groups
+    # a "downgrade" (lower number) is not treated as an upgrade
+    down = ClaimLite("n", "ci.node_version", "12", datetime(2025, 10, 22), False, "CI was updated to Node 12.")
+    assert plan_conflicts([old, down]).groups

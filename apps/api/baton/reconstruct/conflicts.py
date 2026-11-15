@@ -67,8 +67,28 @@ def same_value(a: str | None, b: str | None) -> bool:
     return bool(ta and tb) and (ta <= tb or tb <= ta)  # "tailwind" vs "tailwind css"
 
 
+UPGRADE = re.compile(r"\b(updat(?:e|ed|es|ing)|upgrad(?:e|ed|es|ing)|bump(?:ed|s|ing)?)\b", re.IGNORECASE)
+_NUM = re.compile(r"\d+(?:\.\d+)*")
+
+
+def _version(v: str | None) -> tuple[int, ...] | None:
+    m = _NUM.search(v or "")
+    return tuple(int(x) for x in m.group(0).split(".")) if m else None
+
+
+def upgrades(newer: ClaimLite, older: ClaimLite) -> bool:
+    """A later "updated to Node 24" replaces an earlier "Node 14" on a version slot (D74): upgrade language, a version
+    subject and a higher number. Without the upgrade wording two versions stay a conflict for a person to judge."""
+    if "version" not in newer.subject_key or not UPGRADE.search(newer.text or ""):
+        return False
+    vn, vo = _version(newer.value), _version(older.value)
+    return bool(vn and vo) and vn > vo
+
+
 def reverses(newer: ClaimLite, older: ClaimLite) -> bool:
     if newer.supersedes_hint:
+        return True
+    if upgrades(newer, older):
         return True
     if not REVERSAL.search(newer.text or ""):
         return False
