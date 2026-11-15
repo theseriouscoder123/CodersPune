@@ -13,10 +13,11 @@ export function TryDemoButton() {
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div>
+    <div className="max-sm:w-full">
       <Button
         size="lg"
         loading={busy}
+        className="max-sm:w-full"
         onClick={async () => {
           setBusy(true);
           setError(null);

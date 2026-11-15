@@ -16,7 +16,7 @@ import { useApi } from "@/lib/useApi";
 
 type Item = { id: string; type_label: string; stale_reason?: string | null; flags?: { reviewer_confirmed_without_evidence?: boolean }; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
   matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean; rerender_note?: string | null };
-type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts;
+type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts; same_as_latest?: boolean;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
 
 const SECTION_NAMES: Record<string, string> = {
@@ -65,6 +65,15 @@ function PreviewInner() {
   // The version just approved shows at once; the refreshed handover list can take a few seconds to arrive.
   const latest = Math.max(done ?? 0, handover?.latest_version ?? 0) || null;
   const nextVersion = (latest ?? 0) + 1;
+  // Nothing changed since the latest approval: don't push the reviewer to approve an identical version.
+  const upToDate = !!latest && (done === latest || !!pv.data?.same_as_latest);
+  const viewAsSuccessor = () => {
+    if (!handover) return;
+    storePersona(ws.id, handover.successor_id);
+    // Full navigation on purpose: the whole shell must reload under the new persona.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = `/w/${ws.id}/handover`;
+  };
 
   async function approve() {
     setBusy(true);
@@ -78,6 +87,7 @@ function PreviewInner() {
       const sent = (r.notified ?? []).filter((x) => x.status === "sent").map((x) => (x.channel === "slack" ? "Slack" : x.to));
       toast(`Version ${r.version} approved. ${name} can see it now${sent.length ? ` · notified ${sent.join(", ")}` : ""}`);
       sel.reload();
+      pv.reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -95,7 +105,12 @@ function PreviewInner() {
       <TopbarActions>
         <ButtonLink size="sm" variant="ghost" href={`/w/${ws.id}/review`}><ArrowLeft /> Back to claims</ButtonLink>
         {handover && <ButtonLink size="sm" variant="secondary" href={`/w/${ws.id}/leaving?h=${handover.id}`} data-testid="leaving-link"><CalendarClock /> Before {handover.leaver} leaves</ButtonLink>}
-        {!ws.read_only && <Button size="sm" onClick={() => setOpen(true)} data-testid="approve-open"><ShieldCheck /> Approve handover v{nextVersion}</Button>}
+        {!ws.read_only && (upToDate && handover ? (
+          <>
+            <Button size="sm" variant="secondary" onClick={() => setOpen(true)} data-testid="approve-open" title={`Nothing has changed since version ${latest}`}><ShieldCheck /> Approve again</Button>
+            <Button size="sm" onClick={viewAsSuccessor} data-testid="view-as-successor">View as {name} <ArrowRight /></Button>
+          </>
+        ) : <Button size="sm" onClick={() => setOpen(true)} data-testid="approve-open"><ShieldCheck /> Approve handover v{nextVersion}</Button>)}
       </TopbarActions>
 
       <p className="flex items-center gap-1.5 text-[12.5px] text-fg-3">
@@ -105,7 +120,7 @@ function PreviewInner() {
         {successor && <Avatar m={successor} size={32} />} What {name} will see
       </h1>
       <p className="mt-2 max-w-[680px] text-[14px] leading-[22px] text-fg-2">
-        {latest ? `Version ${latest} is approved. Approving again creates version ${nextVersion}.` : "Nothing is approved yet, so the successor currently sees nothing."}{" "}
+        {latest ? (upToDate ? `Version ${latest} is approved and up to date: nothing has changed since.` : `Version ${latest} is approved. Things have changed since, so approving again creates version ${nextVersion}.`) : "Nothing is approved yet, so the successor currently sees nothing."}{" "}
         Anything that cites a source {name} can&apos;t open is withheld automatically, and inferred claims never reach {name} as fact.
       </p>
       <HandoverPicker handovers={sel.handovers} selected={handover} onCreated={sel.reload} />
@@ -133,7 +148,7 @@ function PreviewInner() {
         </div>
         {!!counts?.unconfirmed && (
           <p className="mt-2 text-[12.5px] text-fg-3" data-testid="approve-unconfirmed">
-            {counts.unconfirmed} of the {counts.current} shared items passed the AI quote check but no person has confirmed them. {name} will see them marked that way.
+            {counts.unconfirmed} of the {counts.current} shared items passed both evidence checks (quote found word for word, and a separate check agrees) but no person has confirmed them. {name} will see them marked that way.
           </p>
         )}
         {hasWarnings && w && (
@@ -149,7 +164,7 @@ function PreviewInner() {
           <span>Show withheld items as <i>&quot;Restricted item. Ask the reviewer&quot;</i> stubs. No text, type or source is revealed.</span>
         </label>
         <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Approval note (optional)" rows={2} aria-label="Approval note"
-          className="mt-3 w-full rounded-md border border-line bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-4 focus:border-accent focus:shadow-[0_0_0_3px_var(--ring)]" />
+          className="mt-3 w-full rounded-md border border-line bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-3 focus:border-accent focus:shadow-[0_0_0_3px_var(--ring)]" />
         {err && <Alert tone="error" className="mt-3">{err}</Alert>}
         <div className="mt-5 flex justify-end gap-2">
           <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

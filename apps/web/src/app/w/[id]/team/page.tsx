@@ -17,7 +17,7 @@ type Team = {
   can_manage: boolean;
   members: { id: string; name: string; handle: string; roles: string[]; has_invite: boolean; joined: number; is_you: boolean; email?: string | null }[];
   notifications?: {
-    email: { configured: boolean; from: string | null };
+    email: { configured: boolean };
     slack: { set: boolean; hint: string };
     discord?: { set: boolean; hint: string };
     recent: { channel: string; event: string; recipient: string | null; status: string; detail: string | null; at: string }[];
@@ -223,7 +223,7 @@ function NotificationsCard({ wsId, n, canManage, onChanged }:
         <div className="rounded-lg border border-line bg-bg-side/50 p-4">
           <p className="flex items-center gap-1.5 text-[13px] font-semibold text-fg"><Mail className="h-4 w-4" /> Email</p>
           {n.email.configured ? (
-            <p className="mt-1 text-[12px] text-fg-3">Sending from {n.email.from}. The successor and leaver get an email when a version is approved; you can email invite links and the leaver&apos;s questions. Add addresses next to each person above.</p>
+            <p className="mt-1 text-[12px] text-fg-3">Email is sent from Baton&apos;s own mail account. The successor and leaver get an email when a version is approved; you can email invite links and the leaver&apos;s questions. Add addresses next to each person above.</p>
           ) : (
             <p className="mt-1 text-[12px] text-fg-3">Email isn&apos;t enabled on this server yet. Everything else works without it, and invite links can still be copied and shared by hand.</p>
           )}

@@ -124,7 +124,7 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
                   : e.occurred_at ? e.occurred_at.slice(0, 10) : "undated"}
               </span>
               <span className="relative flex justify-center" aria-hidden>
-                <span className="absolute inset-y-0 w-px bg-line" />
+                <span className="absolute inset-y-0 w-px bg-line-2" />
                 <span className={`relative mt-[6px] h-[9px] w-[9px] rounded-full border-[1.5px] bg-bg ${contra ? "border-con" : muted ? "border-fg-4" : "border-fg-3"}`} />
               </span>
               <div className="min-w-0 pb-5 pl-1">
@@ -188,7 +188,7 @@ function ClaimBox({ title, n, dateLabel }: { title: string; n: Node; dateLabel?:
 
 function DrawerHead({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg px-5 py-3">
+    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line glass px-5 py-3">
       <p className="text-[14px] font-semibold text-fg">{title}</p>
       <IconButton onClick={onClose} aria-label="Close"><X /></IconButton>
     </div>
@@ -262,7 +262,7 @@ function RelationDetail({ rel, canEdit, onClose, onChanged, wsId }: { rel: Rel; 
               ))}
             </div>
             <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="Why? (shown in the activity log)"
-              className="mt-2 h-8 w-full rounded-md border border-line-2 bg-bg px-2.5 text-[13px] text-fg outline-none placeholder:text-fg-4 focus:ring-2 focus:ring-[var(--ring)]" />
+              className="mt-2 h-8 w-full rounded-md border border-line-2 bg-bg px-2.5 text-[13px] text-fg outline-none placeholder:text-fg-3 focus:ring-2 focus:ring-[var(--ring)]" />
             <div className="mt-2 flex justify-end">
               <Button size="sm" loading={busy} onClick={() => void save()} data-testid="save-relation">Save</Button>
             </div>

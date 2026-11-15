@@ -64,7 +64,7 @@ export function AckControls({ hid, wsId, claimId, ack, canRespond, onChanged, ch
       {canRespond ? (
         <button type="button" onClick={(e) => { e.stopPropagation(); void send("acknowledged"); }} disabled={!!busy} data-testid="ack-got-it"
           title={done ? "Acknowledged" : "Mark as got it"} aria-pressed={done}
-          className={`no-print relative mt-[1px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border transition-colors before:absolute before:-inset-[9px] before:content-[''] ${done ? "border-ver bg-ver text-white" : "border-line-2 bg-bg text-transparent hover:border-fg-3 hover:text-fg-4"}`}>
+          className={`no-print relative mt-[1px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border transition-colors before:absolute before:-inset-[9px] before:content-[''] ${done ? "border-ver bg-ver text-bg" : "border-line-2 bg-bg text-transparent hover:border-fg-3 hover:text-fg-4"}`}>
           <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
           <span className="sr-only">{done ? "Acknowledged" : "Got it"}</span>
         </button>

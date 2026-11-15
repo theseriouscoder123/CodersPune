@@ -50,7 +50,7 @@ const H2 = "text-[24px] font-semibold leading-8 tracking-[-0.02em] text-fg";
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col overflow-x-clip bg-bg">
-      <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-line glass">
         <div className="mx-auto flex h-14 w-full max-w-[1160px] items-center justify-between px-4 sm:px-8">
           <Logo />
           <nav className="flex items-center gap-0.5 text-[13px]">
@@ -64,6 +64,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
+        <div className="hero-glow">
         <section className="mx-auto w-full max-w-[1160px] px-4 pb-14 pt-14 sm:px-8 sm:pt-20">
           <div className="max-w-[760px]">
             <p className="text-[13px] font-medium text-accent-ink">Knowledge handover for small software teams</p>
@@ -85,12 +86,15 @@ export default function Home() {
             </p>
           </div>
 
-          <figure className="mt-12 overflow-hidden rounded-[10px] border border-line bg-bg-side shadow-[var(--pop)]">
+          <figure className="glass-pop mt-12 rounded-[14px] border border-line p-1.5 sm:p-2">
+            <div className="overflow-hidden rounded-[9px] border border-line bg-bg-side">
             <Image src={verifyLight} alt="The Verify screen: claims grouped by status on the left; on the right a conflicting claim with its rule checks and the two quotes that disagree, side by side." priority sizes="(min-width: 1160px) 1096px, 100vw" className="only-light h-auto w-full" />
             <Image src={verifyDark} alt="" aria-hidden sizes="(min-width: 1160px) 1096px, 100vw" className="only-dark h-auto w-full" />
+            </div>
           </figure>
           <p className="mt-3 text-center text-[12.5px] text-fg-3">Verify: every claim shows the exact quote it rests on, and the rules that set its status.</p>
         </section>
+        </div>
 
         <section id="how" className="border-t border-line">
           <div className="mx-auto max-w-[1160px] px-4 py-16 sm:px-8">

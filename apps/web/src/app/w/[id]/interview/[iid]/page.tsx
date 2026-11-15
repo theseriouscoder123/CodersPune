@@ -187,7 +187,7 @@ export default function InterviewPage() {
 
       {/* Footer actions */}
       {iv.status === "draft" && iv.can_edit && (
-        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-bg/95 px-4 py-3 shadow-[var(--pop)] backdrop-blur">
+        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line glass-pop px-4 py-3">
           <p className="text-[13px] text-fg-2">{iv.counts.total} question{iv.counts.total === 1 ? "" : "s"} for {iv.respondent.name}. Edit or remove any before sending.</p>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" loading={busy === "discard"} onClick={() => void discard()}>Discard</Button>
@@ -196,7 +196,7 @@ export default function InterviewPage() {
         </div>
       )}
       {answering && (
-        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-bg/95 px-4 py-3 shadow-[var(--pop)] backdrop-blur">
+        <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line glass-pop px-4 py-3">
           <p className="text-[13px] text-fg-2">{iv.counts.answered === 0 ? "Answer at least one question to submit." : `${iv.counts.answered} of ${iv.counts.total} answered. Skipped questions stay open.`}</p>
           <Button size="sm" loading={busy === "submit"} disabled={iv.counts.answered === 0} onClick={() => void submit()} data-testid="submit-interview">
             <Check className="h-4 w-4" /> Submit answers

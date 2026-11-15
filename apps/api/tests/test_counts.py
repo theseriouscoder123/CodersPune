@@ -98,3 +98,17 @@ def test_compare_two_people(world):
     assert a["current"] + a["history"] == d["both"] + len(d["only_a"])
     assert b["current"] + b["history"] == d["both"] + len(d["only_b"])
     assert a["withheld"] == len(d["only_b"])  # what Neha can't see is exactly what only Kabir sees
+
+
+def test_preview_says_when_nothing_changed_since_the_latest_approval(world):
+    c = TestClient(app)
+    c.cookies.set("baton_visitor", "counts-visitor")
+    ws = world["ws"]
+    p = {m["handle"]: m["id"] for m in c.get(f"/api/workspaces/{ws}").json()["members"]}
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+    meera = {"X-Baton-Persona": p["meera"]}
+    c.post(f"/api/handovers/{hid}/approve", headers=meera, json={})
+    assert c.get(f"/api/handovers/{hid}/preview", headers=meera).json()["same_as_latest"] is True
+    claim = next(it for it in c.get(f"/api/handovers/{hid}/preview", headers=meera).json()["visible"] if not it["history"])
+    assert c.post(f"/api/claims/{claim['id']}/review", headers=meera, json={"action": "reject", "note": "test"}).status_code == 200
+    assert c.get(f"/api/handovers/{hid}/preview", headers=meera).json()["same_as_latest"] is False

@@ -16,7 +16,7 @@
   --fg: #191918;
   --fg-2: #45454a;
   --fg-3: #6a6a66; /* passes 4.5:1 on bg and bg-side */
-  --fg-4: #a3a39e; /* decorative only */
+  --fg-4: #8d8d88; /* decorative only (separators, icons); never for words people must read */
   --accent: #0b6bde;
   --accent-hover: #0959bd;
   --accent-soft: #ebf3fe;
@@ -32,77 +32,83 @@
   --hl-line: #e9c552;
   --ring: rgba(11, 107, 222, 0.35);
   --pop: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
-  --overlay: rgba(20, 20, 15, 0.32);
+  --overlay: rgba(20, 20, 15, 0.42);
   --skeleton-hi: rgba(20, 20, 15, 0.07);
   /* toast is inverted (fg background), so its icons use the other theme's status colours */
   --toast-ver: #3fb950; --toast-mis: #f2685e; --toast-acc: #6ea8fe;
+  --glass-edge: rgba(255, 255, 255, 0.65);
+  --glass-glow: rgba(11, 107, 222, 0.07);
 }
 
 /* Dark: applied when the OS prefers dark (unless the visitor chose light), or when data-theme="dark". */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #121213;
-  --bg-side: #0c0c0d;
-  --bg-sunk: #0f0f10;
-  --hover: rgba(255, 255, 255, 0.045);
-  --active: rgba(255, 255, 255, 0.08);
-  --line: #242427;
-  --line-2: #323236;
-  --fg: #ededeb;
-  --fg-2: #bebeb9;
-  --fg-3: #8f8f8a;
-  --fg-4: #5e5e5a;
+  --bg: #141416;
+  --bg-side: #0e0e10;
+  --bg-sunk: #101012;
+  --hover: rgba(255, 255, 255, 0.055);
+  --active: rgba(255, 255, 255, 0.095);
+  --line: #2b2b2f;
+  --line-2: #3b3b40;
+  --fg: #f1f1ef;
+  --fg-2: #d0d0cb;
+  --fg-3: #a8a8a2;
+  --fg-4: #8a8a84;
   --accent: #1f6fe0;
   --accent-hover: #3a82ee;
-  --accent-soft: rgba(47, 128, 237, 0.14);
-  --accent-ink: #6ea8fe;
-  --ver: #3fb950;
-  --ver-soft: rgba(63, 185, 80, 0.13);
-  --inf: #8b949e;
-  --con: #e58a3e;
-  --con-soft: rgba(229, 138, 62, 0.13);
-  --mis: #f2685e;
-  --mis-soft: rgba(242, 104, 94, 0.13);
-  --hl: rgba(214, 163, 40, 0.26);
-  --hl-line: #a27c1e;
+  --accent-soft: rgba(47, 128, 237, 0.17);
+  --accent-ink: #82b6ff;
+  --ver: #4cc760;
+  --ver-soft: rgba(63, 185, 80, 0.15);
+  --inf: #a0a8b2;
+  --con: #f09a52;
+  --con-soft: rgba(229, 138, 62, 0.15);
+  --mis: #f67e74;
+  --mis-soft: rgba(242, 104, 94, 0.15);
+  --hl: rgba(236, 184, 64, 0.17);
+  --hl-line: #e0ac3c;
   --ring: rgba(110, 168, 254, 0.4);
   --pop: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 6px 16px rgba(0, 0, 0, 0.4);
   --overlay: rgba(0, 0, 0, 0.55);
   --skeleton-hi: rgba(255, 255, 255, 0.07);
   --toast-ver: #1a7f37; --toast-mis: #cf222e; --toast-acc: #0a5bc0;
+  --glass-edge: rgba(255, 255, 255, 0.07);
+  --glass-glow: rgba(47, 128, 237, 0.10);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #121213;
-    --bg-side: #0c0c0d;
-    --bg-sunk: #0f0f10;
-    --hover: rgba(255, 255, 255, 0.045);
-    --active: rgba(255, 255, 255, 0.08);
-    --line: #242427;
-    --line-2: #323236;
-    --fg: #ededeb;
-    --fg-2: #bebeb9;
-    --fg-3: #8f8f8a;
-    --fg-4: #5e5e5a;
+    --bg: #141416;
+    --bg-side: #0e0e10;
+    --bg-sunk: #101012;
+    --hover: rgba(255, 255, 255, 0.055);
+    --active: rgba(255, 255, 255, 0.095);
+    --line: #2b2b2f;
+    --line-2: #3b3b40;
+    --fg: #f1f1ef;
+    --fg-2: #d0d0cb;
+    --fg-3: #a8a8a2;
+    --fg-4: #8a8a84;
     --accent: #1f6fe0;
     --accent-hover: #3a82ee;
-    --accent-soft: rgba(47, 128, 237, 0.14);
-    --accent-ink: #6ea8fe;
-    --ver: #3fb950;
-    --ver-soft: rgba(63, 185, 80, 0.13);
-    --inf: #8b949e;
-    --con: #e58a3e;
-    --con-soft: rgba(229, 138, 62, 0.13);
-    --mis: #f2685e;
-    --mis-soft: rgba(242, 104, 94, 0.13);
-    --hl: rgba(214, 163, 40, 0.26);
-    --hl-line: #a27c1e;
+    --accent-soft: rgba(47, 128, 237, 0.17);
+    --accent-ink: #82b6ff;
+    --ver: #4cc760;
+    --ver-soft: rgba(63, 185, 80, 0.15);
+    --inf: #a0a8b2;
+    --con: #f09a52;
+    --con-soft: rgba(229, 138, 62, 0.15);
+    --mis: #f67e74;
+    --mis-soft: rgba(242, 104, 94, 0.15);
+    --hl: rgba(236, 184, 64, 0.17);
+    --hl-line: #e0ac3c;
     --ring: rgba(110, 168, 254, 0.4);
     --pop: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 6px 16px rgba(0, 0, 0, 0.4);
     --overlay: rgba(0, 0, 0, 0.55);
     --skeleton-hi: rgba(255, 255, 255, 0.07);
     --toast-ver: #1a7f37; --toast-mis: #cf222e; --toast-acc: #0a5bc0;
+  --glass-edge: rgba(255, 255, 255, 0.07);
+  --glass-glow: rgba(47, 128, 237, 0.10);
   }
 }
 
@@ -169,6 +175,11 @@ body {
   overflow-x: clip;
 }
 
+::placeholder {
+  color: var(--fg-3);
+  opacity: 1;
+}
+
 ::selection {
   background: var(--accent-soft);
   color: var(--fg);
@@ -232,6 +243,36 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------- glass: frosted surfaces that float over content
+ * (sticky bars, popovers, dialogs, drawers). Never on reading surfaces (cards, evidence, tables). Text on glass keeps
+ * the same contrast because the tint is 78-86% of the solid background. Solid fallback without backdrop-filter. */
+.glass, .glass-pop { background: var(--bg); }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+  .glass-pop {
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    backdrop-filter: blur(22px) saturate(1.6);
+    box-shadow: var(--pop), inset 0 1px 0 var(--glass-edge);
+  }
+  .glass-side {
+    background: color-mix(in srgb, var(--bg-side) 84%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    backdrop-filter: blur(22px) saturate(1.6);
+  }
+  .glass-scrim { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+}
+/* A soft accent glow behind the landing hero, so its glass has something to frost. */
+.hero-glow {
+  background:
+    radial-gradient(60% 50% at 18% 0%, var(--glass-glow), transparent 70%),
+    radial-gradient(50% 45% at 85% 10%, color-mix(in srgb, var(--ver) 7%, transparent), transparent 70%);
+}
+
 /* Thin, quiet scrollbars inside panes. */
 .scroll-quiet { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
 
@@ -249,6 +290,8 @@ body {
     --hl: #fff1b8; --hl-line: #e9c552;
   }
   body { background: #fff !important; }
+  .glass, .glass-pop, .glass-side { background: #fff !important; backdrop-filter: none !important; }
+  .hero-glow { background: none !important; }
   .no-print, header.sticky, aside[data-sidebar], [role="note"] { display: none !important; }
   main { padding: 0 !important; max-width: none !important; }
   * { animation: none !important; transition: none !important; box-shadow: none !important; }

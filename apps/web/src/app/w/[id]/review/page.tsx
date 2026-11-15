@@ -74,10 +74,15 @@ function Review() {
   const select = (id: string | undefined) => {
     if (!id) return;
     setSelected(id);
-    requestAnimationFrame(() => document.getElementById(`claim-${id}`)?.scrollIntoView({ block: "nearest" }));
     // On phones the list and the claim are stacked: bring the claim into view, or a tap looks like it did nothing.
+    // (Scrolling the row into view as well would cancel this page scroll, so phones skip it: the row was just tapped.)
     if (typeof window !== "undefined" && window.innerWidth < 1024)
-      requestAnimationFrame(() => document.getElementById("claim-panel")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+      setTimeout(() => {
+        // window.scrollTo, not scrollIntoView: right after the tap Chrome ignored scrollIntoView on the stacked layout.
+        const p = document.getElementById("claim-panel");
+        if (p) window.scrollTo({ top: p.getBoundingClientRect().top + window.scrollY - 48 });
+      }, 80);
+    else requestAnimationFrame(() => document.getElementById(`claim-${id}`)?.scrollIntoView({ block: "nearest" }));
   };
 
   // Keyboard review: j/k move, c confirm, r reject, e edit, x select, ? help, / search. Ignored while typing.
@@ -186,7 +191,7 @@ function Review() {
       {/* ---------------------------------------------------------------- list pane */}
       <section className="flex min-h-0 w-full shrink-0 flex-col border-line lg:w-[44%] lg:max-w-[560px] lg:border-r" aria-label="Claims">
         <div className="shrink-0 space-y-2 border-b border-line px-3 pb-2.5 pt-3">
-          <div className="no-scrollbar flex gap-0.5 overflow-x-auto" role="tablist">
+          <div className="no-scrollbar flex gap-0.5 overflow-x-auto max-sm:pr-6 max-sm:[mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]" role="tablist">
             {TABS.map((t) => {
               const n = ledger.data?.tab_counts[t.key as keyof Ledger["tab_counts"]];
               const active = tab === t.key;
@@ -248,7 +253,7 @@ function Review() {
             const confirmed = xs.filter((c) => c.review_state === "confirmed").length;
             return (
               <div key={`${s}${prom ? "-promoted" : ""}`}>
-                <div className="sticky top-0 z-[1] flex h-8 items-center gap-2 bg-bg px-2.5 text-[12.5px] font-semibold text-fg">
+                <div className="sticky top-0 z-[1] flex h-8 items-center gap-2 glass px-2.5 text-[12.5px] font-semibold text-fg">
                   {prom ? <StatusChip status={s} promoted iconOnly /> : <StatusIcon status={s} size={13} />} {prom ? "Reviewer-confirmed" : STATUS_META[s].label} <span className="font-normal text-fg-3">{xs.length}</span>
                   <span className="h-px flex-1 bg-line" aria-hidden />
                   {s === "missing" && isReviewer && tab !== "missing" && <button type="button" onClick={() => setParam("tab", "missing")} className="text-[12px] font-medium text-accent-ink hover:underline">Ask {leaver}</button>}
@@ -270,7 +275,7 @@ function Review() {
       </section>
 
       {/* ---------------------------------------------------------------- inspector */}
-      <section id="claim-panel" className="flex min-h-0 min-w-0 flex-1 scroll-mt-12 flex-col border-t border-line lg:border-t-0" aria-label="Claim">
+      <section id="claim-panel" className="flex min-h-0 min-w-0 flex-1 scroll-mt-12 flex-col border-t border-line max-lg:min-h-[calc(100dvh-48px)] lg:border-t-0" aria-label="Claim">
         {currentId ? (
           <ClaimPanel key={currentId} id={currentId} position={idx + 1} total={claimsAll.length}
             onPrev={() => select(claimsAll[Math.max(idx - 1, 0)]?.id)} onNext={() => select(claimsAll[Math.min(idx + 1, claimsAll.length - 1)]?.id)}
@@ -552,7 +557,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
   const doResolve = () => {
     const n = resolveNote.trim() || undefined;
     if (pick === "risk") void resolve({ keep_as_risk: true, note: n ?? "Unclear which is current" }, "Kept both as an open risk", { key: "risk", label: "Keeping both as an open risk" });
-    else if (chosen) void resolve({ winner_claim_id: chosen.id, note: n }, "Marked as current; the other is superseded",
+    else if (chosen) void resolve({ winner_claim_id: chosen.id, note: n }, "Marked as current. The other claim moves to the Superseded tab as history, so the counts drop by one",
       { key: chosen.id, label: `Marking “${chosen.text.length > 60 ? `${chosen.text.slice(0, 60)}…` : chosen.text}” as current` });
   };
 
@@ -593,7 +598,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
           <div className="flex flex-wrap items-center gap-2">
             <StatusChip status={c.status as Status} promoted={!!c.flags?.reviewer_confirmed_without_evidence} size="md" />
             <span className="text-[12px] text-fg-3">{c.type_label}</span>
-            {c.origin === "checklist" && <span className="text-[12px] text-fg-3">· from the repository checklist</span>}
+            {c.origin === "checklist" && <span className="text-[12px] text-fg-3">{c.status === "missing" ? "· a question Baton expected the sources to answer" : "· answers a question Baton expected from the repo"}</span>}
             {c.origin === "testimony" && <span className="text-[12px] text-fg-3">· leaver testimony</span>}
             {!c.stated && <span className="inline-flex items-center gap-1 text-[12px] text-fg-3" title="The AI marked this as likely but not stated"><Sparkles className="h-3 w-3" /> not explicitly stated</span>}
           </div>
@@ -676,7 +681,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
               <label className="mt-3 block text-[12.5px] font-medium text-fg-2">Note for {successor} <span className="font-normal text-fg-3">(optional)</span>
                 <textarea value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} rows={2} maxLength={500}
                   placeholder="e.g. Code is the source of truth. Raise MAX_BYTES only if organisers complain again."
-                  className="mt-1 w-full rounded-md border border-line-2 bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-4 focus:ring-2 focus:ring-[var(--ring)]" />
+                  className="mt-1 w-full rounded-md border border-line-2 bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-3 focus:ring-2 focus:ring-[var(--ring)]" />
               </label>
             </div>
           )}
@@ -694,7 +699,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
 
       {/* sticky action bar */}
       {writable && (isReviewer || isLeaver) && (
-        <div className="shrink-0 border-t border-line bg-bg px-4 py-2.5">
+        <div className="shrink-0 border-t border-line bg-bg px-4 py-2.5 max-lg:sticky max-lg:bottom-0 max-lg:z-10 max-lg:shadow-[0_-6px_16px_rgba(0,0,0,0.12)]">
           {mode === "idle" && (
             <div className="flex flex-wrap items-center gap-1.5">
               {isReviewer && openConflict && !resolving && (
@@ -732,7 +737,7 @@ function ClaimPanel({ id, position, total, onPrev, onNext, onChanged, onReviewed
             <div className="space-y-2">
               <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={500} autoFocus
                 placeholder={mode === "promote" ? "Why is this true without a source? (required, e.g. 'Rohan confirmed in person on 3 Nov')" : mode === "reject" ? "Reason (optional)" : "Your comment"}
-                className="w-full rounded-md border border-line-2 bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-4 focus:ring-2 focus:ring-[var(--ring)]" />
+                className="w-full rounded-md border border-line-2 bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-3 focus:ring-2 focus:ring-[var(--ring)]" />
               <div className="flex gap-1.5">
                 <Button size="sm" variant={mode === "reject" ? "danger" : "primary"} loading={busy} disabled={mode !== "reject" && !note.trim()} onClick={() => act(mode, { note })}>
                   {mode === "promote" ? "Promote" : mode === "reject" ? "Reject claim" : "Add comment"}

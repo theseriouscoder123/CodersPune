@@ -274,7 +274,7 @@ function HandoverInner() {
                     <h2 className="text-[18px] font-semibold tracking-[-0.015em] text-fg">{s.title} <span className="ml-1 text-[13px] font-normal text-fg-3">{s.items.length}</span></h2>
                     <p className="mt-0.5 text-[12.5px] text-fg-3">{s.help}</p>
                   </div>
-                  {gotIt !== null && real.length > 0 && s.key === "start_here" && <span className="text-[12px] text-fg-3">{gotIt} of {real.length} marked got it</span>}
+                  {gotIt !== null && real.length > 0 && s.key === "start_here" && <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-3" data-testid="got-it-hint"><span className="inline-block h-3 w-3 rounded-full border border-line-2" aria-hidden /> Tick the circle beside an item once you&apos;ve read it · {gotIt} of {real.length} done</span>}
                   {s.key === "decisions" && counts && counts.history > 0 && <span className="text-[12px] text-fg-3">Newest first · {counts.history} kept as history (changed decisions and work that is probably done)</span>}
                 </div>
               );

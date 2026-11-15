@@ -28,7 +28,7 @@ const SIZE: Record<Size, string> = {
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", extra = "") {
-  return `inline-flex select-none items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors duration-150 ease-out disabled:pointer-events-none disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${extra}`;
+  return `inline-flex select-none items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors duration-150 ease-out disabled:pointer-events-none ${VARIANT[variant]} disabled:border-line-2 disabled:bg-hover disabled:text-fg-3 disabled:[&_svg]:text-fg-3 [&:disabled_kbd]:border-line-2 [&:disabled_kbd]:text-fg-3 ${SIZE[size]} ${extra}`;
 }
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; loading?: boolean };
@@ -36,7 +36,10 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: V
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = "primary", size = "md", loading, className = "", children, disabled, ...rest }, ref) {
   return (
-    <button ref={ref} className={buttonClass(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+    // A loading button keeps its colour (it isn't "disabled", it's busy) but ignores clicks until it finishes.
+    <button ref={ref} className={buttonClass(variant, size, `${loading && !disabled ? "pointer-events-none" : ""} ${className}`)} disabled={disabled}
+      aria-busy={loading || undefined} aria-disabled={loading || undefined} {...rest}
+      onClick={loading ? (e) => e.preventDefault() : rest.onClick}>
       {loading && <Spinner className="h-3.5 w-3.5" />}
       {children}
     </button>
@@ -237,9 +240,9 @@ function ModalPanel({ onClose, children, label }: { onClose: () => void; childre
   const ref = useRef<HTMLDivElement>(null);
   useDialogFocus(ref, onClose);
   return (
-    <div className="animate-fade fixed inset-0 z-50 grid place-items-center bg-[var(--overlay)] p-4" onClick={onClose}>
+    <div className="animate-fade glass-scrim fixed inset-0 z-50 grid place-items-center bg-[var(--overlay)] p-4" onClick={onClose}>
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
-        className="animate-pop scroll-quiet max-h-[calc(100vh-32px)] w-full max-w-[480px] overflow-auto rounded-[10px] border border-line bg-bg p-5 shadow-[var(--pop)] outline-none" onClick={(e) => e.stopPropagation()}>
+        className="animate-pop scroll-quiet max-h-[calc(100vh-32px)] w-full max-w-[480px] overflow-auto rounded-[10px] border border-line glass-pop p-5 outline-none" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -255,9 +258,9 @@ function DrawerPanel({ onClose, children, label }: { onClose: () => void; childr
   const ref = useRef<HTMLElement>(null);
   useDialogFocus(ref, onClose);
   return (
-    <div className="animate-fade fixed inset-0 z-50 flex justify-end bg-[var(--overlay)]" onClick={onClose}>
+    <div className="animate-fade glass-scrim fixed inset-0 z-50 flex justify-end bg-[var(--overlay)]" onClick={onClose}>
       <aside ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
-        className="animate-drawer scroll-quiet h-full w-full max-w-[540px] overflow-auto border-l border-line bg-bg shadow-[var(--pop)] outline-none" onClick={(e) => e.stopPropagation()}>
+        className="animate-drawer scroll-quiet h-full w-full max-w-[540px] overflow-auto border-l border-line glass-pop outline-none" onClick={(e) => e.stopPropagation()}>
         {children}
       </aside>
     </div>

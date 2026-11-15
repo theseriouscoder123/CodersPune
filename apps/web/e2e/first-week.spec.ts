@@ -13,16 +13,17 @@ test("successor's first-week plan", async ({ page }) => {
   await expect(page.getByText(/will see \(\d+/).first()).toBeVisible();
   await page.getByRole("button", { name: /Approve handover/ }).click();
   await page.getByRole("button", { name: /Approve and share/ }).click();
-  await page.getByRole("button", { name: /View as/ }).click();
+  await page.getByRole("button", { name: /View as/ }).first().click();
   await page.waitForURL(/\/handover/, { waitUntil: "commit" });
 
-  await page.getByTestId("ack-controls").first().getByTestId("ack-got-it").click();
-  await expect(page.getByTestId("ack-controls").first().getByTestId("ack-got-it")).toHaveText(/Acknowledged/);
+  const vercel = page.getByTestId("ack-controls").filter({ hasText: "Vercel project ownership" }).first();
+  await vercel.getByTestId("ack-got-it").click();
+  await expect(vercel.getByTestId("ack-got-it")).toHaveText(/Acknowledged/);
   await page.getByTestId("first-week-link").click();
   await page.waitForURL(/\/first-week/);
   await expect(page.getByRole("heading", { name: "Your first week" })).toBeVisible();
-  await expect(page.getByTestId("bucket-day1")).toContainText("admin access");
   await page.getByTestId("bucket-day1").getByRole("button", { name: /Show all/ }).click();
+  await expect(page.getByTestId("bucket-day1")).toContainText("admin access");
   await expect(page.getByTestId("bucket-day1").locator('[data-done="1"]')).toContainText("Vercel");  // done items sink to the end
   await expect(page.getByTestId("bucket-day1")).toContainText("It names you.");
   await expect(page.getByTestId("first-week-progress")).toContainText(/^1 of \d+ picked up/);

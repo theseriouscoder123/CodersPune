@@ -79,7 +79,7 @@ def mask_webhook(url: str) -> str:
 
 def email_status() -> dict:
     s = get_settings()
-    return {"configured": s.email_configured, "from": mask_email(s.smtp_user) if s.email_configured else None}
+    return {"configured": s.email_configured}  # the sending account is never shown (it is the operator's own mailbox)
 
 
 # ---------- logging and limits ----------

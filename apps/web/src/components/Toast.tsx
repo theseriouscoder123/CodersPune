@@ -22,7 +22,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => dismiss(id), action ? 7000 : 4200); // a little longer when there's something to click
   }, [dismiss]);
   const ICON = { success: CheckCircle2, error: XCircle, info: Info };
-  const TONE = { success: "text-[var(--toast-ver)]", error: "text-[var(--toast-mis)]", info: "text-[var(--toast-acc)]" };
+  const TONE = { success: "text-ver", error: "text-mis", info: "text-accent-ink" };
   return (
     <ToastContext.Provider value={push}>
       {children}
@@ -30,12 +30,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {items.map((t) => {
           const Icon = ICON[t.tone];
           return (
-            <div key={t.id} className="animate-pop pointer-events-auto flex max-w-md items-center gap-2.5 rounded-lg bg-fg px-3.5 py-2.5 text-[13px] text-bg shadow-[var(--pop)]">
+            <div key={t.id} className="glass-pop animate-pop pointer-events-auto flex max-w-md items-center gap-2.5 rounded-lg border border-line-2 px-3.5 py-2.5 text-[13px] text-fg">
               <Icon className={`h-4 w-4 shrink-0 ${TONE[t.tone]}`} />
               <span>{t.text}</span>
               {t.action && (
                 <button onClick={() => { dismiss(t.id); t.action!.onClick(); }} data-testid="toast-action"
-                  className="-my-1 ml-1 rounded-md px-2 py-1 text-[13px] font-semibold text-[var(--toast-acc)] underline-offset-2 hover:underline">
+                  className="-my-1 ml-1 rounded-md px-2 py-1 text-[13px] font-semibold text-accent-ink underline-offset-2 hover:underline">
                   {t.action.label}
                 </button>
               )}

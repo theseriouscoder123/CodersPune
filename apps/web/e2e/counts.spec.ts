@@ -18,7 +18,7 @@ test("approve dialog and successor page agree on counts", async ({ page }) => {
   await page.getByRole("button", { name: /Approve and share/ }).click();
   await expect(page.getByText(/Version 1 approved/i).first()).toBeVisible();
 
-  await page.getByRole("button", { name: /View as/ }).click();
+  await page.getByRole("button", { name: /View as/ }).first().click();
   await page.waitForURL(/\/handover/, { waitUntil: "commit" });
   await expect(page.getByTestId("handover-counts")).toContainText(`${shared} item`);
   const cards = page.locator("[data-section] li.group");

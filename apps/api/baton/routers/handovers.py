@@ -6,6 +6,7 @@ the permission projection is applied at READ time from current source ACLs, so t
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime
 
@@ -271,9 +272,14 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
         "missing": sum(1 for c in all_live if c.status == "missing"),
         "source_changed": sum(1 for c in all_live if (c.meta or {}).get("source_changed")),
     }
+    latest = _latest(db, h, None)
+    # True when approving now would snapshot exactly what the latest version already holds (nothing to re-approve).
+    same = bool(latest) and json.loads(json.dumps(items, default=str, sort_keys=True)) == json.loads(
+        json.dumps((latest.snapshot or {}).get("items", []), default=str, sort_keys=True))
     return {"member": {"id": str(target.id), "name": target.display_name}, "scope": scope_keywords(h.scope),
             "visible": shown, "withheld": withheld, "counts": count_items(items, tv, acls),
-            "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings}
+            "hidden_inferred": hidden_inferred, "show_restricted_stubs": h.show_restricted_stubs, "warnings": warnings,
+            "same_as_latest": same}
 
 
 @router.get("/handovers/{handover_id}/compare")

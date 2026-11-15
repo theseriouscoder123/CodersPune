@@ -130,7 +130,7 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-3" />
       </button>
       {open && (
-        <div className="animate-pop absolute bottom-full left-0 z-40 mb-1.5 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100%+3rem)] overflow-hidden rounded-lg border border-line bg-bg shadow-[var(--pop)]" role="listbox" data-testid="persona-menu">
+        <div className="animate-pop absolute bottom-full left-0 z-40 mb-1.5 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100%+3rem)] overflow-hidden rounded-lg border border-line glass-pop" role="listbox" data-testid="persona-menu">
           <p className="border-b border-line px-3 py-2.5 text-[12px] leading-[17px] text-fg-3">
             Switch person to see exactly what each person is allowed to see. The server enforces it.
           </p>
@@ -158,7 +158,7 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
 /* ------------------------------------------------------------------ step-state icons */
 
 function StepIcon({ state }: { state: "done" | "current" | "todo" | "locked" }) {
-  if (state === "locked") return <Lock className="h-3.5 w-3.5 shrink-0 text-fg-4" aria-hidden />;
+  if (state === "locked") return <Lock className="h-3.5 w-3.5 shrink-0 text-fg-3" aria-hidden />;
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" className="shrink-0" aria-hidden>
       {state === "done" && <><circle cx="7" cy="7" r="6" fill="var(--fg-3)" /><path d="M4.4 7.2l1.7 1.7 3.5-3.6" stroke="var(--bg-side)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>}
@@ -198,7 +198,7 @@ function Sidebar({ ws, nav, onSwitch, onReset, resetting }: { ws: WorkspaceInfo;
     sources: nav ? (nav.sources.visible < nav.sources.total ? `${nav.sources.visible} of ${nav.sources.total} sources` : `${nav.sources.total} source${nav.sources.total === 1 ? "" : "s"}`) : undefined,
     ledger: nav?.claims !== undefined ? String(nav.claims) : undefined,
     review: nav?.to_review !== undefined ? (nav.to_review ? `${nav.to_review} left` : "All reviewed") : undefined,
-    preview: h ? (h.version ? `v${h.version} approved` : "Draft") : undefined,
+    preview: h ? (h.version ? `v${h.version}` : "Draft") : undefined,
     handover: h ? (h.acks ? `${h.acks.done} / ${h.acks.total}` : h.version ? `v${h.version}` : "Not sent") : undefined,
   };
   const questions = (h?.acks?.questions_open ?? 0) + (h?.acks?.questions_answered ?? 0);
@@ -250,7 +250,7 @@ function Sidebar({ ws, nav, onSwitch, onReset, resetting }: { ws: WorkspaceInfo;
                 {ok ? (
                   <Link href={`/w/${ws.id}/${s.href}`} aria-current={active ? "step" : undefined} data-testid={`step-${s.key}`} className={navLink(active)}>{inner}</Link>
                 ) : (
-                  <span className="flex h-7 cursor-not-allowed items-center gap-2 rounded-md px-2 text-[13px] text-fg-4" tabIndex={0} aria-disabled="true"
+                  <span className="flex h-7 cursor-not-allowed items-center gap-2 rounded-md px-2 text-[13px] text-fg-3" tabIndex={0} aria-disabled="true"
                     title={s.who === "reviewer" ? `Only the reviewer works in this step. ${ws.persona.name} sees the approved handover instead.` : `The ledger is for the reviewer and the leaver. ${ws.persona.name} sees the approved handover (step 5).`}>
                     {inner}
                   </span>
@@ -327,7 +327,7 @@ function TopBar({ ws, onMenu }: { ws: WorkspaceInfo; onMenu: () => void }) {
   const successor = ws.members.find((m) => m.roles.includes("successor"));
   const title = PAGE_TITLES.find(([re]) => re.test(pathname))?.[1] ?? "";
   return (
-    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center gap-2 border-b border-line bg-bg/95 px-3 backdrop-blur sm:px-4">
+    <header className="no-print sticky top-0 z-30 flex h-12 shrink-0 items-center gap-2 border-b border-line glass px-3 sm:px-4">
       <button type="button" onClick={onMenu} aria-label="Open navigation" className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-fg-3 hover:bg-hover hover:text-fg lg:hidden">
         <Menu className="h-4 w-4" />
       </button>
@@ -436,8 +436,8 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
           </aside>
           {drawer && (
             <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
-              <div className="animate-fade absolute inset-0 bg-[var(--overlay)]" onClick={() => setDrawer(false)} />
-              <div className="animate-drawer absolute inset-y-0 left-0 w-[min(280px,86vw)] border-r border-line bg-bg-side">
+              <div className="animate-fade glass-scrim absolute inset-0 bg-[var(--overlay)]" onClick={() => setDrawer(false)} />
+              <div className="animate-drawer absolute inset-y-0 left-0 w-[min(280px,86vw)] border-r border-line bg-bg-side glass-side">
                 <button type="button" onClick={() => setDrawer(false)} aria-label="Close navigation" className="absolute right-2 top-2.5 z-10 grid h-8 w-8 place-items-center rounded-md bg-bg-side text-fg-3 hover:bg-hover">
                   <X className="h-4 w-4" />
                 </button>

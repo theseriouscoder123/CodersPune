@@ -91,7 +91,13 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
       },
     },
   ];
+  // A step the visitor skipped past (they already did a later one) counts as done, so the highlighted step is never
+  // behind their real progress.
+  const lastDone = steps.map((s) => s.done).lastIndexOf(true);
+  steps.forEach((s, i) => { if (i < lastDone && !s.done && ["sources", "ledger", "review"].includes(s.key)) s.done = true; });
   const doneCount = steps.filter((s) => s.done).length;
+  const reviewerName = ws.members.find((m) => m.roles.includes("reviewer"))?.name ?? "the reviewer";
+  const asWhom: Record<string, string> = isSuccessor ? { ledger: reviewerName, review: reviewerName, reviewed: reviewerName, approved: reviewerName } : {};
   const next = steps.find((s) => !s.done);
 
   if (hidden) {
@@ -122,13 +128,13 @@ export function TourChecklist({ ws, onSwitchPersona }: { ws: WorkspaceInfo; onSw
           const isNext = s === next;
           return (
             <li key={s.key}>
-              <button type="button" onClick={() => { if (!s.done) s.go(); }} disabled={s.done}
-                className={`flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[12px] leading-[17px] transition-colors ${isNext ? "bg-accent-soft text-fg" : s.done ? "text-fg-3" : "text-fg-2 hover:bg-hover"}`}>
+              <button type="button" onClick={() => s.go()} title={asWhom[s.key] ? `Switches you to ${asWhom[s.key]}, who does this step` : undefined}
+                className={`flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[12px] leading-[17px] transition-colors ${isNext ? "bg-accent-soft text-fg" : s.done ? "text-fg-3 hover:bg-hover" : "text-fg-2 hover:bg-hover"}`}>
                 <svg width="12" height="12" viewBox="0 0 14 14" className="mt-[2.5px] shrink-0" aria-hidden>
-                  {s.done ? <><circle cx="7" cy="7" r="6" fill="var(--fg-4)" /><path d="M4.4 7.2l1.7 1.7 3.5-3.6" stroke="var(--bg)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>
+                  {s.done ? <><circle cx="7" cy="7" r="6" fill="var(--ver)" /><path d="M4.4 7.2l1.7 1.7 3.5-3.6" stroke="var(--bg)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>
                     : <circle cx="7" cy="7" r="5.6" fill="none" stroke={isNext ? "var(--accent)" : "var(--fg-4)"} strokeWidth="1.5" />}
                 </svg>
-                <span className="flex-1">{s.label}</span>
+                <span className="flex-1">{s.label}{asWhom[s.key] && !s.done && <span className="text-fg-3"> (as {asWhom[s.key]})</span>}</span>
                 {isNext && <span className="shrink-0 font-semibold text-accent-ink">Go</span>}
               </button>
             </li>
