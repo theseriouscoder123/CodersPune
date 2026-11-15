@@ -114,7 +114,8 @@ async def create_workspace(
         raise HTTPException(422, "Please confirm you are authorised to use these sources.")
     since = datetime.now(UTC) - timedelta(days=1)
     made = db.scalar(select(func.count()).select_from(Workspace).where(
-        Workspace.visitor_id == visitor.id, Workspace.sandbox_of.is_(None), Workspace.created_at > since))
+        Workspace.visitor_id == visitor.id, Workspace.synthetic.is_(False), Workspace.is_demo_template.is_(False),
+        Workspace.created_at > since))
     from baton.limits import check_custom, client_ip
 
     check_custom(db, client_ip(request))

@@ -26,7 +26,9 @@ def client_ip(request: Request) -> str:
 def _count_for_ip(db: Session, ip: str, since: datetime, sandbox: bool) -> int:
     q = (select(func.count()).select_from(Workspace).join(Visitor, Visitor.id == Workspace.visitor_id)
          .where(Visitor.ip == ip, Workspace.created_at > since))
-    q = q.where(Workspace.sandbox_of.is_not(None)) if sandbox else q.where(Workspace.sandbox_of.is_(None))
+    # Custom workspaces are the non-synthetic ones. Never infer "custom" from a missing sandbox_of: a demo copy loses that
+    # link if its template is ever deleted, and must not then count against the visitor's custom-workspace limit.
+    q = q.where(Workspace.sandbox_of.is_not(None)) if sandbox else q.where(Workspace.synthetic.is_(False), Workspace.is_demo_template.is_(False))
     return db.scalar(q) or 0
 
 

@@ -54,3 +54,23 @@ def test_gc_endpoint_requires_secret(monkeypatch):
     monkeypatch.setenv("CRON_SECRET", "s3cret")
     assert c.get("/api/maintenance/gc", headers={"authorization": "Bearer nope"}).status_code == 401
     assert c.get("/api/maintenance/gc", headers={"authorization": "Bearer s3cret"}).status_code == 200
+
+
+def test_orphaned_demo_copies_dont_count_as_custom_workspaces():
+    """A demo copy whose template was deleted (sandbox_of set NULL) is still synthetic: it must not use up the
+    network's custom-workspace allowance. Only real (non-synthetic) custom workspaces count."""
+    from baton.limits import _count_for_ip
+
+    ip, since = "203.0.113.91", datetime.now(UTC) - timedelta(days=1)
+    with SessionLocal.begin() as db:
+        db.add(Visitor(id="orphan-v", ip=ip))
+        db.flush()
+        db.add_all([Workspace(name="orphan copy", visitor_id="orphan-v", synthetic=True),
+                    Workspace(name="orphan custom", visitor_id="orphan-v", synthetic=False)])
+    try:
+        with SessionLocal() as db:
+            assert _count_for_ip(db, ip, since, sandbox=False) == 1
+    finally:
+        with SessionLocal.begin() as db:
+            db.execute(delete(Workspace).where(Workspace.visitor_id == "orphan-v"))
+            db.execute(delete(Visitor).where(Visitor.id == "orphan-v"))

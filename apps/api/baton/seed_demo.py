@@ -12,7 +12,7 @@ import sys
 import time
 from collections import Counter
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
 from baton.db.models import Claim, Source, Workspace
 from baton.db.session import SessionLocal
@@ -24,9 +24,12 @@ from baton.pipeline import create_run, run_to_completion
 def main() -> None:
     args = set(sys.argv[1:])
     with SessionLocal.begin() as db:
-        db.execute(delete(Workspace).where(Workspace.is_demo_template.is_(True)))
+        old = list(db.scalars(select(Workspace.id).where(Workspace.is_demo_template.is_(True))))
         ws = build_demo_workspace(db, template=True)
         ws_id = ws.id
+        if old:  # visitors' demo copies follow the new template (deleting the old one would orphan them: FK SET NULL)
+            db.execute(update(Workspace).where(Workspace.sandbox_of.in_(old)).values(sandbox_of=ws_id))
+            db.execute(delete(Workspace).where(Workspace.id.in_(old)))
         print(f"template workspace {ws_id}")
         for s in db.scalars(select(Source).where(Source.workspace_id == ws_id)):
             print(f"  {s.name:<28} {s.type:<12} chunks={s.meta.get('chunk_count'):<4} scrubbed={s.scrub_report}")
