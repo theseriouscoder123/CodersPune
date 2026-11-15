@@ -217,7 +217,7 @@ The successor-readiness measurement uses simulated testers rather than the 35 us
 - **Live AI depends on free quotas**, and extraction recall is lower on the Groq fallback (9–10/13 in Round 2 runs). The demo never calls the AI.
 - **No real sign-in:** a persona switcher for the demo, plus invite links for real teams. Sources are snapshots; private repos can't auto-refresh.
 - **A deploy drops in-flight requests.** Runs resume on the next poll. No deploys after the freeze.
-- **Pipeline-rule issues found by the blind judge, not yet fixed:** some timeline dates use a commit range's end date instead of the commit's own date; one open PR item is labelled "probably done"; one Missing item ("status of issue #131") overlaps a supported claim about the same issue. They affect the demo's wording, not permissions.
+- **Pipeline rules, still open after the blind tests:** some claims built from a commit log are dated by the end of the log's range rather than the commit; near-duplicate claims stay in the handover when their access lists differ or their wording diverges (the CI timeout twice, Wi-Fi compression three times); "status of issue #131" stays Missing beside a supported claim that the issue is unresolved. Fixed: resolved conflicts, undated claims, the "probably done" labels and the owners table (D72).
 - **Live Slack import and Discord notifications** are built and tested against fakes; the live Slack test waits for a bot token with the missing scopes, and Discord for a webhook.
 - **Keys to rotate after the hackathon:** Neon password, 4 Gemini keys, 2 Groq keys, the GitHub token, the Gmail app password, the Slack webhook and bot token (and the app-level token that was shared by mistake).
 
