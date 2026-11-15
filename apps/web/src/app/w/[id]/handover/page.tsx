@@ -28,6 +28,13 @@ function fmtDate(iso: string, withTime = false) {
  * a change made in February): show it as an earlier state, never as an event dated after its replacement. */
 const pastState = (it: { history?: boolean | string | null; occurred_at?: string | null; superseded_on?: string | null }) =>
   !!it.history && !!it.superseded_on && !!it.occurred_at && it.occurred_at.slice(0, 10) > it.superseded_on.slice(0, 10);
+/** "15 Nov" in an item's text, read in the current year: "Overdue" once past, "Due today" on the day, else null. */
+const dueState = (due: string): string | null => {
+  const d = new Date(`${due} ${new Date().getFullYear()}`);
+  if (Number.isNaN(d.getTime())) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return d < today ? "Overdue" : d.getTime() === today.getTime() ? "Due today" : null;
+};
 const shortDate = (iso: string) => new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 function daysUntil(iso: string) {
   const a = new Date(`${iso}T00:00:00`).getTime();
@@ -148,7 +155,7 @@ function HandoverInner() {
 
   const itemMeta = (it: HandoverItem) => (
     <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-fg-3">
-      <span className="inline-flex items-center gap-1.5"><StatusIcon status={it.status} size={12} /> {it.type_label}</span>
+      <span className="inline-flex items-center gap-1.5"><StatusIcon status={it.flags?.reviewer_confirmed_without_evidence ? "supported" : it.status} size={12} /> {it.type_label}</span>
       {it.status === "supported" && !it.history && <span data-testid="unconfirmed" title="The quote was found in the source and a separate AI check agrees, but no person has confirmed it">· not confirmed by a person</span>}
       {it.flags?.reviewer_confirmed_without_evidence && <span>· Reviewer-confirmed, no source evidence</span>}
       {it.evidence.length > 0 && (
@@ -213,7 +220,7 @@ function HandoverInner() {
           <p className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-fg-3" data-testid="handover-meta">
             <ShieldCheck className="h-3.5 w-3.5 text-ver" />
             Approved by <b className="font-medium text-fg-2">{v.approved_by}</b> on {fmtDate(v.approved_at)} · Version {v.version}
-            {counts && <span data-testid="handover-counts" title={counts.unconfirmed ? `${counts.unconfirmed} not yet confirmed by a person` : undefined}>· {counts.current} item{counts.current === 1 ? "" : "s"}{counts.history > 0 && ` · ${counts.history} kept as history`}{!!counts.withheld && ` · ${counts.withheld} restricted`}</span>}
+            {counts && <span data-testid="handover-counts" title={counts.unconfirmed ? `${counts.unconfirmed} not yet confirmed by a person` : undefined}>· {counts.current} item{counts.current === 1 ? "" : "s"}{!isSuccessor && " you can see"}{counts.history > 0 && ` · ${counts.history} kept as history`}{!!counts.withheld && ` · ${counts.withheld} restricted`}</span>}
           </p>
           <h1 className="mt-3 text-[32px] font-[650] leading-[40px] tracking-[-0.025em] text-fg">{title}</h1>
           <p className="mt-3 text-[15px] leading-[24px] text-fg-2">
@@ -261,7 +268,7 @@ function HandoverInner() {
                     <p className="mt-0.5 text-[12.5px] text-fg-3">{s.help}</p>
                   </div>
                   {gotIt !== null && real.length > 0 && s.key === "start_here" && <span className="text-[12px] text-fg-3">{gotIt} of {real.length} marked got it</span>}
-                  {s.key === "decisions" && counts && counts.history > 0 && <span className="text-[12px] text-fg-3">Newest first · {counts.history} changed decision{counts.history === 1 ? "" : "s"} kept as history</span>}
+                  {s.key === "decisions" && counts && counts.history > 0 && <span className="text-[12px] text-fg-3">Newest first · {counts.history} kept as history (changed decisions and work that is probably done)</span>}
                 </div>
               );
               if (s.key === "owners") {
@@ -340,7 +347,7 @@ function HandoverInner() {
                       {s.items.map((it, i) => it.restricted ? restrictedRow(i) : itemRow(it, it.claim_id, false,
                         it.status === "missing" ? <p className="mt-1 text-[12px] text-mis">No source answers this. Ask {v.leaver} or {v.reviewer ?? reviewer?.name ?? "the reviewer"}.</p> : undefined,
                         <span className="mt-0.5 hidden shrink-0 items-center gap-1.5 text-[12px] text-fg-3 sm:inline-flex">
-                          {leaver && <Avatar m={leaver} size={16} />}{it.asked_on ? `Asked ${ago(it.asked_on)}` : "Not asked yet"}
+                          {leaver && <Avatar m={leaver} size={16} />}{it.asked_on ? `Asked ${ago(it.asked_on)}` : `Not yet asked of ${v.leaver}`}
                         </span>))}
                     </ul>
                   </section>
@@ -358,7 +365,7 @@ function HandoverInner() {
                         const owner = s.key === "start_here" ? personIn(it.text, ws.members) : undefined;
                         return itemRow(it, it.claim_id, hiddenFrom(i), undefined, (due || owner) ? (
                           <span className="mt-0.5 flex shrink-0 items-center gap-1.5">
-                            {due && <span className="inline-flex items-center gap-1 rounded-[4px] border border-con/30 px-1.5 text-[11.5px] font-medium leading-5 text-con"><CalendarClock className="h-3 w-3" /> {due}</span>}
+                            {due && <span className={`inline-flex items-center gap-1 rounded-[4px] border px-1.5 text-[11.5px] font-medium leading-5 ${dueState(due) ? "border-mis/40 bg-mis-soft text-mis" : "border-con/30 text-con"}`}><CalendarClock className="h-3 w-3" /> {dueState(due) ? `${dueState(due)} · ${due}` : due}</span>}
                             {owner && <span title={owner.name}><Avatar m={owner} size={18} /></span>}
                           </span>
                         ) : undefined);

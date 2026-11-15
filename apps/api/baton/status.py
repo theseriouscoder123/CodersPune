@@ -116,5 +116,7 @@ def compute_status(c: ClaimState) -> StatusResult:
     if c.source_changed:
         return StatusResult("inferred", f"The source changed: {c.source_changed}. Check it again before relying on it.",
                             {"source_changed": True})
-    prefix = f"Confirmed by {c.reviewer_name}, but no quote passed: " if c.review_state == "confirmed" else "No quote passed: "
+    # "passing" = the quote was found AND the separate check agrees; say both, so a found quote doesn't read as a failure
+    prefix = (f"Confirmed by {c.reviewer_name}, but no evidence passed both checks: " if c.review_state == "confirmed"
+              else "No evidence passed both checks: ")
     return StatusResult("inferred", prefix + _first_failure(c.evidence))

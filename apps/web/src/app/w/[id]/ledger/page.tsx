@@ -31,7 +31,10 @@ export default function LedgerPage() {
 
   if (!canSee) return <NotForPersona step="The reconstructed ledger" />;
 
-  const counts = ledger.data?.status_counts ?? {};
+  const promoted = ledger.data?.promoted_count ?? 0;
+  // Promoted claims are "verified" by status.py but have no source evidence: never count them as passing the checks.
+  const raw = ledger.data?.status_counts ?? {};
+  const counts: Partial<Record<string, number>> = { ...raw, verified: Math.max(0, (raw.verified ?? 0) - promoted) };
   const total = ledger.data?.tab_counts.all ?? 0;
   const isAdmin = ws.persona.roles.includes("admin");
   const isReviewer = ws.persona.roles.includes("reviewer");
@@ -102,14 +105,20 @@ export default function LedgerPage() {
       {/* stat strip: proportional bar on top, five columns, each opening the filtered Verify view */}
       <div className="mt-6 overflow-hidden rounded-lg border border-line" data-testid="status-counts">
         <div className="flex h-2 w-full bg-hover" aria-hidden>
-          {STATUS_ORDER.map((s) => <span key={s} className={BAR[s]} style={{ width: total ? `${(100 * (counts[s] ?? 0)) / total}%` : 0 }} />)}
+          {STATUS_ORDER.map((s) => (
+            <span key={s} className="contents">
+              <span className={BAR[s]} style={{ width: total ? `${(100 * (counts[s] ?? 0)) / total}%` : 0 }} />
+              {s === "verified" && promoted > 0 && <span className="bg-ver/20" style={{ width: `${(100 * promoted) / total}%` }} />}
+            </span>
+          ))}
         </div>
         <div className="grid grid-cols-2 divide-line sm:grid-cols-5 sm:divide-x [&>*]:border-line max-sm:[&>*:nth-child(n+3)]:border-t max-sm:[&>*:nth-child(even)]:border-l">
           {STATUS_ORDER.map((s) => (
             <Link key={s} href={`/w/${ws.id}/review?status=${s}`} title={STATUS_HELP[s]} className="block px-4 py-3.5 transition-colors hover:bg-hover">
               <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-fg-2"><StatusIcon status={s} size={13} /> {STATUS_META[s].label}</span>
               {ledger.loading ? <Skeleton className="mt-2 h-7 w-10" /> : <p className={`mt-1 text-[26px] font-semibold leading-8 tracking-[-0.02em] ${s === "conflicting" ? "text-con" : s === "missing" ? "text-mis" : "text-fg"}`}>{counts[s] ?? 0}</p>}
-              <p className="mt-1 text-[12px] leading-[17px] text-fg-3">{s === "missing" ? `${successor} will need this, but no source covers it` : s === "inferred" ? `No quote passed. Never shown to ${successor} as fact` : STATUS_HELP[s]}</p>
+              {s === "verified" && promoted > 0 && <p className="mt-1 text-[12px] font-medium leading-[17px] text-fg-2" data-testid="promoted-count">+{promoted} reviewer-confirmed, no source evidence</p>}
+              <p className="mt-1 text-[12px] leading-[17px] text-fg-3">{s === "missing" ? `${successor} will need this, but no source covers it` : s === "inferred" ? `No evidence passed both checks. Never shown to ${successor} as fact` : STATUS_HELP[s]}</p>
             </Link>
           ))}
         </div>

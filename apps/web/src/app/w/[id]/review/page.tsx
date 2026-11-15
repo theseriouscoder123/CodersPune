@@ -75,6 +75,9 @@ function Review() {
     if (!id) return;
     setSelected(id);
     requestAnimationFrame(() => document.getElementById(`claim-${id}`)?.scrollIntoView({ block: "nearest" }));
+    // On phones the list and the claim are stacked: bring the claim into view, or a tap looks like it did nothing.
+    if (typeof window !== "undefined" && window.innerWidth < 1024)
+      requestAnimationFrame(() => document.getElementById("claim-panel")?.scrollIntoView({ block: "start", behavior: "smooth" }));
   };
 
   // Keyboard review: j/k move, c confirm, r reject, e edit, x select, ? help, / search. Ignored while typing.
@@ -237,7 +240,7 @@ function Review() {
           )}
         </div>
 
-        <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-6 pt-0 max-lg:max-h-[52vh]" data-testid="claim-list">
+        <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-6 pt-0 [contain:paint] max-lg:max-h-[52vh]" data-testid="claim-list">
           {ledger.loading && <div className="p-2"><SkeletonList rows={6} /></div>}
           {ledger.error && <div className="p-2"><Alert tone="error">{ledger.error}</Alert></div>}
           {ledger.data && claimsAll.length === 0 && <div className="p-2"><EmptyState icon={<Inbox />} title="Nothing here">No claims match this view.</EmptyState></div>}
@@ -255,7 +258,7 @@ function Review() {
                 </div>
                 <ul>
                   {xs.map((c) => (
-                    <ClaimRow key={c.id} c={c} active={c.id === currentId} onClick={() => setSelected(c.id)}
+                    <ClaimRow key={c.id} c={c} active={c.id === currentId} onClick={() => select(c.id)}
                       selectable={selectMode} checked={picked.has(c.id)}
                       onToggle={() => setPicked((p) => { const n = new Set(p); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })} />
                   ))}
@@ -267,7 +270,7 @@ function Review() {
       </section>
 
       {/* ---------------------------------------------------------------- inspector */}
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col border-t border-line lg:border-t-0" aria-label="Claim">
+      <section id="claim-panel" className="flex min-h-0 min-w-0 flex-1 scroll-mt-12 flex-col border-t border-line lg:border-t-0" aria-label="Claim">
         {currentId ? (
           <ClaimPanel key={currentId} id={currentId} position={idx + 1} total={claimsAll.length}
             onPrev={() => select(claimsAll[Math.max(idx - 1, 0)]?.id)} onNext={() => select(claimsAll[Math.min(idx + 1, claimsAll.length - 1)]?.id)}
@@ -445,7 +448,9 @@ function RuleChecks({ c, others, isReviewer }: { c: ClaimDetail; others: ClaimSu
   } else if (promoted) {
     rows.push(<Check_ key="p" state="pass" label="A reviewer confirmed it without source evidence, with a note" measure="promoted" />);
   } else if (c.status !== "missing" && c.status !== "rejected") {
-    rows.push(c.review_state === "confirmed" || c.review_state === "edited"
+    rows.push(c.review_state === "edited"
+      ? <Check_ key="r" state="pending" label="A person edited it; confirm the new wording to verify it" measure="edited" />
+      : c.review_state === "confirmed"
       ? <Check_ key="r" state="pass" label="A person confirmed it" measure={c.review_state} />
       : <Check_ key="r" state="pending" label="A person confirms it" measure={isReviewer ? "waiting on you" : "waiting"} />);
   }

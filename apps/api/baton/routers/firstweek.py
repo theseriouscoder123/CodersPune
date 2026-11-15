@@ -69,6 +69,7 @@ def first_week(handover_id: uuid.UUID, request: Request, db: Session = Depends(g
         bucket, why = place(it, leaver.display_name, leaver_here)
         state = (eff.get(cid) or {}).get("state")
         out[bucket].append({"claim_id": cid, "text": it["text"], "status": it["status"], "section": it["section"],
+                            "promoted": bool((it.get("flags") or {}).get("reviewer_confirmed_without_evidence")),
                             "type_label": it.get("type_label"), "why": why, "state": state,
                             "done": state in ("acknowledged", "not_mine") or bool((eff.get(cid) or {}).get("closed"))})
     for bucket_items in out.values():

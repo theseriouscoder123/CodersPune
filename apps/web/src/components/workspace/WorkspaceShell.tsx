@@ -130,7 +130,7 @@ function PersonaSwitcher({ ws, onSwitch }: { ws: WorkspaceInfo; onSwitch: (id: s
         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-3" />
       </button>
       {open && (
-        <div className="animate-pop absolute bottom-full left-0 z-40 mb-1.5 w-72 overflow-hidden rounded-lg border border-line bg-bg shadow-[var(--pop)]" role="listbox" data-testid="persona-menu">
+        <div className="animate-pop absolute bottom-full left-0 z-40 mb-1.5 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100%+3rem)] overflow-hidden rounded-lg border border-line bg-bg shadow-[var(--pop)]" role="listbox" data-testid="persona-menu">
           <p className="border-b border-line px-3 py-2.5 text-[12px] leading-[17px] text-fg-3">
             Switch person to see exactly what each person is allowed to see. The server enforces it.
           </p>
@@ -438,7 +438,7 @@ export function WorkspaceShell({ workspaceId, children }: { workspaceId: string;
             <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
               <div className="animate-fade absolute inset-0 bg-[var(--overlay)]" onClick={() => setDrawer(false)} />
               <div className="animate-drawer absolute inset-y-0 left-0 w-[min(280px,86vw)] border-r border-line bg-bg-side">
-                <button type="button" onClick={() => setDrawer(false)} aria-label="Close navigation" className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-md text-fg-3 hover:bg-hover">
+                <button type="button" onClick={() => setDrawer(false)} aria-label="Close navigation" className="absolute right-2 top-2.5 z-10 grid h-8 w-8 place-items-center rounded-md bg-bg-side text-fg-3 hover:bg-hover">
                   <X className="h-4 w-4" />
                 </button>
                 {sidebar}

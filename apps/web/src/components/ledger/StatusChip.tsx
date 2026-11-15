@@ -85,7 +85,7 @@ export const STATUS_STYLE = Object.fromEntries(Object.entries(STATUS_META).map((
 export const STATUS_HELP: Record<Status, string> = {
   verified: "Evidence passed the checks and a person confirmed it",
   supported: "Quote found in the source and a separate check agrees. Not yet confirmed by a person",
-  inferred: "No quote passed the checks. Never shown to the successor as fact",
+  inferred: "No evidence passed both checks. Never shown to the successor as fact",
   conflicting: "Sources disagree. A person must decide",
   missing: "A successor needs this, but no source covers it",
   rejected: "Rejected by the reviewer",

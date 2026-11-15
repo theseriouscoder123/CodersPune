@@ -146,7 +146,7 @@ export default function SourcesPage() {
           <p className="text-[13px] font-semibold text-fg">Next: {canLedger ? "Reconstruct" : "your handover"}</p>
           <p className="text-[12.5px] text-fg-3">{canLedger ? "Baton turned these sources into claims, each linked to a quote. Restricted sources are read in their own batches, so their text never mixes into claims others can see." : "The approved handover shows only what you are allowed to see."}</p>
         </div>
-        <ButtonLink size="sm" href={canLedger ? `/w/${ws.id}/ledger` : `/w/${ws.id}/handover`}>{canLedger ? "See the ledger" : "Open my handover"} <ArrowRight /></ButtonLink>
+        <ButtonLink size="sm" className="max-sm:w-full" href={canLedger ? `/w/${ws.id}/ledger` : `/w/${ws.id}/handover`}>{canLedger ? "See the ledger" : "Open my handover"} <ArrowRight /></ButtonLink>
       </div>
       )}
     </div>

@@ -93,7 +93,7 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
         In date order. Baton tells a <b className="font-medium text-fg-2">changed decision</b> apart from a <b className="font-medium text-fg-2">contradiction</b>,
         and flags open work that later events probably finished. Click a note to see why.
       </p>
-      <div className="no-scrollbar mt-3 flex gap-0.5 overflow-x-auto" role="tablist" aria-label="Filter the timeline">
+      <div className="mt-3 flex flex-wrap gap-0.5" role="tablist" aria-label="Filter the timeline">
         {FILTERS.map(([k, label, n]) => (
           <button key={k} role="tab" aria-selected={filter === k} onClick={() => setFilter(k)} data-testid={`tl-filter-${k}`}
             className={`inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors ${filter === k ? "bg-active text-fg" : "text-fg-3 hover:bg-hover hover:text-fg"}`}>

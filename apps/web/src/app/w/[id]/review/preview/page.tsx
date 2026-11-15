@@ -13,7 +13,7 @@ import { Alert, Button, ButtonLink, EmptyState, Modal, SkeletonList } from "@/co
 import { api, storePersona, type HandoverCounts, type HandoverRef, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
-type Item = { id: string; type_label: string; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
+type Item = { id: string; type_label: string; flags?: { reviewer_confirmed_without_evidence?: boolean }; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
   matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean; rerender_note?: string | null };
 type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
@@ -61,7 +61,9 @@ function PreviewInner() {
   const name = handover?.successor ?? "the successor";
   const successor = ws.members.find((m) => m.id === handover?.successor_id);
   const showStubs = stubs ?? handover?.show_restricted_stubs ?? false;
-  const nextVersion = (handover?.latest_version ?? 0) + 1;
+  // The version just approved shows at once; the refreshed handover list can take a few seconds to arrive.
+  const latest = Math.max(done ?? 0, handover?.latest_version ?? 0) || null;
+  const nextVersion = (latest ?? 0) + 1;
 
   async function approve() {
     setBusy(true);
@@ -96,13 +98,13 @@ function PreviewInner() {
       </TopbarActions>
 
       <p className="flex items-center gap-1.5 text-[12.5px] text-fg-3">
-        <Eye className="h-3.5 w-3.5" /> Preview as {name} · {handover?.latest_version ? `v${handover.latest_version} approved, v${nextVersion} would be next` : "not approved yet"}
+        <Eye className="h-3.5 w-3.5" /> Preview as {name} · {latest ? `v${latest} approved, v${nextVersion} would be next` : "not approved yet"}
       </p>
       <h1 className="mt-2 flex items-center gap-3 text-[28px] font-semibold leading-9 tracking-[-0.02em] text-fg">
         {successor && <Avatar m={successor} size={32} />} What {name} will see
       </h1>
       <p className="mt-2 max-w-[680px] text-[14px] leading-[22px] text-fg-2">
-        {handover?.latest_version ? `Version ${handover.latest_version} is approved. Approving again creates version ${nextVersion}.` : "Nothing is approved yet, so the successor currently sees nothing."}{" "}
+        {latest ? `Version ${latest} is approved. Approving again creates version ${nextVersion}.` : "Nothing is approved yet, so the successor currently sees nothing."}{" "}
         Anything that cites a source {name} can&apos;t open is withheld automatically, and inferred claims never reach {name} as fact.
       </p>
       <HandoverPicker handovers={sel.handovers} selected={handover} onCreated={sel.reload} />
@@ -176,8 +178,8 @@ function PreviewInner() {
                     <ul className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line">
                       {items.map((it) => (
                         <li key={it.id} className="flex items-start gap-3 px-3.5 py-2.5 text-[13px] leading-5" data-history={it.history ?? undefined}>
-                          <span className="mt-px shrink-0"><StatusChip status={it.status} iconOnly /></span>
-                          <span className="sr-only">{it.status}</span>
+                          <span className="mt-px shrink-0"><StatusChip status={it.status} promoted={!!it.flags?.reviewer_confirmed_without_evidence} iconOnly /></span>
+                          <span className="sr-only">{it.flags?.reviewer_confirmed_without_evidence ? "reviewer-confirmed, no source evidence" : it.status}</span>
                           <span className={`min-w-0 flex-1 ${it.history ? "text-fg-3" : "text-fg"}`}>
                             {it.history && <span className="mr-1.5 inline-flex h-[18px] items-center rounded-[4px] border border-line px-1 align-[1px] text-[10.5px] font-semibold uppercase tracking-[0.04em] text-fg-3">{it.history === "stale" ? "Probably done" : "Changed later"}</span>}
                             {it.text}

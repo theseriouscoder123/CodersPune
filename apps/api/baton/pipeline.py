@@ -212,6 +212,12 @@ def _finish(db: Session, run: Run) -> None:
     run.stats = {**{k: v for k, v in (run.stats or {}).items() if k != "lease_until"}, "status_counts": counts}
 
 
+def _singular(message: str | None) -> str | None:
+    """Messages stored by older runs (the frozen demo) said "1 conflicts"; read them back in correct English."""
+    import re
+    return re.sub(r"\b1 (conflict|reversed decision|item|claim|source)s\b", r"1 \1", message) if message else message
+
+
 def run_progress(run_id) -> dict:
     with SessionLocal() as db:
         run = db.get(Run, run_id)
@@ -222,7 +228,7 @@ def run_progress(run_id) -> dict:
             "finished_at": run.finished_at.isoformat() if run.finished_at else None,
             "stats": {k: v for k, v in (run.stats or {}).items() if k != "lease_until"},
             "steps": [{"step": j.step, "label": STEP_LABELS.get(j.step, j.step), "status": j.status,
-                       "progress": j.progress, "total": j.total, "message": j.message,
+                       "progress": j.progress, "total": j.total, "message": _singular(j.message),
                        "errors": (j.state or {}).get("errors", [])[-5:]} for j in jobs],
         }
 

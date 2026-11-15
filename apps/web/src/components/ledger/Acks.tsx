@@ -64,7 +64,7 @@ export function AckControls({ hid, wsId, claimId, ack, canRespond, onChanged, ch
       {canRespond ? (
         <button type="button" onClick={(e) => { e.stopPropagation(); void send("acknowledged"); }} disabled={!!busy} data-testid="ack-got-it"
           title={done ? "Acknowledged" : "Mark as got it"} aria-pressed={done}
-          className={`no-print mt-[1px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border transition-colors ${done ? "border-ver bg-ver text-white" : "border-line-2 bg-bg text-transparent hover:border-fg-3 hover:text-fg-4"}`}>
+          className={`no-print relative mt-[1px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border transition-colors before:absolute before:-inset-[9px] before:content-[''] ${done ? "border-ver bg-ver text-white" : "border-line-2 bg-bg text-transparent hover:border-fg-3 hover:text-fg-4"}`}>
           <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
           <span className="sr-only">{done ? "Acknowledged" : "Got it"}</span>
         </button>
@@ -89,11 +89,12 @@ export function AckControls({ hid, wsId, claimId, ack, canRespond, onChanged, ch
         {state === "not_mine" && <p className="mt-1 text-[12px] text-fg-3"><UserX className="mr-1 inline h-3 w-3" />You marked this as not yours{ack?.note ? `: ${ack.note}` : ""}.</p>}
         {ack?.carried && done && <p className="mt-0.5 text-[11.5px] text-fg-3">Acknowledged in an earlier version, unchanged</p>}
         {canRespond && asking && (
-          <form className="no-print mt-2 flex gap-1.5" onClick={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (note.trim().length >= 3) void send("question", note.trim()); }}>
+          <form className="no-print mt-2 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (note.trim().length >= 3) void send("question", note.trim()); }}>
             <input autoFocus value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="What do you need to know?" aria-label="Your question"
-              className="h-7 min-w-0 flex-1 rounded-md border border-line-2 bg-bg px-2.5 text-[13px] text-fg outline-none focus:ring-2 focus:ring-[var(--ring)]" data-testid="ack-question" />
+              className="h-8 min-w-[12rem] flex-1 rounded-md border border-line-2 bg-bg px-2.5 text-[13px] text-fg outline-none focus:ring-2 focus:ring-[var(--ring)]" data-testid="ack-question" />
             <Button size="sm" type="submit" loading={busy === "question"} disabled={note.trim().length < 3}>Send</Button>
             <Button size="sm" variant="ghost" type="button" onClick={() => setAsking(false)}>Cancel</Button>
+            {done && <p className="w-full text-[12px] text-fg-3">Asking replaces your &quot;Got it&quot; on this item until the question is closed.</p>}
           </form>
         )}
       </div>

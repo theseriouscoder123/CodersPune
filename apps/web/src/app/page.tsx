@@ -22,7 +22,7 @@ const STEPS = [
 const STATUSES: { s: Status; rule: string; successor: string }[] = [
   { s: "verified", rule: "Quote found word for word, a separate check agrees, and a reviewer confirmed it.", successor: "Shown" },
   { s: "supported", rule: "Quote found word for word and a separate check agrees. No person has confirmed it yet.", successor: "Shown, marked unconfirmed" },
-  { s: "inferred", rule: "No quote passed the checks. It may be true, but nothing in the sources says so.", successor: "Hidden unless a reviewer promotes it" },
+  { s: "inferred", rule: "No evidence passed both checks (quote found, separate check agrees). It may be true, but nothing in the sources says so.", successor: "Hidden unless a reviewer promotes it" },
   { s: "conflicting", rule: "Another claim gives a different value for the same subject.", successor: "Shown as a risk until resolved" },
   { s: "missing", rule: "The successor will need this, but no source covers it.", successor: "Listed as unresolved" },
 ];

@@ -10,7 +10,7 @@ import { Alert, ButtonLink, Card, EmptyState, PageHeader, SkeletonList } from "@
 import type { Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
-type Item = { claim_id: string; text: string; status: Status; section: string; type_label: string | null; why: string; state: string | null; done: boolean };
+type Item = { claim_id: string; text: string; status: Status; promoted?: boolean; section: string; type_label: string | null; why: string; state: string | null; done: boolean };
 type Plan = { approved: boolean; version?: number; successor: string | null; leaver?: string; leaves_on?: string | null; leaver_here?: boolean;
   counts?: { total: number; done: number }; buckets: { key: string; title: string; help: string; items: Item[] }[] };
 
@@ -76,7 +76,7 @@ function Bucket({ b }: { b: Plan["buckets"][number] }) {
           <li key={i.claim_id} className={`rounded-lg border bg-bg p-3 ${i.done ? "border-line" : "border-line-2"}`} data-done={i.done ? "1" : undefined}>
             <div className="flex items-center gap-2">
               {i.done ? <span className="grid h-5 w-5 place-items-center rounded-full bg-ver text-white"><Check className="h-3 w-3" /></span>
-                : i.state === "question" ? <MessageCircleQuestion className="h-4 w-4 text-accent-ink" /> : <StatusChip status={i.status} />}
+                : i.state === "question" ? <MessageCircleQuestion className="h-4 w-4 text-accent-ink" /> : <StatusChip status={i.status} promoted={!!i.promoted} />}
               <span className="text-[12px] font-medium text-fg-3">{i.section}</span>
             </div>
             <p className={`mt-1.5 text-[13px] leading-snug ${i.done ? "text-fg-2" : "text-fg"}`}>{i.text}</p>

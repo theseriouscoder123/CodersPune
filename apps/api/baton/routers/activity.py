@@ -57,7 +57,8 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             "at": v.approved_at.isoformat(), "kind": "approval", "action": "approve",
             "label": f"Approved version {v.version}" + (f" of “{hname}”" if hname else ""),
             "actor": names.get(v.approved_by, "Someone"), "role": "reviewer", "claim_id": None,
-            "claim": f"Shared with {names.get(succ, 'the successor')} ({len(v.snapshot.get('items', []))} items)",
+            "claim": f"Shared with {names.get(succ, 'the successor')} (a snapshot of {len(v.snapshot.get('items', []))} items, "
+                     "each shown only to people who can read its sources)",
             "claim_type": None, "note": pii(v.note), "before": None,
         })
     src_names = {str(s.id): s.name for s in db.scalars(select(Source).where(Source.workspace_id == ws_id))}

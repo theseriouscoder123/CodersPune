@@ -109,10 +109,14 @@ def list_claims(tab: str = "all", status: str | None = None, type: str | None = 
     rows.sort(key=lambda c: (order.get(c.status or "", 9), c.type, c.text))
     reviewed = sum(1 for c in live if c.review_state != "none")
     nums = claim_numbers(db, ctx.workspace.id)
+    # promoted claims carry status "verified" (status.py rule 5) but have no source evidence: count them apart, so the
+    # UI never shows them under "Evidence passed the checks"
+    promoted = sum(1 for c in live if (c.meta or {}).get("flags", {}).get("reviewer_confirmed_without_evidence"))
     return {"claims": [claim_summary(c, refs.get(c.id, []), nums.get(c.id)) for c in rows], "status_counts": counts,
+            "promoted_count": promoted,
             "type_counts": type_counts, "tab_counts": tab_counts,
             "progress": {"reviewed": reviewed, "total": len(live),
-                         "supported_unconfirmed": sum(1 for c in live if c.status == "supported" and c.review_state == "none"),
+                         "supported_unconfirmed": sum(1 for c in live if c.status == "supported" and c.review_state in ("none", "edited")),
                          "source_changed": sum(1 for c in live if (c.meta or {}).get("source_changed"))}}
 
 

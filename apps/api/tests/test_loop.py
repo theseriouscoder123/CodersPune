@@ -342,3 +342,19 @@ def test_search_snippet_stays_masked_when_the_query_hits_the_number(world):
         assert "90000 00000" not in joined.replace("«", "").replace("»", ""), q
     r = c.get(f"/api/workspaces/{ws}/search", params={"q": "90000"}, headers=as_(p["meera"])).json()
     assert any("90000" in x["snippet"] for x in r["passages"])  # the reviewer still sees it
+
+
+def test_promoted_claims_are_counted_apart_from_verified(world):
+    """Blind judge: a promoted claim (no source evidence) raised the ledger's Verified count."""
+    c = client("visitor-one")
+    ws = world["s1"]
+    p = personas(c, ws)
+    before = ledger(c, ws, p["meera"])
+    inferred = next(x for x in before["claims"] if x["status"] == "inferred")
+    r = c.post(f"/api/claims/{inferred['id']}/review", headers=as_(p["meera"]), json={"action": "promote", "note": "I know this is true"})
+    assert r.status_code == 200
+    after = ledger(c, ws, p["meera"])
+    assert after["promoted_count"] == before.get("promoted_count", 0) + 1
+    # status.py still files it under verified; the UI subtracts promoted_count so it never reads as "evidence passed"
+    assert after["status_counts"].get("verified", 0) == before["status_counts"].get("verified", 0) + 1
+    c.post(f"/api/claims/{inferred['id']}/review", headers=as_(p["meera"]), json={"action": "restore"})

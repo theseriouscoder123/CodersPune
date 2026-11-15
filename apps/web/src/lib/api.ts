@@ -161,6 +161,8 @@ export type ClaimDetail = ClaimSummary & {
 export type Ledger = {
   claims: ClaimSummary[];
   status_counts: Partial<Record<Status, number>>;
+  /** promoted claims are counted under verified by status.py; this many of them have no source evidence */
+  promoted_count?: number;
   type_counts: Record<string, number>;
   tab_counts: { all: number; conflicts: number; missing: number; rejected: number; superseded: number };
   progress?: { reviewed: number; total: number; supported_unconfirmed: number; source_changed?: number };
