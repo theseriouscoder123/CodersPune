@@ -20,7 +20,7 @@ from baton.config import get_settings
 from baton.db.models import Member, Membership, Source, Workspace
 from baton.db.session import get_db
 from baton.ingest.chat_export import ChatExportError, parse_chat_export
-from baton.ingest.github import GitHubError, parse_repo
+from baton.ingest.github import GitHubError, check_repo, parse_repo
 from baton.ingest.service import store_chunks
 from baton.ingest.uploads import MAX_UPLOAD_BYTES, UploadRejected, parse_upload
 from baton.pipeline import create_run
@@ -96,7 +96,7 @@ def _acl(spec: str | None, ids: dict[str, str]) -> dict:
 @router.post("/workspaces")
 async def create_workspace(
     request: Request, response: Response, db: Session = Depends(get_db),
-    name: str = Form(..., max_length=80),
+    name: str = Form("", max_length=500),  # trimmed to 80 below; blank becomes the repo name
     members: str = Form(..., max_length=6000),
     repo_url: str | None = Form(None, max_length=300),
     repo_access: str | None = Form("all", max_length=2000),
@@ -170,7 +170,13 @@ async def create_workspace(
         if not channels:
             raise HTTPException(422, "The chat export contains no messages.")
 
-    ws = Workspace(name=name.strip(), visitor_id=visitor.id, synthetic=False)
+    if repo and not (github_token or "").strip():
+        try:
+            check_repo(repo)  # a typo, private or empty repo is caught here, before anything is created
+        except GitHubError as exc:
+            raise HTTPException(422, exc.args[0]) from exc
+    title = " ".join(name.split())[:80] or (f"{parse_repo(repo)[1]}" if repo else "Untitled project")
+    ws = Workspace(name=title, visitor_id=visitor.id, synthetic=False)
     db.add(ws)
     db.flush()
     ids: dict[str, str] = {}

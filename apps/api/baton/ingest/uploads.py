@@ -56,11 +56,14 @@ def parse_upload(filename: str, data: bytes) -> list[ChunkDraft]:
         return drafts
 
     text = data.decode("utf-8", errors="replace")
+    # Text files only: NUL bytes or mostly undecodable bytes mean a binary file renamed to .md/.txt.
+    if "\x00" in text or text.count("\ufffd") > max(20, len(text) // 20):
+        raise UploadRejected(f"{name}: this doesn't look like a text file")
     when = guess_date(name, text)
-    return [
-        ChunkDraft("note_para", piece, {"file": name, **extra}, None, when)
-        for piece, extra in split_markdown(text)
-    ]
+    drafts = [ChunkDraft("note_para", piece, {"file": name, **extra}, None, when) for piece, extra in split_markdown(text)]
+    if not drafts:
+        raise UploadRejected(f"{name}: the file is empty")
+    return drafts
 
 
 def _parse_pdf(name: str, data: bytes) -> list[ChunkDraft]:
@@ -69,7 +72,7 @@ def _parse_pdf(name: str, data: bytes) -> list[ChunkDraft]:
     try:
         reader = PdfReader(io.BytesIO(data))
     except Exception as exc:
-        raise UploadRejected(f"{name}: could not read PDF ({type(exc).__name__})") from exc
+        raise UploadRejected(f"{name}: this PDF couldn't be opened (it may be damaged or password-protected)") from exc
     if len(reader.pages) > MAX_PDF_PAGES:
         raise UploadRejected(f"{name}: more than {MAX_PDF_PAGES} pages; split it or upload the relevant part")
     drafts: list[ChunkDraft] = []

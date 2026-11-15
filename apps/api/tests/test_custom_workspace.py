@@ -120,3 +120,55 @@ def test_private_repo_token_is_used_once_and_never_stored(monkeypatch):
         assert token not in (dump or "") and token not in (chunks or "")
         assert '"private": true' in dump and "Deploys with fly.io" in chunks
     cleanup(v)
+
+
+def test_bad_inputs_are_refused_before_anything_is_created(monkeypatch):
+    """Reliability sweep (D75): each of these used to create a workspace (or crash) instead of a clear message."""
+    from baton.ingest import github as gh
+    from baton.ingest.github import GitHubError
+    from baton.routers import custom
+
+    c = TestClient(app, headers={"x-forwarded-for": "198.51.100.200"})
+
+    def missing(url):
+        raise GitHubError("GitHub has no public repository nobody/nothing. Check the URL; for a private repository, add a read-only token.")
+
+    monkeypatch.setattr(custom, "check_repo", missing)
+    assert "no public repository" in post(c, data={"repo_url": "https://github.com/nobody/nothing"}, files=[]).json()["detail"]
+    for fname, body, expect in [("empty.md", b"", "empty"), ("blank.md", b"  \n\n ", "empty"),
+                                ("bin.md", bytes(range(256)) * 40, "text file"), ("x.pdf", b"not a pdf", "couldn't be opened")]:
+        r = post(c, data={}, files=[("notes", (fname, body, "text/markdown"))])
+        assert r.status_code == 422 and expect in r.json()["detail"], (fname, r.text)
+    assert gh.check_repo  # the real check exists (network-free tests stub it)
+
+
+def test_ai_quota_exhausted_mid_run_fails_clearly_and_ships_nothing(monkeypatch):
+    """AI-quota safety net (D75): when every key is out of quota, the run stops with the plain quota message at
+    the extraction step instead of finishing with an empty or half-graded ledger."""
+    from baton import pipeline
+    from baton.db.models import Claim, Run
+    from baton.llm.base import _QUOTA_MSG, LLMError
+
+    class OutOfQuota:
+        def structured(self, **kw):
+            raise LLMError("all keys out", _QUOTA_MSG)
+
+    monkeypatch.setattr(pipeline, "get_llm", lambda: OutOfQuota())
+    c = TestClient(app, headers={"x-forwarded-for": "198.51.100.201"})
+    c.cookies.set("baton_visitor", "quota-visitor")
+    r = post(c, data={}, files=[("notes", ("sync.md", NOTE, "text/markdown"))])
+    assert r.status_code == 200, r.text
+    run_id, ws = r.json()["run_id"], r.json()["workspace_id"]
+    try:
+        for _ in range(20):
+            pipeline.advance(run_id, budget_s=20)
+            with SessionLocal() as db:
+                if db.get(Run, run_id).status not in ("queued", "running"):
+                    break
+        with SessionLocal() as db:
+            run = db.get(Run, run_id)
+            assert run.status == "failed" and "quota" in (run.error or "").lower(), run.error
+            assert "Extract" in run.error
+            assert not db.scalars(select(Claim).where(Claim.workspace_id == ws, Claim.origin != "checklist")).first()
+    finally:
+        cleanup("quota-visitor")

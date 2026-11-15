@@ -136,6 +136,30 @@ async def _fetch(owner: str, name: str, token: str, allow_private: bool = False)
         await c.http.aclose()
 
 
+def check_repo(url_or_slug: str) -> None:
+    """One cheap request before a workspace is created, so a typo or a private repo is caught on the form instead of
+    failing minutes later in the run (and using up one of the visitor's daily workspaces). Only definite answers
+    block: not found, private or empty. A network error or GitHub rate limit lets the run try anyway."""
+    owner, name = parse_repo(url_or_slug)
+    token = get_settings().github_token
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "baton-handover"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        r = httpx.get(f"{API}/repos/{owner}/{name}", headers=headers, timeout=8)
+    except httpx.HTTPError:
+        return
+    if r.status_code == 404:
+        raise GitHubError(f"GitHub has no public repository {owner}/{name}. Check the URL; for a private repository, add a read-only token.")
+    if r.status_code != 200:
+        return
+    repo = r.json()
+    if repo.get("private"):
+        raise GitHubError("This repository is private. Add a read-only access token to read it.")
+    if not repo.get("size"):
+        raise GitHubError(f"{owner}/{name} is empty: it has no commits or files to reconstruct from yet.")
+
+
 def fetch_repo(url_or_slug: str, token: str | None = None, *, user_token: str | None = None) -> RepoData:
     """`user_token`: a visitor-supplied read-only token for a private repo. It is used for this call only and never
     stored or logged."""

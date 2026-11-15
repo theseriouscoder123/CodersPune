@@ -40,8 +40,11 @@ function Review() {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const tab = params.get("tab") ?? "all";
-  const status = params.get("status");
+  // Unknown values in a shared or hand-edited URL fall back to "all" instead of an unexplained empty list.
+  const tabParam = params.get("tab");
+  const tab = tabParam && TABS.some((t) => t.key === tabParam) ? tabParam : "all";
+  const statusParam = params.get("status");
+  const status = statusParam && (STATUS_ORDER as readonly string[]).includes(statusParam) ? statusParam : null;
   const type = params.get("type");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(params.get("claim"));
@@ -248,7 +251,8 @@ function Review() {
         <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-6 pt-0 [contain:paint] max-lg:max-h-[52vh]" data-testid="claim-list">
           {ledger.loading && <div className="p-2"><SkeletonList rows={6} /></div>}
           {ledger.error && <div className="p-2"><Alert tone="error">{ledger.error}</Alert></div>}
-          {ledger.data && claimsAll.length === 0 && <div className="p-2"><EmptyState icon={<Inbox />} title="Nothing here">No claims match this view.</EmptyState></div>}
+          {ledger.data && claimsAll.length === 0 && <div className="p-2"><EmptyState icon={<Inbox />} title="Nothing here"
+            action={(tab !== "all" || status || type || q) ? <Link href={`${pathname}?tab=all`} onClick={() => setQ("")} className="text-[12.5px] font-medium text-accent-ink hover:underline">Clear filters</Link> : undefined}>No claims match this view.</EmptyState></div>}
           {groups.map(([s, xs, prom]) => {
             const confirmed = xs.filter((c) => c.review_state === "confirmed").length;
             return (

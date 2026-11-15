@@ -27,7 +27,7 @@ def store_chunks(db: Session, source: Source, drafts: list[ChunkDraft], *, repla
     rows = []
     keep: set = set()
     for d in drafts:
-        clean, counts = scrub(d.text)
+        clean, counts = scrub(d.text.replace("\x00", ""))  # Postgres text can't hold NUL bytes (any source)
         report.update(counts)
         if not clean.strip():
             continue
