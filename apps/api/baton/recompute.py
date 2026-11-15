@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from baton.db.models import Claim, Job, Run, Workspace
 from baton.db.session import SessionLocal
-from baton.ledger import recompute_statuses
+from baton.ledger import rebuild_relations, recompute_statuses
 from baton.pipeline import _n, replan_conflicts
 
 
@@ -23,6 +23,7 @@ def main() -> None:
             select(Workspace.id).where(Workspace.is_demo_template.is_(True)).order_by(Workspace.created_at.desc()))
         groups, sup = replan_conflicts(db, ws_id, reset=True)
         recompute_statuses(db, ws_id)
+        rebuild_relations(db, ws_id)  # relation signals and stale-work reasons use the fresh dates and statuses
         run = db.scalars(select(Run).where(Run.workspace_id == ws_id).order_by(Run.created_at.desc())).first()
         if run:
             for j in db.scalars(select(Job).where(Job.run_id == run.id, Job.step == "conflicts")):

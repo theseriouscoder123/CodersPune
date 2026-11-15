@@ -10,10 +10,11 @@ import { HandoverPicker, useHandoverSelection } from "@/components/workspace/Han
 import { NotForPersona } from "@/components/workspace/NotForPersona";
 import { Avatar, TopbarActions, useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, Button, ButtonLink, EmptyState, Modal, SkeletonList } from "@/components/ui";
+import { staleTag } from "@/lib/stale";
 import { api, storePersona, type HandoverCounts, type HandoverRef, type Status } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
-type Item = { id: string; type_label: string; flags?: { reviewer_confirmed_without_evidence?: boolean }; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
+type Item = { id: string; type_label: string; stale_reason?: string | null; flags?: { reviewer_confirmed_without_evidence?: boolean }; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
   matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean; rerender_note?: string | null };
 type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
@@ -181,7 +182,7 @@ function PreviewInner() {
                           <span className="mt-px shrink-0"><StatusChip status={it.status} promoted={!!it.flags?.reviewer_confirmed_without_evidence} iconOnly /></span>
                           <span className="sr-only">{it.flags?.reviewer_confirmed_without_evidence ? "reviewer-confirmed, no source evidence" : it.status}</span>
                           <span className={`min-w-0 flex-1 ${it.history ? "text-fg-3" : "text-fg"}`}>
-                            {it.history && <span className="mr-1.5 inline-flex h-[18px] items-center rounded-[4px] border border-line px-1 align-[1px] text-[10.5px] font-semibold uppercase tracking-[0.04em] text-fg-3">{it.history === "stale" ? "Probably done" : "Changed later"}</span>}
+                            {it.history && <span className="mr-1.5 inline-flex h-[18px] items-center rounded-[4px] border border-line px-1 align-[1px] text-[10.5px] font-semibold uppercase tracking-[0.04em] text-fg-3">{it.history === "stale" ? staleTag(it.stale_reason) : "Changed later"}</span>}
                             {it.text}
                           </span>
                           <span className="hidden shrink-0 text-[12px] text-fg-3 sm:block">{it.type_label}</span>

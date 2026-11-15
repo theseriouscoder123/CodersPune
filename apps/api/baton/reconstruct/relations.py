@@ -71,6 +71,16 @@ def _src(c: C) -> str:
     return f" ({c.ref})" if c.ref else ""
 
 
+def _when(c: C) -> str:
+    """"(9 Feb 2026, PR #88)", "(PR #88, undated)" or "(undated)": one pair of parentheses, never nested."""
+    parts = [_day(c.occurred_at)] if c.occurred_at else []
+    if c.ref:
+        parts.append(c.ref)
+    if not c.occurred_at:
+        parts.append("undated")
+    return f"({', '.join(parts)})"
+
+
 def classify_supersession(older: C, newer: C) -> Relation:
     """Explain an older -> newer supersession found by conflicts.plan_conflicts (or chosen by the reviewer)."""
     hist = HISTORICAL.search(older.text or "")
@@ -123,7 +133,7 @@ def stale_reasons(claims: list[C]) -> dict[str, str]:
                       and _naive(o.occurred_at) > _naive(w.occurred_at)]
         if later_same:
             newest = max(later_same, key=lambda o: _naive(o.occurred_at))
-            out[w.id] = f"A later update on the same item ({_day(newest.occurred_at)}{_src(newest)}): “{newest.text}”"
+            out[w.id] = f"A later update on the same item {_when(newest)}: “{newest.text}”"
             continue
         ww = _words(w.text)
         for d in live:
@@ -133,10 +143,10 @@ def stale_reasons(claims: list[C]) -> dict[str, str]:
             if len(shared) < 2:
                 continue
             if PARKED.search(d.text or ""):
-                out[w.id] = f"A later decision parks this ({_day(d.occurred_at)}{_src(d)}): “{d.text}”"
+                out[w.id] = f"{'A later' if d.occurred_at else 'A'} decision parks this {_when(d)}: “{d.text}”"
                 break
             if COMPLETION.search(d.text or ""):
-                out[w.id] = f"A later decision says this is in place ({_day(d.occurred_at)}{_src(d)}): “{d.text}”"
+                out[w.id] = f"{'A later' if d.occurred_at else 'A'} decision says this is in place {_when(d)}: “{d.text}”"
                 break
     return out
 

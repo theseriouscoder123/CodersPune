@@ -54,18 +54,29 @@ def list_relations(ctx: Ctx = Depends(workspace_ctx), db: Session = Depends(get_
     ev = evidence_rows(db, list(ok))
     refs = {cid: list(dict.fromkeys(ref_for(*r) for r in ev.get(cid, [])))[:3] for cid in ok}
     names = {m.id: m.display_name for m in db.scalars(select(Member).where(Member.workspace_id == ws_id))}
+    gids = {c.conflict_group_id for c in claims.values() if c.conflict_group_id}
+    groups = {g.id: g for g in db.scalars(select(ConflictGroup).where(ConflictGroup.id.in_(gids)))} if gids else {}
     out = []
     for r in rels:
         if r.from_claim_id not in ok or r.to_claim_id not in ok:
             continue
+        # a contradiction the reviewer has resolved: say how, so the timeline stops calling it "both can't be true"
+        resolution = None
+        g = groups.get(claims[r.from_claim_id].conflict_group_id or claims[r.to_claim_id].conflict_group_id)
+        if r.relation == "contradiction" and g is not None and g.resolved:
+            res = g.resolution or ""
+            resolution = ({"winner": res.split(":", 1)[1], "by": names.get(g.resolved_by)} if res.startswith("winner:")
+                          else {"kept_as_risk": True, "by": names.get(g.resolved_by)})
         out.append({"id": str(r.id), "relation": r.relation, "label": LABEL[r.relation], "decided_by": r.decided_by,
+                    "resolution": resolution,
                     "decided_by_name": names.get(r.decided_by_member_id) if r.decided_by == "reviewer" else None,
                     "signal": pii(r.signal), "note": pii(r.note),
                     "earlier": _node(claims[r.from_claim_id], refs[r.from_claim_id], pii),
                     "later": _node(claims[r.to_claim_id], refs[r.to_claim_id], pii)})
     stale_out = [_node(c, refs.get(c.id, []), pii) for c in stale if c.id in ok]
     return {"relations": out, "stale": stale_out,
-            "counts": {k: sum(1 for x in out if x["relation"] == k) for k in LABEL} | {"stale": len(stale_out)}}
+            "counts": {k: sum(1 for x in out if x["relation"] == k and not x["resolution"]) for k in LABEL}
+            | {"stale": len(stale_out), "resolved": sum(1 for x in out if x["resolution"])}}
 
 
 class RelationIn(BaseModel):

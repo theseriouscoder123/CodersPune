@@ -693,9 +693,22 @@ def step_verify(run_id, job_id, workspace_id, deadline) -> bool:
     return all(str(i) in retried for i in left)
 
 
+def date_from_evidence(db: Session, workspace_id) -> int:
+    """An undated claim takes the earliest date among the passages it cites (a PR comment, a note, a message), so the
+    timeline can place it. Claims citing only undated text (code, config) stay undated. Deterministic, no LLM."""
+    rows = db.execute(select(Claim, func.min(Chunk.occurred_at)).join(Evidence, Evidence.claim_id == Claim.id)
+                      .join(Chunk, Chunk.id == Evidence.chunk_id)
+                      .where(Claim.workspace_id == workspace_id, Claim.occurred_at.is_(None), Chunk.occurred_at.is_not(None))
+                      .group_by(Claim.id)).all()
+    for c, when in rows:
+        c.occurred_at = when
+    return len(rows)
+
+
 def replan_conflicts(db: Session, workspace_id, reset: bool = False) -> tuple[int, int]:
     """Plan conflicts/supersession for claims not already in a (resolved) group. Deterministic, no LLM."""
     from baton.db.models import ClaimRelation
+    date_from_evidence(db, workspace_id)
     reviewer_rel = select(ClaimRelation.from_claim_id).where(ClaimRelation.workspace_id == workspace_id, ClaimRelation.decided_by == "reviewer").union(
         select(ClaimRelation.to_claim_id).where(ClaimRelation.workspace_id == workspace_id, ClaimRelation.decided_by == "reviewer"))
     if reset:  # forget unresolved groups and AUTOMATIC supersessions (never ones a reviewer chose)

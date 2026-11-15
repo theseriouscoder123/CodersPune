@@ -13,6 +13,7 @@ import { STATUS_META, StatusChip, StatusIcon } from "@/components/ledger/StatusC
 import { HandoverPicker, useHandoverSelection } from "@/components/workspace/HandoverPicker";
 import { Avatar, TopbarActions, useWorkspace } from "@/components/workspace/WorkspaceShell";
 import { Alert, Button, ButtonLink, Drawer, EmptyState, IconButton, PropertyList, SkeletonList, Spinner } from "@/components/ui";
+import { staleTag } from "@/lib/stale";
 import { api, type EvidenceInfo, type HandoverItem, type HandoverView, type Member, type SourceInfo } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
@@ -49,6 +50,12 @@ function ago(iso: string) {
 const DEADLINE = /\b(?:before|by|until|due)\s+(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2})/i;
 const personIn = (text: string, members: Member[]) => members
   .map((m) => ({ m, at: text.search(new RegExp(`\\b${m.name}\\b`)) })).filter((x) => x.at >= 0).sort((a, b) => a.at - b.at)[0]?.m;
+
+/** "Sana is preparing…" -> "Sana": the person a sentence starts with, for people named in sources who aren't members. */
+const namedPerson = (text: string): string | null => {
+  const m = /^([A-Z][a-z]+)\s+(?:is|are|was|needs|will|must|should|has|owns|handles|maintains|leads|runs|takes)\b/.exec(text);
+  return m && !["The", "This", "That", "There", "It", "Each", "Every", "All", "Our"].includes(m[1]) ? m[1] : null;
+};
 
 type Versions = { versions: { version: number; approved_by: string; approved_at: string; note: string | null; items: number; added: number; removed: number }[] };
 
@@ -272,38 +279,51 @@ function HandoverInner() {
                 </div>
               );
               if (s.key === "owners") {
+                const ownRow = (it: HandoverItem, i: number) => {
+                  if (it.restricted) return restrictedRow(i);
+                  const owner = personIn(it.text, ws.members);
+                  const named = owner ? null : namedPerson(it.text);
+                  const isLeaverOwned = owner && leaver && owner.id === leaver.id;
+                  return (
+                    <li key={it.claim_id} onClick={it.evidence.length > 0 ? () => void openEvidence(it) : undefined} data-history={it.history ? "1" : undefined}
+                      className={`group grid grid-cols-1 gap-1 px-3.5 py-2.5 text-[13px] transition-colors sm:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,1fr)] sm:gap-3 ${it.evidence.length ? "cursor-pointer hover:bg-hover" : ""}`}>
+                      <span className="min-w-0 text-fg">{it.text}</span>
+                      <span className="flex min-w-0 items-center gap-1.5 text-fg-2">
+                        {owner ? <><Avatar m={owner} size={16} /> {owner.name}{isLeaverOwned && successor && <span className="text-fg-3">→ {isSuccessor ? "you" : successor.name}{v.leaves_on ? ` after ${shortDate(v.leaves_on)}` : ""}</span>}</>
+                          : named ? <span title="Named in the sources; not a member of this workspace">{named}</span> : <span className="text-fg-3">Not named</span>}
+                      </span>
+                      <span className="min-w-0">
+                        {it.evidence.length > 0 ? (
+                          <button type="button" onClick={(e) => { e.stopPropagation(); void openEvidence(it); }} data-testid="source-ref" className="max-w-full truncate text-left font-mono text-[11.5px] text-accent-ink hover:underline">
+                            {[...new Set(it.evidence.map((e) => e.ref))].join(" · ")}
+                          </button>
+                        ) : <span className="text-[12px] text-fg-3">No source</span>}
+                      </span>
+                    </li>
+                  );
+                };
+                // ownership claims form the table; other people's open work (placed here, not in Start here) is its own list
+                const owned = s.items.map((it, i) => [it, i] as const).filter(([it]) => it.restricted || it.type === "ownership");
+                const others = s.items.map((it, i) => [it, i] as const).filter(([it]) => !it.restricted && it.type !== "ownership");
+                const table = (rows: (readonly [HandoverItem, number])[], first: string) => (
+                  <div className="overflow-hidden rounded-lg border border-line">
+                    <div className="hidden grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,1fr)] gap-3 border-b border-line bg-bg-sunk px-3.5 py-2 text-[12px] font-medium text-fg-3 sm:grid">
+                      <span>{first}</span><span>Person</span><span>Based on</span>
+                    </div>
+                    <ul className="divide-y divide-line">{rows.map(([it, i]) => ownRow(it, i))}</ul>
+                  </div>
+                );
                 return (
                   <section key={s.key} id={s.key} data-section={s.key} className="scroll-mt-16">
                     {head}
-                    <div className="overflow-hidden rounded-lg border border-line">
-                      <div className="hidden grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,1fr)] gap-3 border-b border-line bg-bg-sunk px-3.5 py-2 text-[12px] font-medium text-fg-3 sm:grid">
-                        <span>Area</span><span>Owner</span><span>Based on</span>
+                    {s.items.length === 0 && <p className="text-[13px] text-fg-3">Nothing here.</p>}
+                    {owned.length > 0 && table(owned, "Responsibility")}
+                    {others.length > 0 && (
+                      <div className={owned.length ? "mt-5" : ""}>
+                        <p className="mb-2 text-[13px] font-semibold text-fg">Other people&apos;s open work <span className="font-normal text-fg-3">{others.length}</span></p>
+                        {table(others, "Task")}
                       </div>
-                      <ul className="divide-y divide-line">
-                        {s.items.length === 0 && <li className="px-3.5 py-3 text-[13px] text-fg-3">Nothing here.</li>}
-                        {s.items.map((it, i) => {
-                          if (it.restricted) return restrictedRow(i);
-                          const owner = personIn(it.text, ws.members);
-                          const isLeaverOwned = owner && leaver && owner.id === leaver.id;
-                          return (
-                            <li key={it.claim_id} onClick={it.evidence.length > 0 ? () => void openEvidence(it) : undefined} data-history={it.history ? "1" : undefined}
-                              className={`group grid grid-cols-1 gap-1 px-3.5 py-2.5 text-[13px] transition-colors sm:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,1fr)] sm:gap-3 ${it.evidence.length ? "cursor-pointer hover:bg-hover" : ""}`}>
-                              <span className="min-w-0 text-fg">{it.text}</span>
-                              <span className="flex min-w-0 items-center gap-1.5 text-fg-2">
-                                {owner ? <><Avatar m={owner} size={16} /> {owner.name}{isLeaverOwned && successor && <span className="text-fg-3">→ {isSuccessor ? "you" : successor.name}{v.leaves_on ? ` after ${shortDate(v.leaves_on)}` : ""}</span>}</> : <span className="text-fg-3">Not named</span>}
-                              </span>
-                              <span className="min-w-0">
-                                {it.evidence.length > 0 ? (
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); void openEvidence(it); }} data-testid="source-ref" className="max-w-full truncate text-left font-mono text-[11.5px] text-accent-ink hover:underline">
-                                    {[...new Set(it.evidence.map((e) => e.ref))].join(" · ")}
-                                  </button>
-                                ) : <span className="text-[12px] text-fg-3">No source</span>}
-                              </span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
+                    )}
                   </section>
                 );
               }
@@ -322,7 +342,7 @@ function HandoverInner() {
                           <div className="min-w-0 flex-1">
                             <p className="flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-fg-3">
                               {pastState(it) ? `before ${it.superseded_on!.slice(0, 10)}` : it.occurred_at ? it.occurred_at.slice(0, 10) : "undated"}
-                              {it.history && <span className="rounded-[4px] bg-hover px-1.5 font-sans text-[10.5px] font-semibold uppercase tracking-wide text-fg-2">{it.stale ? "Probably done" : pastState(it) ? "Earlier state" : "Changed later"}</span>}
+                              {it.history && <span className="rounded-[4px] bg-hover px-1.5 font-sans text-[10.5px] font-semibold uppercase tracking-wide text-fg-2">{it.stale ? staleTag(it.stale_reason) : pastState(it) ? "Earlier state" : "Changed later"}</span>}
                             </p>
                             <p className={`mt-0.5 text-[14px] leading-[21px] ${it.history ? "text-fg-3" : "text-fg"}`}>{it.text}</p>
                             {it.history && it.superseded_by_text && <p className="mt-0.5 text-[12.5px] text-fg-3">{pastState(it) ? `Mentioned ${shortDate(it.occurred_at!)} as how it used to be. Now: ` : it.superseded_on ? `Replaced on ${shortDate(it.superseded_on)} by: ` : "Replaced by: "}{it.superseded_by_text}</p>}

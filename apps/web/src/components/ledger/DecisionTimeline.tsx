@@ -6,10 +6,13 @@ import { useMemo, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import { Button, Drawer, IconButton, Skeleton } from "@/components/ui";
+import { staleTag } from "@/lib/stale";
 import { api, type ClaimSummary } from "@/lib/api";
 
 type Node = { id: string; text: string; type: string; status: string; subject_key: string; occurred_at: string | null; refs: string[]; superseded: boolean; stale_reason: string | null };
-type Rel = { id: string; relation: "reversal" | "historical" | "contradiction" | "unrelated"; label: string; decided_by: "rule" | "reviewer"; decided_by_name: string | null; signal: string | null; note: string | null; earlier: Node; later: Node };
+type Rel = { id: string; relation: "reversal" | "historical" | "contradiction" | "unrelated"; label: string; decided_by: "rule" | "reviewer"; decided_by_name: string | null; signal: string | null; note: string | null; earlier: Node; later: Node;
+  /** set when a reviewer resolved this contradiction in Verify */
+  resolution?: { winner?: string; kept_as_risk?: boolean; by?: string | null } | null };
 export type RelationsOut = { relations: Rel[]; stale: Node[]; counts: Record<string, number> };
 
 type Filter = "all" | "changes" | "contradictions" | "stale";
@@ -28,6 +31,10 @@ function explain(rel: Rel, role: "earlier" | "later") {
   const self = role === "earlier" ? rel.earlier : rel.later;
   if (rel.relation === "reversal") return role === "earlier" ? { tag: "Changed decision", text: `Replaced${other.occurred_at ? ` on ${fmt(other.occurred_at)}` : ""} by “${short(other.text, 70)}”. Kept as history, not treated as a contradiction.` } : { tag: "Changed decision", text: `Replaces an earlier decision: “${short(other.text, 70)}”.` };
   if (rel.relation === "historical") return role === "earlier" ? { tag: "Earlier state", text: `Describes how things were before${other.occurred_at ? ` ${fmt(other.occurred_at)}` : ""}${self.occurred_at ? ` (written down ${fmt(self.occurred_at)})` : ""}. Current state: “${short(other.text, 70)}”.` } : { tag: "Current state", text: `An earlier claim describes how it used to be: “${short(other.text, 70)}”.` };
+  if (rel.relation === "contradiction" && rel.resolution?.kept_as_risk) return { tag: "Kept as a risk", text: `Disagrees with “${short(other.text, 70)}”. ${rel.resolution.by ?? "The reviewer"} kept both as an open risk for the successor.` };
+  if (rel.relation === "contradiction" && rel.resolution?.winner) return rel.resolution.winner === self.id
+    ? { tag: "Resolved", text: `${rel.resolution.by ?? "The reviewer"} kept this over “${short(other.text, 70)}”.` }
+    : { tag: "Resolved", text: `${rel.resolution.by ?? "The reviewer"} chose “${short(other.text, 70)}” instead. Kept as history.` };
   if (rel.relation === "contradiction") return { tag: "Contradiction", text: `Disagrees with “${short(other.text, 80)}”. Both can't be true.` };
   return { tag: "Unrelated", text: "A reviewer marked these as unrelated." };
 }
@@ -75,14 +82,14 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
   const shown = rows.filter((r) => {
     const rels = byClaim.get(r.id) ?? [];
     if (filter === "changes") return rels.some((x) => x.rel.relation === "reversal" || x.rel.relation === "historical");
-    if (filter === "contradictions") return rels.some((x) => x.rel.relation === "contradiction");
+    if (filter === "contradictions") return rels.some((x) => x.rel.relation === "contradiction" && !x.rel.resolution);
     if (filter === "stale") return staleById.has(r.id);
     return true;
   });
   const c = relations?.counts ?? {};
   const FILTERS: [Filter, string, number | undefined][] = [
     ["all", "All", rows.length], ["changes", "Changed decisions", (c.reversal ?? 0) + (c.historical ?? 0)],
-    ["contradictions", "Contradictions", c.contradiction], ["stale", "Probably done", c.stale],
+    ["contradictions", "Contradictions", c.contradiction], ["stale", "Done, parked or updated", c.stale],
   ];
   const collapsed = filter === "all" && !all && shown.length > FIRST + 2;
 
@@ -107,7 +114,7 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
         {shown.map((e, i) => {
           const rels = byClaim.get(e.id) ?? [];
           const stale = staleById.get(e.id);
-          const contra = rels.some((x) => x.rel.relation === "contradiction");
+          const contra = rels.some((x) => x.rel.relation === "contradiction" && !x.rel.resolution);
           const muted = e.superseded || !!stale;
           return (
             <li key={e.id} className={`grid grid-cols-[78px_20px_minmax(0,1fr)] sm:grid-cols-[92px_24px_minmax(0,1fr)] ${collapsed && i >= FIRST ? "hidden" : ""}`}>
@@ -129,7 +136,7 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
                   className={`mt-0.5 block text-[14px] leading-[21px] hover:underline ${muted ? "text-fg-3" : "text-fg"}`}>{e.text}</Link>
                 {rels.map(({ rel, role }) => {
                   const x = explain(rel, role);
-                  const isContra = rel.relation === "contradiction";
+                  const isContra = rel.relation === "contradiction" && !rel.resolution;
                   return (
                     <button key={rel.id + role} type="button" onClick={() => setOpen({ rel })} data-testid="relation-chip"
                       className={`mt-2 flex w-full flex-wrap items-start gap-x-3 gap-y-1 rounded-md border sm:flex-nowrap px-3 py-2 text-left transition-colors hover:bg-hover ${isContra ? "border-con/30" : "border-line"}`}>
@@ -143,7 +150,7 @@ export function DecisionTimeline({ wsId, events, relations, loading, canEdit, on
                 {stale && (
                   <button type="button" onClick={() => setOpen({ stale })} data-testid="stale-chip"
                     className="mt-2 flex w-full flex-wrap items-start gap-x-3 gap-y-1 rounded-md border sm:flex-nowrap border-line px-3 py-2 text-left transition-colors hover:bg-hover">
-                    <span className="mt-px shrink-0 rounded-[4px] bg-hover px-1.5 text-[10.5px] font-semibold uppercase leading-[18px] tracking-wide text-fg-2">Probably done</span>
+                    <span className="mt-px shrink-0 rounded-[4px] bg-hover px-1.5 text-[10.5px] font-semibold uppercase leading-[18px] tracking-wide text-fg-2">{staleTag(stale.stale_reason)}</span>
                     <span className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-fg-2 max-sm:order-last max-sm:basis-full">{stale.stale_reason}</span>
                     <span className="shrink-0 text-[12px] text-fg-3 max-sm:ml-auto">by rule</span>
                     <span className="shrink-0 text-[12px] font-medium text-accent-ink">Why?</span>
@@ -235,7 +242,10 @@ function RelationDetail({ rel, canEdit, onClose, onChanged, wsId }: { rel: Rel; 
           {rel.decided_by === "reviewer" && rel.signal && <p className="mt-2 text-[12px] text-fg-3">Baton&apos;s rule had said: {rel.signal}</p>}
           {rel.decided_by === "rule" && <p className="mt-2 text-[12px] text-fg-3">Decided by fixed rules, not by the AI.</p>}
         </div>
-        {rel.relation === "contradiction" && (
+        {rel.relation === "contradiction" && rel.resolution && (
+          <p className="text-[13px] text-fg-2">Resolved in Verify by {rel.resolution.by ?? "the reviewer"}: {rel.resolution.kept_as_risk ? "both kept as an open risk." : `kept “${short(rel.resolution.winner === rel.earlier.id ? rel.earlier.text : rel.later.text, 80)}”.`}</p>
+        )}
+        {rel.relation === "contradiction" && !rel.resolution && (
           <Link href={`/w/${wsId}/review?tab=conflicts&claim=${rel.later.id}`} className="inline-flex text-[13px] font-medium text-accent-ink hover:underline">Resolve in Verify →</Link>
         )}
         {canEdit ? (
@@ -282,7 +292,7 @@ function StaleDetail({ node, canEdit, onClose, onChanged, wsId }: { node: Node; 
   }
   return (
     <div data-testid="stale-detail">
-      <DrawerHead title="Probably done or parked" onClose={onClose} />
+      <DrawerHead title={staleTag(node.stale_reason)} onClose={onClose} />
       <div className="space-y-4 p-5">
         <ClaimBox title="Open work" n={node} />
         <div className="rounded-lg border border-line bg-bg-sunk p-3 text-[13px]">
