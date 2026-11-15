@@ -81,6 +81,8 @@ def _entries(db: Session, ctx: Ctx) -> list[dict]:
             label, what = "Changed how two claims relate", f"{(a.before or {}).get('relation', '?')} → {(a.after or {}).get('relation', '?')}"
         elif a.action == "duplicate_merged":  # claim text left out: it may come from a source this viewer can't read
             label, what = "Merged two near-identical claims (evidence kept together)", None
+        elif a.action == "reviewer_note":
+            label, what = "Wrote a note for the successor in place of a withheld item", None
         elif a.action == "run_cancelled":
             label, what = "Cancelled a pipeline run", None
         elif a.action == "stale_override":

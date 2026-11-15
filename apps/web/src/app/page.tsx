@@ -57,6 +57,7 @@ export default function Home() {
             <a href="#how" className="hidden h-8 items-center rounded-md px-2.5 text-fg-2 hover:bg-hover hover:text-fg sm:inline-flex">How it works</a>
             <a href="#trust" className="hidden h-8 items-center rounded-md px-2.5 text-fg-2 hover:bg-hover hover:text-fg sm:inline-flex">Statuses</a>
             <a href="#security" className="hidden h-8 items-center rounded-md px-2.5 text-fg-2 hover:bg-hover hover:text-fg md:inline-flex">Security</a>
+            <a href="/guide" className="hidden h-8 items-center rounded-md px-2.5 text-fg-2 hover:bg-hover hover:text-fg sm:inline-flex">Guide</a>
             <ThemeToggle />
             <ButtonLink href="/new" variant="secondary" size="sm" className="ml-1.5 whitespace-nowrap">Use your repo</ButtonLink>
           </nav>

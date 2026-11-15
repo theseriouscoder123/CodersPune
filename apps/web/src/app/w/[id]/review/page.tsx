@@ -17,11 +17,11 @@ import { api, type ClaimDetail, type ClaimSummary, type EvidenceInfo, type Ledge
 import { useApi } from "@/lib/useApi";
 
 const TABS = [
-  { key: "all", label: "All" },
-  { key: "conflicts", label: "Conflicts" },
-  { key: "missing", label: "Missing" },
-  { key: "rejected", label: "Rejected" },
-  { key: "superseded", label: "Superseded" },
+  { key: "all", label: "All", hint: "Every current claim" },
+  { key: "conflicts", label: "Conflicts", hint: "Claims that disagree with each other; a reviewer decides" },
+  { key: "missing", label: "Missing", hint: "Knowledge the sources should hold but don't; asked of the leaver" },
+  { key: "rejected", label: "Rejected", hint: "Removed by a reviewer; never shared" },
+  { key: "superseded", label: "Superseded", hint: "Replaced by a later decision; kept as history" },
 ] as const;
 
 const GROUP_ORDER: Status[] = ["conflicting", "missing", "inferred", "supported", "verified", "rejected"];
@@ -200,7 +200,7 @@ function Review() {
               const active = tab === t.key;
               const tone = t.key === "conflicts" && n ? "text-con" : t.key === "missing" && n ? "text-mis" : "text-fg-3";
               return (
-                <button key={t.key} role="tab" aria-selected={active} onClick={() => setParam("tab", t.key)}
+                <button key={t.key} role="tab" aria-selected={active} onClick={() => setParam("tab", t.key)} title={t.hint}
                   className={`inline-flex h-[26px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[13px] font-medium transition-colors ${active ? "bg-active text-fg" : "text-fg-3 hover:bg-hover hover:text-fg"}`}>
                   {t.label}{n !== undefined && <span className={`text-[12px] ${tone}`}>{n}</span>}
                 </button>

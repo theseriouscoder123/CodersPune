@@ -297,7 +297,7 @@ function HandoverInner() {
                           <button type="button" onClick={(e) => { e.stopPropagation(); void openEvidence(it); }} data-testid="source-ref" className="max-w-full truncate text-left font-mono text-[11.5px] text-accent-ink hover:underline">
                             {[...new Set(it.evidence.map((e) => e.ref))].join(" · ")}
                           </button>
-                        ) : <span className="text-[12px] text-fg-3">No source</span>}
+                        ) : <span className="text-[12px] text-fg-3">{it.flags?.reviewer_confirmed_without_evidence ? "Reviewer-confirmed" : "No source"}</span>}
                       </span>
                     </li>
                   );

@@ -223,3 +223,39 @@ def test_resolving_a_conflict_counts_as_a_review(world):
         assert won.review_state == "confirmed" and won.status == "verified"
     finally:
         db.close()
+
+
+def test_conflict_answered_neither_becomes_testimony(world):
+    """D75: on a conflict the leaver can say neither side is right and write the answer; it becomes testimony on the
+    same subject with access no wider than either side, and the conflict still waits for the reviewer."""
+    c, ws = _c(), world["ws"]
+    p = _p(c, ws)
+    repo = "devclub/campus-events-app"
+    db = SessionLocal()
+    try:
+        g = ConflictGroup(workspace_id=ws, subject_key="uploads.cap")
+        db.add(g)
+        db.flush()
+        _claim(db, ws, "decision", "Posters are capped at 2 MB.", _chunk(db, ws, repo, "MAX_BYTES"), "MAX_BYTES = 2 * 1024 * 1024",
+               subject="uploads.cap", group=g.id)
+        _claim(db, ws, "decision", "Posters are capped at 5 MB.", _chunk(db, ws, "Meeting notes", "5 MB"), "5 MB",
+               subject="uploads.cap", group=g.id)
+        recompute_statuses(db, ws)
+        db.commit()
+    finally:
+        db.close()
+    iv = c.post(f"/api/workspaces/{ws}/interviews", headers=h(p["meera"]), json={}).json()
+    iid = iv["id"]
+    conf = next(q for q in iv["questions"] if q["kind"] == "conflict" and any("capped" in o["text"] for o in q["options"]))
+    assert c.post(f"/api/interviews/{iid}/send", headers=h(p["meera"])).status_code == 200
+    r = c.put(f"/api/interviews/{iid}/questions/{conf['id']}/answer", headers=h(p["rohan"]),
+              json={"answer_kind": "answered", "answer": "Neither: it is 8 MB since the March release."})
+    assert r.status_code == 200, r.text
+    assert c.post(f"/api/interviews/{iid}/submit", headers=h(p["rohan"])).json()["created"] >= 1
+    db = SessionLocal()
+    try:
+        t = db.scalar(select(Claim).where(Claim.workspace_id == ws, Claim.origin == "testimony", Claim.text.contains("8 MB")))
+        assert t is not None and t.subject_key == "uploads.cap"
+        assert db.get(ConflictGroup, g.id).resolved is False  # a person still decides
+    finally:
+        db.close()

@@ -173,3 +173,36 @@ def test_rewrite_does_not_make_the_original_stale(world):
         db.rollback()
     finally:
         db.close()
+
+
+def test_reviewer_note_replaces_a_withheld_item_as_reviewer_confirmed(world):
+    """D75, improvement #3's third fix: the reviewer writes the successor's version in their own words. It is labelled
+    reviewer-confirmed (never a sourced fact), cites nothing restricted, and only the reviewer may write it."""
+    db = SessionLocal()
+    try:
+        logo, _ = _logo_and_neha(db, world["ws"])
+        logo_id = str(logo.id)
+        db.execute(delete(Claim).where(Claim.derived_from == logo.id))  # start without a rewrite
+        db.commit()
+    finally:
+        db.close()
+    c = TestClient(app)
+    c.cookies.set("baton_visitor", "rr-visitor")
+    ws = world["ws"]
+    p = {m["handle"]: m["id"] for m in c.get(f"/api/workspaces/{ws}").json()["members"]}
+    hid = c.get(f"/api/workspaces/{ws}/handover").json()["handover"]["id"]
+    url = f"/api/handovers/{hid}/note/{logo_id}"
+    note = {"text": "Add the sponsor's logo to the fest page before 20 Dec; Meera has the files."}
+    assert c.post(url, headers={"X-Baton-Persona": p["neha"]}, json=note).status_code == 403
+    r = c.post(url, headers={"X-Baton-Persona": p["meera"]}, json=note)
+    assert r.status_code == 200 and r.json()["claim_status"] == "verified", r.text
+    assert c.post(url, headers={"X-Baton-Persona": p["meera"]}, json=note).status_code == 409  # one replacement per item
+    db = SessionLocal()
+    try:
+        n = db.get(Claim, r.json()["claim_id"])
+        assert (n.meta.get("flags") or {}).get("reviewer_confirmed_without_evidence") is True
+        assert not list(db.scalars(select(Evidence).where(Evidence.claim_id == n.id)))
+    finally:
+        db.close()
+    w = next(x for x in c.get(f"/api/handovers/{hid}/preview", headers={"X-Baton-Persona": p["meera"]}).json()["withheld"] if x["id"] == logo_id)
+    assert w["rerendered"]["note"] is True and w["rerendered"]["visible"] is True

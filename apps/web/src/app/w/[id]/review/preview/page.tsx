@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, ChevronRight, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 import { Suspense, useState } from "react";
 
 import { CompareViews } from "@/components/ledger/CompareViews";
@@ -15,9 +15,12 @@ import { api, storePersona, type HandoverCounts, type HandoverRef, type Status }
 import { useApi } from "@/lib/useApi";
 
 type Item = { id: string; type_label: string; stale_reason?: string | null; flags?: { reviewer_confirmed_without_evidence?: boolean }; text: string; status: Status; section: string; history?: "superseded" | "stale" | null; source_refs: string[]; reason?: string;
-  matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean } | null; rerender_tried?: boolean; rerender_note?: string | null };
+  matters?: string | null; rerendered?: { id: string; text: string; status: Status; visible: boolean; note?: boolean } | null; rerender_tried?: boolean; rerender_note?: string | null };
 type Preview = { member: { id: string; name: string }; visible: Item[]; withheld: Item[]; hidden_inferred: number; show_restricted_stubs: boolean; counts?: HandoverCounts; same_as_latest?: boolean;
   warnings?: { unresolved_conflicts: number; unreviewed: number; missing: number; source_changed?: number } };
+
+// Long sections start folded so the preview reads as a summary; their counts stay visible.
+const OPEN_BY_DEFAULT = new Set(["start_here", "risks", "unresolved"]);
 
 const SECTION_NAMES: Record<string, string> = {
   start_here: "Start here", owners: "Who owns what", decisions: "Key decisions", risks: "Risks and conflicts",
@@ -33,10 +36,10 @@ export default function PreviewPage() {
   );
 }
 
-function Stat({ n, label, tone = "fg" }: { n: number; label: string; tone?: "fg" | "ver" | "mis" | "fg-3" }) {
+function Stat({ n, label, tone = "fg", hint }: { n: number; label: string; tone?: "fg" | "ver" | "mis" | "fg-3"; hint?: string }) {
   const color = { fg: "text-fg", ver: "text-ver", mis: "text-mis", "fg-3": "text-fg-3" }[tone];
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3" title={hint}>
       <p className={`text-[22px] font-semibold leading-7 tracking-[-0.02em] ${color}`}>{n}</p>
       <p className="mt-0.5 text-[12px] leading-[16px] text-fg-3">{label}</p>
     </div>
@@ -56,6 +59,7 @@ function PreviewInner() {
   const [done, setDone] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [openSecs, setOpenSecs] = useState<Record<string, boolean>>({});
 
   if (!isReviewer) return <NotForPersona step="The visibility preview" who="Only the reviewer previews and approves the handover." />;
   if (!sel.loading && !handover) return <EmptyState title="No handover set up">This workspace has no successor yet.</EmptyState>;
@@ -177,9 +181,9 @@ function PreviewInner() {
         <>
           <div className="mt-6 grid grid-cols-2 overflow-hidden rounded-lg border border-line sm:grid-cols-4 sm:divide-x sm:divide-line max-sm:[&>*:nth-child(n+3)]:border-t max-sm:[&>*:nth-child(even)]:border-l [&>*]:border-line">
             <Stat n={counts?.current ?? pv.data.visible.length} label={`shared with ${name}`} tone="ver" />
-            <Stat n={counts?.history ?? 0} label="kept as history" />
-            <Stat n={pv.data.withheld.length} label="withheld, restricted source" tone="mis" />
-            <Stat n={pv.data.hidden_inferred} label="inferred, not shared" tone="fg-3" />
+            <Stat n={counts?.history ?? 0} label="kept as history" hint="Reversed decisions and work that's done or parked, shown apart from current items" />
+            <Stat n={pv.data.withheld.length} label="withheld, restricted source" tone="mis" hint="Cites a source this person can't open, so it is left out" />
+            <Stat n={pv.data.hidden_inferred} label="inferred, not shared" tone="fg-3" hint="No quote passed both checks; never shown as fact" />
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -188,10 +192,16 @@ function PreviewInner() {
                 <Eye className="h-4 w-4 text-ver" /> {name} will see <span className="text-[13px] font-normal text-fg-3">({counts ? `${counts.current}${counts.history ? ` + ${counts.history} as history` : ""}` : pv.data.visible.length})</span>
               </h2>
               <div className="mt-4 space-y-6">
-                {grouped(pv.data.visible).map(([sec, items]) => (
-                  <div key={sec}>
-                    <h3 className="text-[13px] font-semibold text-fg">{SECTION_NAMES[sec]}<span className="ml-1.5 font-normal text-fg-3">{items.length}</span></h3>
-                    <ul className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line">
+                {grouped(pv.data.visible).map(([sec, items]) => {
+                  const isOpen = openSecs[sec] ?? OPEN_BY_DEFAULT.has(sec);
+                  return (
+                  <div key={sec} data-section={sec}>
+                    <button type="button" onClick={() => setOpenSecs((o) => ({ ...o, [sec]: !isOpen }))} aria-expanded={isOpen}
+                      className="flex w-full items-center gap-1.5 rounded-md text-left text-[13px] font-semibold text-fg hover:text-accent-ink">
+                      <ChevronRight className={`h-3.5 w-3.5 text-fg-3 transition-transform ${isOpen ? "rotate-90" : ""}`} aria-hidden />
+                      {SECTION_NAMES[sec]}<span className="font-normal text-fg-3">{items.length}</span>
+                    </button>
+                    {isOpen && <ul className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line">
                       {items.map((it) => (
                         <li key={it.id} className="flex items-start gap-3 px-3.5 py-2.5 text-[13px] leading-5" data-history={it.history ?? undefined}>
                           <span className="mt-px shrink-0"><StatusChip status={it.status} promoted={!!it.flags?.reviewer_confirmed_without_evidence} iconOnly /></span>
@@ -203,9 +213,10 @@ function PreviewInner() {
                           <span className="hidden shrink-0 text-[12px] text-fg-3 sm:block">{it.type_label}</span>
                         </li>
                       ))}
-                    </ul>
+                    </ul>}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -243,6 +254,21 @@ function WithheldItem({ it, name, wsId, hid, canAct, onChanged }: { it: Item; na
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(it.rerender_tried && !it.rerendered ? (it.rerender_note ?? `Tried before: no source ${name} can read states this.`) : null);
+  const [noting, setNoting] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  async function saveNote() {
+    setBusy(true);
+    try {
+      await api(`/handovers/${hid}/note/${it.id}`, { workspaceId: wsId, method: "POST", body: { text: noteText.trim() } });
+      toast(`Note saved. ${name} sees it, marked reviewer-confirmed, in the next version you approve`);
+      setNoting(false);
+      onChanged();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function rewrite() {
     setBusy(true);
     try {
@@ -266,9 +292,9 @@ function WithheldItem({ it, name, wsId, hid, canAct, onChanged }: { it: Item; na
       <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-mis"><Lock className="mt-0.5 h-3 w-3 shrink-0" /> {it.reason}</p>
       {it.rerendered ? (
         <div className="mt-2.5 rounded-md border border-line bg-bg-sunk px-2.5 py-2 text-[12.5px]" data-testid="rerendered">
-          <p className="font-medium text-ver">Rewritten from sources {name} can read</p>
+          <p className="font-medium text-ver">{it.rerendered.note ? `Your note for ${name} (reviewer-confirmed, no source evidence)` : `Rewritten from sources ${name} can read`}</p>
           <p className="mt-0.5 text-fg">{it.rerendered.text}</p>
-          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-fg-3"><StatusChip status={it.rerendered.status} />
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-fg-3"><StatusChip status={it.rerendered.status} promoted={!!it.rerendered.note} />
             {it.rerendered.status === "inferred" ? `Not verified, so ${name} won't see it.` : it.rerendered.visible ? `${name} will see this in the next version you approve.` : ""}</p>
         </div>
       ) : canAct ? (
@@ -277,7 +303,19 @@ function WithheldItem({ it, name, wsId, hid, canAct, onChanged }: { it: Item; na
             Rewrite from {name}&apos;s sources
           </Button>
           {it.matters && <ButtonLink size="sm" variant="ghost" href={`/w/${wsId}/sources`}>Change access</ButtonLink>}
+          {it.matters && !noting && <Button size="sm" variant="ghost" onClick={() => setNoting(true)} data-testid="write-note">Write a note</Button>}
           {result && <p className="w-full text-[12px] text-fg-3" data-testid="rerender-result">{result}</p>}
+          {noting && (
+            <div className="w-full">
+              <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} rows={2} maxLength={500} aria-label={`Note for ${name}`}
+                placeholder={`What ${name} needs to know, in your words`} title="Shared with everyone who can see the handover; it cites no source"
+                className="w-full rounded-md border border-line-2 bg-bg px-2.5 py-2 text-[13px] text-fg outline-none placeholder:text-fg-3 focus:border-accent focus:shadow-[0_0_0_3px_var(--ring)]" />
+              <div className="mt-1.5 flex gap-1.5">
+                <Button size="sm" loading={busy} disabled={noteText.trim().length < 3} onClick={() => void saveNote()} data-testid="save-note">Save note</Button>
+                <Button size="sm" variant="ghost" onClick={() => setNoting(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
     </li>

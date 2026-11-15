@@ -13,6 +13,8 @@ import { Alert, Button, Card, EmptyState, SkeletonList } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 
+const NEITHER = "__neither__";
+
 const KIND: Record<InterviewQuestion["kind"], { label: string; tone: string }> = {
   missing: { label: "Missing from the sources", tone: "bg-mis-soft text-mis ring-mis/20" },
   conflict: { label: "Sources disagree", tone: "bg-con-soft text-con ring-con/20" },
@@ -236,7 +238,8 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(q.question);
   const [answer, setAnswer] = useState(q.answer_kind === "answered" ? q.answer ?? "" : "");
-  const [choice, setChoice] = useState(q.chosen_claim_id ?? "");
+  // "Neither is right" on a conflict: the leaver writes the correct answer, stored as testimony like any answer.
+  const [choice, setChoice] = useState(q.chosen_claim_id ?? (q.kind === "conflict" && q.answer_kind === "answered" ? NEITHER : ""));
   const [asking, setAsking] = useState(q.answer_kind === "ask_other");
   const [who, setWho] = useState(q.ask_who ?? "");
   const saving = busy === `ans-${q.id}`;
@@ -292,16 +295,23 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
                 </label>
               );
             })}
+            {(answering || q.answer_kind === "answered") && (
+              <label className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 text-[13px] transition ${
+                choice === NEITHER ? "border-accent bg-accent-soft/50" : "border-line bg-bg-side hover:border-line-2"} ${answering ? "" : "cursor-default"}`}>
+                {answering && <input type="radio" name={`q-${q.id}`} checked={choice === NEITHER} onChange={() => setChoice(NEITHER)} className="mt-0.5 h-4 w-4 accent-[var(--color-amber)]" data-testid="conflict-neither" />}
+                <span className="text-fg">Neither is right</span>
+              </label>
+            )}
           </div>
         )}
 
         {/* Answering */}
         {answering && (
           <div className="mt-3 sm:pl-10">
-            {q.kind !== "conflict" && !asking && (
+            {(q.kind !== "conflict" || choice === NEITHER) && !asking && (
               <div>
                 <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={1000} rows={3} aria-label={`Answer to question ${index}`}
-                  placeholder="Type what you know. Short is fine."
+                  placeholder={q.kind === "conflict" ? "What is actually right?" : "Type what you know. Short is fine."}
                   className="w-full resize-y rounded-lg border border-line bg-bg-side px-3 py-2 text-[13px] leading-relaxed outline-none focus:border-accent" />
                 <p className="mt-0.5 text-right text-[11px] text-fg-3">{answer.length}/1000</p>
               </div>
@@ -315,9 +325,9 @@ function QuestionCard({ q, index, iv, wsId, busy, answering, onEdit, onDrop, onA
             )}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Button size="sm" loading={saving} data-testid="save-answer"
-                disabled={asking ? who.trim().length < 2 : q.kind === "conflict" ? !choice : answer.trim().length < 2}
+                disabled={asking ? who.trim().length < 2 : q.kind === "conflict" && choice !== NEITHER ? !choice : answer.trim().length < 2}
                 onClick={() => void onAnswer(asking ? { answer_kind: "ask_other", ask_who: who.trim() }
-                  : q.kind === "conflict" ? { answer_kind: "chose_option", chosen_claim_id: choice } : { answer_kind: "answered", answer: answer.trim() })}>
+                  : q.kind === "conflict" && choice !== NEITHER ? { answer_kind: "chose_option", chosen_claim_id: choice } : { answer_kind: "answered", answer: answer.trim() })}>
                 {done ? "Update answer" : "Save answer"}
               </Button>
               {!asking && <Button size="sm" variant="ghost" onClick={() => setAsking(true)}>Someone else would know</Button>}

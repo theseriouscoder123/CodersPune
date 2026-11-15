@@ -258,6 +258,7 @@ def preview(handover_id: uuid.UUID, request: Request, db: Session = Depends(get_
             withheld.append({**item, "reason": withheld_reason(db, h.workspace_id, tv, cited.get(c.id, [])),
                              "matters": None if history else looks_like_theirs(c.text, target.display_name),
                              "rerendered": {"id": str(derived.id), "text": derived.text, "status": derived.status,
+                                            "note": derived.origin == "reviewer_note",
                                             "visible": visible(tv, claim_sources(db, [derived.id]).get(derived.id, []))} if derived else None,
                              "rerender_tried": bool((c.meta or {}).get("rerender_none")),
                              "rerender_note": _rerender_note(db, c, target.display_name)})

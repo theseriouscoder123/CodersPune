@@ -21,6 +21,15 @@ test("a11y: landing page @desktop", async ({ page }) => {
   expect(await audit(page, "landing")).toEqual([]);
 });
 
+test("a11y: guide page, light and dark @desktop", async ({ page }) => {
+  await page.goto("/guide");
+  await expect(page.getByRole("heading", { name: "Baton guide" })).toBeVisible();
+  expect(await audit(page, "guide")).toEqual([]);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.reload();
+  expect(await audit(page, "guide dark")).toEqual([]);
+});
+
 test("a11y: workspace screens @desktop", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Try the demo" }).first().click();

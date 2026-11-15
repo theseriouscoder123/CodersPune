@@ -435,7 +435,9 @@ def submit_interview(interview_id: uuid.UUID, request: Request, db: Session = De
     for q in qs:
         orig = claims.get(q.claim_id) if q.claim_id else None
         if q.answer_kind == "answered" and q.answer:
-            acl = _source_acl(db, [orig.id]) if orig is not None else normalise_acl(CUSTOM_ACL)
+            # A conflict answer ("neither is right") may draw on both sides: take the most restrictive access of all options.
+            ids = [orig.id] + ([uuid.UUID(o["claim_id"]) for o in (q.options or []) if o.get("claim_id")] if q.kind == "conflict" else [])
+            acl = _source_acl(db, ids) if orig is not None else normalise_acl(CUSTOM_ACL)
             src = source_for(acl)
             ch = add_chunk(src, q, f"Question: {q.question}\nAnswer ({label}): {q.answer}")
             stem = q.question.rstrip("?").strip()

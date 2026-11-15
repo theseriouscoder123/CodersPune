@@ -8,6 +8,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -19,6 +20,7 @@ from baton.db.session import get_db
 from baton.ledger import rebuild_relations, recompute_statuses
 from baton.llm.base import LLMError, get_llm
 from baton.projection import claim_sources, visible
+from baton.ingest.scrubber import scrub
 from baton.reconstruct.rerender import (
     RERENDER_SYSTEM,
     Rerendered,
@@ -148,3 +150,43 @@ def rerender(handover_id: uuid.UUID, claim_id: uuid.UUID, request: Request, db: 
     rebuild_relations(db, h.workspace_id)
     db.commit()
     return out
+
+
+class NoteIn(BaseModel):
+    text: str = Field(min_length=3, max_length=500)
+
+
+@router.post("/handovers/{handover_id}/note/{claim_id}")
+def write_note(handover_id: uuid.UUID, claim_id: uuid.UUID, body: NoteIn, request: Request, db: Session = Depends(get_db)) -> dict:
+    """The third fix for a withheld item that is the successor's own work (improvement #3): the reviewer writes what
+    the successor needs in their own words. It ships as "Reviewer-confirmed (no source evidence)", never as a sourced
+    fact (trust rule 4), cites no restricted source, and only reaches the successor in the next approved version."""
+    h, ctx = _handover(db, request, handover_id)
+    if not ctx.is_reviewer:
+        raise HTTPException(403, "Only the reviewer can write notes for the successor")
+    if not ctx.can_write:
+        raise HTTPException(403, "This is the shared read-only template. Click 'Try the demo' to get your own copy.")
+    original = db.get(Claim, claim_id)
+    if original is None or original.workspace_id != h.workspace_id:
+        raise HTTPException(404, "Claim not found")
+    existing = db.scalar(select(Claim).where(Claim.derived_from == original.id, Claim.review_state != "rejected"))
+    if existing is not None:
+        raise HTTPException(409, "This item already has a rewrite or a note.")
+    successor = db.get(Member, h.successor_member_id) if h.successor_member_id else None
+    text = scrub(" ".join(body.text.split()))[0]
+    who = successor.display_name if successor else "the successor"
+    # A note is guidance for the successor, never an ownership record: it ships as work to pick up unless the
+    # withheld item was already a decision, risk or dependency.
+    kind = original.type if original.type in ("open_work", "next_action", "decision", "risk", "dependency") else "next_action"
+    note = Claim(workspace_id=h.workspace_id, type=kind, text=text, subject_key=original.subject_key,
+                 origin="reviewer_note", review_state="promoted", derived_from=original.id,
+                 about_member_id=original.about_member_id,
+                 reviewer_note=f"Written by {ctx.member.display_name} for {who} in place of an item from a source they can't read.",
+                 meta={"reviewer_note_for": who})
+    db.add(note)
+    db.flush()
+    db.add(AuditEvent(workspace_id=h.workspace_id, actor_member_id=ctx.member.id, actor_role="reviewer", action="reviewer_note",
+                      target=str(original.id), after={"note_claim": str(note.id)}))
+    recompute_statuses(db, h.workspace_id)
+    db.commit()
+    return {"status": "created", "claim_id": str(note.id), "text": note.text, "claim_status": note.status}

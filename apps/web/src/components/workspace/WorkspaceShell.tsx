@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Check, ChevronsUpDown, Gauge, History, Info, Lock, Menu, MessageCircleQuestion, Search, UsersRound, X } from "lucide-react";
+import { BookOpen, CalendarDays, Check, ChevronsUpDown, Gauge, History, Info, Lock, Menu, MessageCircleQuestion, Search, UsersRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -288,6 +288,9 @@ function Sidebar({ ws, nav, onSwitch, onReset, resetting }: { ws: WorkspaceInfo;
           )}
         </>
       )}
+      <a href="/guide" target="_blank" rel="noopener" data-testid="guide-link" className={`${navLink(false)} ${manage ? "" : "mt-4"}`} title="How Baton works: statuses, access rules and limits (opens in a new tab)">
+        <BookOpen className="h-3.5 w-3.5 text-fg-3" /> Guide
+      </a>
 
       {ws.synthetic && <div className="mt-4"><TourChecklist ws={ws} onSwitchPersona={onSwitch} /></div>}
 
