@@ -67,10 +67,16 @@ flowchart LR
 | Cancel and resume | `POST /runs/{id}/cancel` stops a run after the current slice; `POST /runs/{id}/retry` resumes a failed or cancelled run from its step. Audited. | `routers/runs.py` |
 | Guided access setup | The new-workspace form shows who can read each source and warns when the successor can't read one or chat is open to everyone. | `app/new/page.tsx` |
 | Self-hosting | Dockerfiles and `docker compose --profile full`, plus any OpenAI-compatible model via `OPENAI_BASE_URL`. | `apps/*/Dockerfile`, `llm/groq.py` (OpenAI-compatible client), `config.py` |
+| Repo pre-check | One GitHub request before a workspace is created rejects a missing, private or empty repo on the form; a network error or rate limit lets the run try anyway. | `ingest/github.check_repo`, `routers/custom.py` |
+| Noise filter | Bot accounts, all-contributors entries and dependency bumps are skipped at ingest and counted in the run log. | `ingest/github_normalise.is_noise` |
+| Rule refinements | Commit-log claims take their commit's date; same-value decisions merge; open work that says it was closed is history; a later "updated to" on a version is a reversal (D73, D74). | `pipeline.date_from_evidence`, `reconstruct/duplicates.py`, `reconstruct/relations.py`, `reconstruct/conflicts.upgrades` |
+| Reviewer notes | For a withheld item that is the successor's own work, the reviewer's own words ship as Reviewer-confirmed (no source evidence), audited, only in the next approved version. | `POST /handovers/{id}/note/{claim_id}` in `routers/rerender.py` |
+| "Neither is right" | A conflict question can be answered with the correct value; it becomes testimony whose access is the intersection of both sides. | `routers/interviews.py` |
+| Guide | A static manual at `/guide` (workflow, statuses, access rules, limits); the screens keep only brief tooltips. | `app/guide/page.tsx` |
 
 ## 4c. Interface
 
-Next.js App Router with Tailwind v4 tokens for light, dark and print (`globals.css`), Inter and JetBrains Mono. A workspace shell gives every page a 236px sidebar (the five steps with live counts, workspace links, Getting started, the person switcher) and a 48px top bar whose action slot each page fills through a portal (`TopbarActions`). On phones the sidebar becomes a drawer and the top bar keeps only the page's primary action. Statuses are told apart by icon shape as well as colour. The redesign followed `docs/design/REDESIGN_HANDOFF.md` (D67).
+Next.js App Router with Tailwind v4 tokens for light, dark and print (`globals.css`), Inter and JetBrains Mono. Frosted `glass` surfaces are used only where something floats over content (sticky bars, popovers, dialogs, drawers, toasts), with a solid fallback; reading surfaces stay solid (D73). A workspace shell gives every page a 236px sidebar (the five steps with live counts, workspace links, Getting started, the person switcher) and a 48px top bar whose action slot each page fills through a portal (`TopbarActions`). On phones the sidebar becomes a drawer and the top bar keeps only the page's primary action. Statuses are told apart by icon shape as well as colour. The redesign followed `docs/design/REDESIGN_HANDOFF.md` (D67).
 
 ## 5. Permissions (the trust core)
 
@@ -81,7 +87,7 @@ Next.js App Router with Tailwind v4 tokens for light, dark and print (`globals.c
 
 ## 6. AI usage
 
-The adapter (`baton/llm/`) uses REST with JSON-schema output, key pools (3 Gemini, 2 Groq) and provider fallback (D26). The AI is used for:
+The adapter (`baton/llm/`) uses REST with JSON-schema output, key pools (4 Gemini, 2 Groq in production) and provider fallback (D26). The AI is used for:
 - extraction;
 - the isolated verifier;
 - checklist coverage;
@@ -92,4 +98,4 @@ It is **never** used for statuses, relations, permissions or interview answers. 
 
 ## 7. Testing
 
-234 API tests on real Postgres; a citation eval against a golden ledger; 21 Playwright end-to-end and accessibility tests run against production; simulated blind-tester readiness runs and three blind agent tests of the redesigned UI (D69). See `docs/TESTING.md`.
+246 API tests on real Postgres; a citation eval against a golden ledger; 22 Playwright end-to-end and accessibility tests run against production; simulated blind-tester readiness runs, four blind agent tests of the redesigned UI (D69, D71, D73) and live custom-repo runs on production (D74, D75). See `docs/TESTING.md`.

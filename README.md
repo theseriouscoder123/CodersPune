@@ -9,6 +9,7 @@ see, with the unknowns clearly marked.
 > CodersInPune Hackathon · Round 3 (The Finish) · Team LoneWolf (Archit Dandavate)
 
 - **Live app:** https://baton-lac.vercel.app  (click **Try the demo**, no sign-up)
+- **Guide:** https://baton-lac.vercel.app/guide (workflow, statuses, access rules and limits)
 - **API health:** https://baton-lac.vercel.app/api/health
 - **Repo:** https://github.com/theseriouscoder123/CodersPune
 
@@ -27,8 +28,8 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
 
 **New in Round 3, the three improvements:**
 - **Gap interview (#1):** on **Verify** (Missing tab), *Prepare questions for the leaver* builds questions from the Missing and Conflicting items. Switch to **Rohan** to answer them. Each answer becomes a cited **leaver testimony** source that can never be wider in access than the items it answers.
-- **Decision timeline (#2):** on **Reconstruct**, the timeline tells a *changed decision* apart from a *contradiction* and flags open work that later events overtook ("Probably done or parked"). Click a label to see the exact signal, and override it as the reviewer.
-- **Acknowledgement and re-rendering (#3):** the preview flags withheld items that look like Neha's own work and offers **Rewrite from Neha's sources**, which rebuilds the item only from sources she can read (precomputed in the demo). The preview can also **compare any two people's views** (Neha vs Kabir shows exactly what #core-team adds). As **Neha**, mark items *Got it*, *Ask a question* or *Not mine*. Meera answers questions in place, and Neha closes them. Responses carry over between versions unless the item changed.
+- **Decision timeline (#2):** on **Reconstruct**, the timeline tells a *changed decision* apart from a *contradiction*, shows how a resolved conflict was settled, and labels open work that later events overtook (*Updated later*, *Parked* or *Probably done*). Click a label to see the exact signal, and override it as the reviewer.
+- **Acknowledgement and re-rendering (#3):** the preview flags withheld items that look like Neha's own work and offers **Rewrite from Neha's sources**, which rebuilds the item only from sources she can read (precomputed in the demo), **Change access**, or **Write a note** (shared as reviewer-confirmed, never as a sourced fact). The preview can also **compare any two people's views** (Neha vs Kabir shows exactly what #core-team adds). As **Neha**, mark items *Got it*, *Ask a question* or *Not mine*. Meera answers questions in place, and Neha closes them. Responses carry over between versions unless the item changed.
 
 ## The trust rules, and where they're enforced
 
@@ -71,7 +72,8 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
   - **The successor's first week:** the approved handover arranged into Day 1 / Days 2–3 / rest of week 1, each item with a reason.
   - **Integrations:** live Slack connector (bot token used once; channel membership becomes the access list), Slack and Discord notifications, questions opened as a pre-filled GitHub issue (restricted questions left out), self-hosting with Docker and any OpenAI-compatible model.
   - **Guided access setup** when creating a workspace (who can read what, with warnings and one-click fixes), and runs you can **cancel and resume**, with a plain explanation when the free AI quota stops one.
-  - **Redesigned interface** in light and dark: a sidebar with the five steps and live, permission-filtered counts, a two-pane Verify inspector, and the handover as a document. It works on phones.
+  - **Redesigned interface** in light and dark: a sidebar with the five steps and live, permission-filtered counts, a two-pane Verify inspector, and the handover as a document. It works on phones. Brief tooltips on the screens; the longer explanations live in the **Guide** (`/guide`).
+  - **Robust intake:** a mistyped, private or empty repo is caught on the form before anything is created; empty or binary uploads get a clear message; bot activity and dependency bumps are skipped at ingest.
 - **Teams:**
   - Private invite links per person, and locked identities, so nobody can view the workspace as someone else.
   - Optional email (Gmail SMTP), Slack and Discord notifications.
@@ -85,9 +87,10 @@ The demo is a fictional student-club project. Meera reviews, Rohan is leaving, N
 
 | Measure | Result (15 Nov 2026) |
 |---|---|
-| API tests | **234 passed**, real Postgres |
-| End-to-end and accessibility, **against production** | **21/21 passed**, including every Round 3 journey; axe: 0 serious violations in light and dark; no sideways scroll on phones |
-| Blind agent tests on production | A first-time judge, a phone user and a permission prober (no project context) all finished the loop; their findings are fixed (D69) |
+| API tests | **246 passed**, real Postgres |
+| End-to-end and accessibility, **against production** | **22/22** (one spec flaked once under load and passed 6/6 on repeat), including every Round 3 journey and the Guide; axe: 0 serious violations in light and dark; no sideways scroll on phones |
+| Live custom repo on production | `kentcdodds/cross-env` + notes through the create form: ledger in about 6 min, **64/64 quotes found and verified**, 0 failed batches (D74, D75) |
+| Blind agent tests on production | A first-time judge, a phone user, a permission prober and a UI/UX reviewer (no project context) all finished the loop; their findings are fixed (D69, D71, D73) |
 | Citation precision (target ≥ 90%) | **9/10**; claim recall 13/13, status accuracy 13/13 |
 | Permission safety (target 0) | **0 leaks** in 179 successor requests across all 29 GET routes |
 | Successor readiness (simulated blind testers) | **10/10 in about 14 s with Baton** vs 10/10 in about 37 s from raw sources (12 files) |

@@ -2,7 +2,20 @@
 
 ## Round 3 (13–16 Nov 2026)
 
-Produced on **14 Nov 2026** by the commands shown. One number is an estimate, and it is labelled as one.
+Produced on **14 Nov 2026** by the commands shown, and refreshed on **15 Nov** after the final development round (D70–D75). One number is an estimate, and it is labelled as one.
+
+### Final checks (15 Nov 2026, after the last development round)
+
+| Check | Result |
+|---|---|
+| API tests (`uv run pytest`) | **246 passed, 0 failed** (local Postgres 16) |
+| End-to-end and accessibility on production | **22 passed** (7 skipped: screenshot and dev-only specs). In the full run the counts spec failed once and then passed 6/6 when repeated (production under load from a parallel live run). Adds an axe check of the new Guide page in light and dark. |
+| Citation eval (demo ledger) | Recall **13/13**, status accuracy **13/13**, citation precision **9/10**, 0 permission leaks, 0 secret leaks; relations G3/G7 correct; 3 stale items |
+| Live custom-repo run, production (D74) | `kentcdodds/cross-env` (public, archived) + one synthetic notes file through the create form: **done in 5 min 25 s**. 368 chunks (135 commits, 60 PRs, 34 issues, 4 files); 11 extraction batches, **0 failed**; 67 claims; **68/68 quotes found** and verified. It found 3 rule problems, all fixed: a limit bug from orphaned demo copies, closed issues shown as open work, and a Node 14 → 24 upgrade read as a contradiction. |
+| Live re-run after the noise filter and prompt change (D75) | Same repo: **done in about 6 min**. 7 bot or dependency-bump items skipped; 314 chunks; 12 batches, 0 failed; 63 claims; **64/64 quotes found** and verified. Claims now state what changed ("NPM releases use GitHub's OIDC authentication for provenance instead of NPM_TOKEN") instead of "PR #265 was merged"; no closed issue appears as open work. |
+| Reliability sweep (D75) | 20 bad inputs on the create form (garbage or mistyped repo URLs, empty, whitespace-only, binary, oversized and fake PDF/Word files, broken chat exports, role and handle errors, blank or long names) all give a readable 422 before anything is created. Bad workspace URLs, unknown claim ids, unknown filters, empty search and rapid repeated resets give a clear page or message. |
+| AI-quota safety net | End-to-end test: with every key out of quota the run stops at extraction with the quota message and ships no claims; the run page explains it and offers Resume. Production's call log for the 24 h before: 104 calls, 0 quota errors, 5 timeouts and 1 server error, all retried successfully. |
+| Blind UI/UX assessment (D73) | One agent, production, light and dark, desktop and phone: no console errors; findings (low-contrast disabled buttons and acknowledged tick, phone Verify detail off-screen, Getting started drift, "Approve v2" right after v1, wording) fixed. |
 
 ### Targets promised in the Round 1 PDF
 
@@ -51,7 +64,7 @@ The testers were fresh AI agents (Claude Sonnet) with no context from this proje
 
 | Layer | Result |
 |---|---|
-| API (`uv run pytest`) | **234 passed, 0 failed** (local Postgres 16, 15 Nov). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts, export and person-to-person comparison (3), duplicates (2), leak sweep (1), then knowledge risk, leaving checklist, first week, Slack import, notifications and issue export, run cancel and resume, and search masking (D61–D69). |
+| API (`uv run pytest`) | **246 passed, 0 failed** (local Postgres 16, 15 Nov; 234 before the last round). Round 3 added: interview (6), relations rules (9) and API (5), acknowledgements (3, with a reliability matrix), re-render (5), source access (6), counts, export and person-to-person comparison (3), duplicates (2), leak sweep (1), then knowledge risk, leaving checklist, first week, Slack import, notifications and issue export, run cancel and resume, and search masking (D61–D69). |
 | End-to-end on production (`pnpm exec playwright test`) | **21 passed, 0 failed** (7 skipped: screenshot capture and dev-only specs), after the redesign and the blind-test fixes. Round 3 added: gap interview, decision timeline, acknowledgements and rewrites, counts agreeing across screens, person-to-person comparison, knowledge risk, leaving checklist and first week. Accessibility (axe, WCAG 2.1 A/AA): 0 serious violations on the landing page and 8 workspace screens, light and dark. Phone: 0 px sideways scroll on every workspace page at 360 and 390 px. |
 
 ### Blind agent tests (15 Nov, production, after the redesign)
@@ -64,7 +77,7 @@ Three agents with no project context drove the live site with Playwright: a firs
 | Phone | Primary action off-screen in the top bar; Verify detail in a 100px pane; handover items squeezed to one word per line; floating button over content | All |
 | Permissions | Search could unmask a phone number for a non-reviewer (highlight markers broke the pattern); template id visible in a sandbox's run info; denial text naming the wrong roles | All. No restricted text reached the successor or a member through any page, export, evidence link, Ask or swapped id. |
 
-Left for review (pipeline rules, not presentation): timeline dates taken from a commit range's end instead of the commit; one "probably done" item that is still open; a Missing item overlapping a supported claim.
+Pipeline rules raised by the testers were later fixed (D72, D73): commit-range dates, the "probably done" labels and the owners table. The Missing item beside a supported claim on issue #131 stays by design: the golden ledger plants it as Missing (G14), because the next step is still unknown.
 
 ### Performance (production, measured from India)
 

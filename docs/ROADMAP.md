@@ -8,7 +8,7 @@ need sign-in and live sources.
 
 The full loop works on production for the demo and for any public GitHub repo plus notes and chat exports: connect →
 reconstruct → verify → review → approve → handover, plus the three Round 3 improvements. Known gaps are listed in
-`HANDBACK.md` §9. The main ones:
+`HANDBACK.md` §10. The main ones:
 - no real sign-in;
 - sources are snapshots (no live sync);
 - it hasn't been tested with real people;

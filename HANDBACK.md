@@ -1,6 +1,6 @@
 # HANDBACK — Baton Round 3 (The Finish)
 
-Written by Claude Code on 14 Nov 2026 (IST), refreshed on 15 Nov after the redesign and Phase B, and checked against production, the test suite and a clean clone. Where
+Written by Claude Code on 14 Nov 2026 (IST), refreshed on 15 Nov after the redesign, Phase B and the final development round (D70–D75), and checked against production, the test suite, live custom-repo runs and a clean clone. **The product is frozen after this round; only bug fixes and docs follow.** Where
 something is not done, estimated or simulated, it says so. Arch uses this file, `docs/DECISIONS.md`, `docs/TESTING.md`,
 `docs/ARCHITECTURE.md`, `docs/ROADMAP.md` and `docs/screenshots/` for the final PDF and the submission form.
 
@@ -10,13 +10,14 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - Repo: https://github.com/theseriouscoder123/CodersPune (public)
 - API health: https://baton-lac.vercel.app/api/health
 - API (direct): https://baton-api-peach.vercel.app (the web app proxies `/api/*` to it)
+- Guide: https://baton-lac.vercel.app/guide (in-app manual: workflow, statuses, access rules, limits)
 
 ## 2. Judge tour (works on production; the e2e suite drives the same paths)
 
 1. **Try the demo** opens your own copy of the synthetic "Campus Events App" on **Connect**: 4 sources with their access lists, `#core-team` restricted, and 2 fake secrets removed.
-2. **Reconstruct:** counts by status and type. The **decision timeline** shows "Describes an earlier state" on the Supabase line, a contradiction on the upload limit, and "Probably done or parked" on Rohan's old push-reminder task. Click a label to see why, and override it.
+2. **Reconstruct:** counts by status and type. The **decision timeline** shows "Describes an earlier state" on the Supabase line, a contradiction on the upload limit (marked "Resolved" once settled), and *Updated later* / *Parked* / *Probably done* on overtaken open work (e.g. Rohan's old push-reminder task). Click a label to see why, and override it.
 3. **Verify** (as Meera): open a claim to see the highlighted quote and why it has its status. On the **Missing** or **Conflicts** tab, **Prepare questions for the leaver** starts the gap interview. Switch to **Rohan** to answer it; the answers become cited leaver testimony.
-4. **Review:** what Neha will see, with counts (**52 shared · 4 earlier decisions as history · 10 withheld**). The sponsor deal is withheld with the reason. "Neha needs to add the TechNova logo…" is flagged *Looks like Neha's own work* and already has a rewrite from #dev that Neha can read. Approve v1.
+4. **Review:** what Neha will see, with counts (**51 shared · 4 kept as history · 10 withheld**), long sections folded. The sponsor deal is withheld with the reason. "Neha needs to add the TechNova logo…" is flagged *Looks like Neha's own work* and already has a rewrite from #dev that Neha can read; other flagged items offer Rewrite, Change access or Write a note. Approve v1; with nothing changed since, the page then offers "View as Neha" instead of another approval.
 5. **Handover** as **Neha**: Start here, owners, decisions (with "Earlier decision, since changed"), risks, dependencies, Unresolved. She marks items *Got it*, *Ask a question* or *Not mine*. As Meera, answer her question in place; as Neha, close it.
 
 ## 3. Complete feature list (one per line)
@@ -37,7 +38,8 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - Re-run modes: Refresh keeps all review work; evidence follows edited source text or flags "source changed"
 - Duplicate claims merged by rules, only when access is identical (audited)
 - **Decision timeline (#2):** reversal vs earlier state vs contradiction, each with its deciding signal, filters and a "why" drawer
-- **Stale open work (#2):** overtaken tasks flagged "Probably done or parked" with the reason; the reviewer can keep them open
+- **Stale open work (#2):** overtaken tasks labelled *Updated later*, *Parked* or *Probably done* with the reason (including items whose own record says they were closed); the reviewer can keep them open
+- Version upgrades ("updated to Node 24") recorded as reversals; resolved conflicts shown as resolved on the timeline
 - Reviewer override of how two claims relate (audited, survives re-runs)
 
 **Verify and review**
@@ -48,14 +50,14 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - Bulk actions, keyboard shortcuts, Undo, auto-advance, a progress meter, copy-link to a claim
 - Ctrl+K search over claims and sources; an activity log with CSV export
 - **Gap interview (#1):** questions from Missing and Conflicting items, editable, sent to the leaver (or answered on their behalf, labelled so)
-- **Leaver testimony (#1):** answers become a cited source whose access is never wider than the items answered; conflict picks propose a resolution
+- **Leaver testimony (#1):** answers become a cited source whose access is never wider than the items answered; conflict picks propose a resolution; "Neither is right" with the correct answer becomes testimony too
 - Copy, GitHub-issue or .md export of open questions
 
 **Handover**
 - Visibility preview: exactly what the successor will see, what is withheld and why
 - **Person-to-person visibility diff (#3):** compare any two people's views of a version, with the reason for every difference
 - One count for every screen: shared, history and withheld
-- **Withheld items that look like the successor's own work, flagged (#3)**, with rewrite or change-access actions
+- **Withheld items that look like the successor's own work, flagged (#3)**, with rewrite, change-access or write-a-note actions (a note ships as Reviewer-confirmed, no source evidence)
 - **Re-rendering a withheld item from the successor's accessible sources only (#3)**, quote-checked, verified and approved before sharing
 - Versioned approvals with notes; "what changed since vN"; version history
 - Successor view: Start here (their own tasks first), owners, decisions with history, risks, dependencies, Unresolved
@@ -86,6 +88,9 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - Abuse limits, daily clean-up, pipeline-health page
 - AI key pools with Gemini → Groq fallback
 - Security headers, timeouts, row locks; WCAG 2.1 AA checked in light and dark
+- Intake checks: mistyped, private or empty repo refused on the form; empty or binary uploads refused; bot activity and dependency bumps skipped at ingest
+- In-app Guide page; brief tooltips on the screens
+- Readable dark theme and frosted surfaces for floating UI (top bars, menus, dialogs, drawers, toasts)
 
 ## 4. Improvements completed since Round 2
 
@@ -123,6 +128,10 @@ something is not done, estimated or simulated, it says so. Arch uses this file, 
 - **Full redesign** to the hand-off spec: new tokens (light, dark, print), sidebar with live permission-filtered counts, Verify as an inspector with rule checks and file-style evidence, Handover as a document, every screen and the landing page restyled (D67)
 - Guided access setup when creating a workspace; cancel and resume a run; plain messages when the free AI quota stops a run (D68)
 - Fixes from three blind agent tests on production (judge, phone, permissions), including a search-snippet masking bug (D69)
+- Fixes from a confirmation blind round (D71) and pipeline-rule fixes picked by Arch (D72)
+- Dark-mode readability, glass surfaces and a blind UI/UX assessment with its fixes; commit-log dates and same-value duplicates (D73)
+- A live custom-repo run on production and its three fixes, including a limit bug from orphaned demo copies (D74)
+- Final round: reliability sweep, AI-quota end-to-end test, noise filter and extraction wording, folded preview sections, Guide page, "Neither is right" and reviewer notes (D75)
 
 **Other**
 - Admin can change source access (D48)
@@ -142,8 +151,10 @@ See `docs/ARCHITECTURE.md` (as built, with a diagram). In short:
 ## 6. Testing details
 
 From `docs/TESTING.md` §Round 3 (14–15 Nov 2026):
-- **API tests:** 234 passed, 0 failed (real Postgres), 15 Nov.
-- **Production e2e:** 21 passed, 0 failed (7 skipped: screenshot and dev-only specs), after the redesign. Covers the judge flow, interview, timeline, acknowledgements and rewrites, counts across screens, person-to-person comparison, knowledge risk, leaving checklist and first week, plus axe accessibility (0 serious violations) in light and dark and 0 px sideways scroll on phones.
+- **API tests:** 246 passed, 0 failed (real Postgres), 15 Nov, after the final round.
+- **Production e2e:** 22 tests (7 skipped: screenshot and dev-only specs); 21 passed in the full run, and the counts spec, which flaked once under load from a parallel live run, passed 6/6 on repeat.
+- **Live custom-repo runs on production:** `kentcdodds/cross-env` + notes via the create form. First run 5 min 25 s, 67 claims, 68/68 quotes found and verified, 3 rule problems found and fixed (D74). Re-run after the noise filter: about 6 min, 63 claims, 64/64 quotes, 0 failed batches, no "PR was merged" claims or closed issues as open work (D75).
+- **Reliability sweep:** 20 bad inputs on the create form all refused with a readable message before anything is created; bad URLs and repeated actions handled (D75). Covers the judge flow, interview, timeline, acknowledgements and rewrites, counts across screens, person-to-person comparison, knowledge risk, leaving checklist and first week, plus axe accessibility (0 serious violations) in light and dark and 0 px sideways scroll on phones.
 - **Blind agent tests** on production after the redesign (a first-time judge, a phone user, a permission prober; no project context): all completed the loop; every finding fixed except three pipeline-rule issues listed in §10 (D69).
 - **Citation eval** (production demo ledger):
   - recall 13/13, status accuracy 13/13, citation precision 9/10 (target ≥ 90% met);
@@ -196,7 +207,7 @@ Unchanged from Round 2 except where noted.
 
 ## 9. Changes from the plan
 
-Round 3 deviations are D47–D69 in `docs/DECISIONS.md`:
+Round 3 deviations are D47–D75 in `docs/DECISIONS.md`:
 - **No demo video** (not required) (D47).
 - **Access-list editing added** (D48).
 - **Testimony status rules** (D50).
@@ -205,7 +216,8 @@ Round 3 deviations are D47–D69 in `docs/DECISIONS.md`:
 - **Person-to-person comparison** (D60).
 - **Features beyond the plan:** knowledge risk, self-hosting, Discord, leaving checklist, first week, live Slack connector (D61–D66).
 - **Redesign** to a new hand-off spec, with its own deviations: no strike-through on changed decisions, claim ids computed at read time, the access editor kept as a dialog, some headings kept (D67).
-- **Guided access setup and run cancel** (stretch items, D68) and blind-test fixes (D69).
+- **Guided access setup and run cancel** (stretch items, D68) and blind-test fixes (D69, D71).
+- **Pipeline-rule fixes, dark theme and glass, live-run fixes, final round** (D72–D75), including the decision not to build the optional AI relation hint.
 
 The successor-readiness measurement uses simulated testers rather than the 35 user tests the Round 1 PDF planned.
 
@@ -217,9 +229,11 @@ The successor-readiness measurement uses simulated testers rather than the 35 us
 - **Live AI depends on free quotas**, and extraction recall is lower on the Groq fallback (9–10/13 in Round 2 runs). The demo never calls the AI.
 - **No real sign-in:** a persona switcher for the demo, plus invite links for real teams. Sources are snapshots; private repos can't auto-refresh.
 - **A deploy drops in-flight requests.** Runs resume on the next poll. No deploys after the freeze.
-- **Pipeline rules, still open after the blind tests:** some claims built from a commit log are dated by the end of the log's range rather than the commit; near-duplicate claims stay in the handover when their access lists differ or their wording diverges (the CI timeout twice, Wi-Fi compression three times); "status of issue #131" stays Missing beside a supported claim that the issue is unresolved. Fixed: resolved conflicts, undated claims, the "probably done" labels and the owners table (D72).
-- **Live Slack import and Discord notifications** are built and tested against fakes; the live Slack test waits for a bot token with the missing scopes, and Discord for a webhook.
-- **Keys to rotate after the hackathon:** Neon password, 4 Gemini keys, 2 Groq keys, the GitHub token, the Gmail app password, the Slack webhook and bot token (and the app-level token that was shared by mistake).
+- **Pipeline rules:** fixed in D72–D74 (resolved conflicts, undated claims, commit-log dates, same-value duplicates, closed items as open work, version upgrades). Still as designed: "status of issue #131" stays Missing beside a supported claim that the issue is unresolved, because the golden ledger plants it as Missing (G14). Near-duplicates of different types (the Wi-Fi compression decision, risk and recurring issue) stay separate. On an archived repo a few claims still restate issue events.
+- **Live Slack import** was tested by Arch against a separate live Slack workspace token (not the token stored in production). **Discord notifications** were tested live from production on 15 Nov (the webhook was removed afterwards).
+- **Optional AI relation hint** (planned in docs/07) not built, by decision: relations stay rules-only (D75).
+- **Three Groq keys were provided; two are in use** in production. Adding the third to `GROQ_API_KEYS` is optional.
+- **Keys to rotate after the hackathon:** Neon password, 4 Gemini keys, the Groq keys, both GitHub tokens (old and new), the Gmail app password, the Slack webhook and bot token (and the app-level token that was shared by mistake), and the Discord webhook.
 
 ## 11. Role and contribution
 
@@ -232,5 +246,5 @@ Arch writes this in his own words (form rule). Facts he can use:
 
 - Round 2's last commit: `2772dae`, 2026-11-11 09:11 IST. No commits between then and the Round 3 window.
 - Round 3's first commit: `f5c56ae`, **2026-11-14 00:06 IST** (the plan), 7 minutes after the window opened. The first code followed at 00:15 (`5f5c51a`).
-- 112 commits in total on 15 Nov 02:50 IST, 41 of them in Round 3, plus this documentation commit. History is never squashed.
+- 127 commits in total at 15 Nov 18:20 IST, 56 of them in Round 3, including this documentation commit. History is never squashed. Arch updates the final count at submission.
 - No code was written outside the build windows; Round 3 builds on our own Round 2 code.
